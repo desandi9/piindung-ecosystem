@@ -1,10 +1,12 @@
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
 import bcrypt from "bcryptjs"
 import { NextResponse, type NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { normalizePhoneNumber } from "@/lib/phone"
 import { AUTH_COOKIE_NAME, createSessionToken } from "@/lib/session-token"
 import type { AuthUser } from "@/types/auth"
-
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
 export async function POST(request: NextRequest) {
