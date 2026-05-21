@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="PIINDUNG">
+  <rect width="128" height="128" rx="28" fill="#0f3460"/>
+  <circle cx="64" cy="64" r="42" fill="#ffffff" opacity="0.12"/>
+  <path d="M64 24c22.091 0 40 17.909 40 40S86.091 104 64 104 24 86.091 24 64 41.909 24 64 24Zm0 10c-16.569 0-30 13.431-30 30s13.431 30 30 30 30-13.431 30-30-13.431-30-30-30Z" fill="#ffffff"/>
+  <path d="M52 46h18c10.493 0 18 7.507 18 18s-7.507 18-18 18H52Zm10 10v16h8c4.748 0 8-3.252 8-8s-3.252-8-8-8Z" fill="#ffffff"/>
+</svg>
