@@ -1,16 +1,18 @@
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+export const revalidate = 0
 
 import bcrypt from "bcryptjs"
 import { NextResponse, type NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrismaClient } from "@/lib/prisma"
 import { normalizePhoneNumber } from "@/lib/phone"
 import { AUTH_COOKIE_NAME, createSessionToken } from "@/lib/session-token"
 import type { AuthUser } from "@/types/auth"
-const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
 export async function POST(request: NextRequest) {
   try {
+    const prisma = getPrismaClient()
+    const authSecret = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
     const body = (await request.json()) as { phoneNumber?: string; password?: string; remember?: boolean }
     const phoneNumber = normalizePhoneNumber(body.phoneNumber ?? "")
     const password = body.password ?? ""
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
         iat: now,
         exp: now + ((body.remember ?? true) ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 12),
       },
-      AUTH_SECRET,
+      authSecret,
     )
 
     const response = NextResponse.json({ user: authUser })

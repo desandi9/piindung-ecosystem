@@ -2,6 +2,7 @@ import type { AppRole } from "@/types/auth"
 
 export const AUTH_COOKIE_NAME = "piindung-session"
 const encoder = new TextEncoder()
+const decoder = new TextDecoder()
 
 export interface SessionTokenPayload {
   sub: string
@@ -15,6 +16,11 @@ export interface SessionTokenPayload {
 
 function toBase64Url(input: ArrayBuffer | Uint8Array | string) {
   const bytes = typeof input === "string" ? encoder.encode(input) : input instanceof Uint8Array ? input : new Uint8Array(input)
+
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(bytes).toString("base64url")
+  }
+
   let binary = ""
   bytes.forEach((byte) => {
     binary += String.fromCharCode(byte)
@@ -23,6 +29,10 @@ function toBase64Url(input: ArrayBuffer | Uint8Array | string) {
 }
 
 function fromBase64Url(input: string) {
+  if (typeof Buffer !== "undefined") {
+    return Uint8Array.from(Buffer.from(input, "base64url"))
+  }
+
   const base64 = input.replace(/-/g, "+").replace(/_/g, "/")
   const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4)
   const binary = atob(padded)
@@ -59,7 +69,7 @@ export async function verifySessionToken(token: string, secret: string) {
   if (expectedSignature !== signature) return null
 
   try {
-    const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(encodedPayload))) as SessionTokenPayload
+    const payload = JSON.parse(decoder.decode(fromBase64Url(encodedPayload))) as SessionTokenPayload
     if (!payload.exp || payload.exp < Date.now()) return null
     return payload
   } catch {
