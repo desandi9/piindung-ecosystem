@@ -180,7 +180,7 @@ export function getMenuItemsForRole(role: UserRole): MenuItem[] {
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (identifier: string, password: string, options?: { remember?: boolean }) => Promise<boolean>
+  login: (identifier: string, password: string, options?: { remember?: boolean }) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   setUser: (user: User | null) => void
 }
@@ -241,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = async (identifier: string, password: string, options?: { remember?: boolean }): Promise<boolean> => {
+  const login = async (identifier: string, password: string, options?: { remember?: boolean }): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true)
 
     try {
@@ -253,6 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null
         addActivityLog({
           userName: identifier,
           type: "Login",
@@ -260,7 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           loginAction: "Login",
           status: "Failed",
         })
-        return false
+        return { success: false, error: payload?.error ?? "Gagal memproses login." }
       }
 
       const payload = (await response.json()) as { user: User }
@@ -273,9 +274,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginAction: "Login",
         status: "Success",
       })
-      return true
+      return { success: true }
     } catch {
-      return false
+      return { success: false, error: "Gagal menghubungi server login." }
     } finally {
       setIsLoading(false)
     }

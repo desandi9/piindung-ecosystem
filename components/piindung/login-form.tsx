@@ -28,15 +28,16 @@ export function LoginForm() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
+    setErrorMessage(null)
 
-    const success = await login(phoneNumber.trim(), password, { remember: rememberMe })
-    if (success) {
+    const result = await login(phoneNumber.trim(), password, { remember: rememberMe })
+    if (result.success) {
       setErrorMessage(null)
       setIsTransitioning(true)
       await new Promise((resolve) => window.setTimeout(resolve, 1250))
       router.push("/dashboard")
     } else {
-      setErrorMessage("Nomor HP atau password tidak valid.")
+      setErrorMessage(result.error ?? "Nomor HP atau password tidak valid.")
     }
 
     setIsLoading(false)
