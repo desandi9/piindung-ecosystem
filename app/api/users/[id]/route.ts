@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrismaClient } from "@/lib/prisma"
 import { normalizePhoneNumber } from "@/lib/phone"
 
 function formatLastLogin(lastLoginAt: Date | null) {
@@ -41,6 +41,7 @@ function mapUser(user: {
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    const prisma = getPrismaClient()
     const { id } = await Promise.resolve(params)
     const body = (await request.json()) as {
       name?: string
@@ -106,6 +107,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    const prisma = getPrismaClient()
     const { id } = await Promise.resolve(params)
     await prisma.$executeRaw`DELETE FROM "User" WHERE id = ${id}`
     return NextResponse.json({ ok: true })
