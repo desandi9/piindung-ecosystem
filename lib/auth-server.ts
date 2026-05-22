@@ -75,15 +75,28 @@ export const DEFAULT_AUTH_USERS: SeedUserInput[] = [
 
 export async function ensureDefaultUsers() {
   const prisma = getPrismaClient()
-  const existingUsers = await prisma.user.count()
-  if (existingUsers > 0) return
 
   await Promise.all(
     DEFAULT_AUTH_USERS.map(async (user) => {
+      const phone = normalizePhoneNumber(user.phone)
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { phone },
+            ...(user.email ? [{ email: user.email }] : []),
+          ],
+        },
+        select: { id: true },
+      })
+
+      if (existingUser) {
+        return
+      }
+
       const passwordHash = await bcrypt.hash(user.password, 10)
       await prisma.$executeRaw`
         INSERT INTO "User" (id, name, phone, email, "passwordHash", role, status, avatar, "updatedAt")
-        VALUES (${randomUUID()}, ${user.name}, ${normalizePhoneNumber(user.phone)}, ${user.email ?? null}, ${passwordHash}, ${user.role}, ${user.status}, ${user.avatar ?? null}, NOW())
+        VALUES (${randomUUID()}, ${user.name}, ${phone}, ${user.email ?? null}, ${passwordHash}, ${user.role}, ${user.status}, ${user.avatar ?? null}, NOW())
       `
     }),
   )
