@@ -4,6 +4,7 @@ export const revalidate = 0
 
 import bcrypt from "bcryptjs"
 import { NextResponse, type NextRequest } from "next/server"
+import { ensureDefaultUsers } from "@/lib/auth-server"
 import { getPrismaClient } from "@/lib/prisma"
 import { normalizePhoneNumber } from "@/lib/phone"
 import { AUTH_COOKIE_NAME, createSessionToken } from "@/lib/session-token"
@@ -11,6 +12,7 @@ import type { AuthUser } from "@/types/auth"
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureDefaultUsers()
     const prisma = getPrismaClient()
     const authSecret = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
     const body = (await request.json()) as { phoneNumber?: string; password?: string; remember?: boolean }
