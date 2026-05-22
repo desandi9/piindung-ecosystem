@@ -79,6 +79,7 @@ export async function ensureDefaultUsers() {
   await Promise.all(
     DEFAULT_AUTH_USERS.map(async (user) => {
       const phone = normalizePhoneNumber(user.phone)
+      const passwordHash = await bcrypt.hash(user.password, 10)
       const existingUser = await prisma.user.findFirst({
         where: {
           OR: [
@@ -90,10 +91,21 @@ export async function ensureDefaultUsers() {
       })
 
       if (existingUser) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: user.name,
+            phone,
+            email: user.email ?? null,
+            passwordHash,
+            role: user.role,
+            status: user.status,
+            avatar: user.avatar ?? null,
+          },
+        })
         return
       }
 
-      const passwordHash = await bcrypt.hash(user.password, 10)
       await prisma.$executeRaw`
         INSERT INTO "User" (id, name, phone, email, "passwordHash", role, status, avatar, "updatedAt")
         VALUES (${randomUUID()}, ${user.name}, ${phone}, ${user.email ?? null}, ${passwordHash}, ${user.role}, ${user.status}, ${user.avatar ?? null}, NOW())
