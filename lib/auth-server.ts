@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
-import { prisma } from "@/lib/prisma"
+import { getPrismaClient } from "@/lib/prisma"
 import type { AppRole } from "@/types/auth"
 import { normalizePhoneNumber } from "@/lib/phone"
 
@@ -74,6 +74,7 @@ export const DEFAULT_AUTH_USERS: SeedUserInput[] = [
 ]
 
 export async function ensureDefaultUsers() {
+  const prisma = getPrismaClient()
   const existingUsers = await prisma.user.count()
   if (existingUsers > 0) return
 

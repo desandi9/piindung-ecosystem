@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs"
 import { randomUUID } from "crypto"
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrismaClient } from "@/lib/prisma"
 import { ensureDefaultUsers } from "@/lib/auth-server"
 import { isValidPhoneNumber, normalizePhoneNumber } from "@/lib/phone"
 
@@ -43,6 +43,7 @@ function mapUser(user: {
 
 export async function GET() {
   try {
+    const prisma = getPrismaClient()
     await ensureDefaultUsers()
     const users = await prisma.$queryRaw<Array<{
       id: string
@@ -63,6 +64,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const prisma = getPrismaClient()
     const body = (await request.json()) as {
       name?: string
       email?: string
