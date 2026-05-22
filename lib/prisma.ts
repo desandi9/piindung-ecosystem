@@ -4,12 +4,12 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-export function getPrismaClient() {
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient()
-  }
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
 
-  return globalForPrisma.prisma
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma
 }
 
-export const prisma = getPrismaClient()
+export function getPrismaClient() {
+  return prisma
+}
