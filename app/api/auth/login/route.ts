@@ -37,11 +37,21 @@ export async function POST(request: NextRequest) {
     const user = users[0]
 
     if (!user || user.status !== "Aktif") {
+      console.warn("Login rejected", {
+        reason: !user ? "user_not_found" : "user_inactive",
+        phoneNumber,
+        status: user?.status ?? null,
+      })
       return NextResponse.json({ error: "Nomor HP atau password tidak valid." }, { status: 401 })
     }
 
     const passwordMatch = await bcrypt.compare(password, user.passwordHash)
     if (!passwordMatch) {
+      console.warn("Login rejected", {
+        reason: "password_mismatch",
+        phoneNumber,
+        userId: user.id,
+      })
       return NextResponse.json({ error: "Nomor HP atau password tidak valid." }, { status: 401 })
     }
 
