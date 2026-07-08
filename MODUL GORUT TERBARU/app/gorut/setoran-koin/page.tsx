@@ -42,6 +42,7 @@ import type { SetoranKoin } from '@/lib/gorut/types'
 import { CheckCircle2, Download, FileSpreadsheet, FileText, Printer, Search, XCircle, X, Clock, Coins, MapPin, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
+import { EmptyState, MetricCard, PageSectionHeader } from '@/components/ui/ds-patterns'
 
 type ValidasiFilter = 'all' | 'pending' | 'valid' | 'invalid'
 type Metode = 'scan' | 'manual'
@@ -497,19 +498,20 @@ export default function SetoranKoinPage() {
   // ---------- UI ----------
   return (
     <DashboardPage>
-      <DashboardPageHeader
-        title="GORUT / Penghimpunan"
+      <PageSectionHeader
+        title={<h1 className="text-2xl font-bold tracking-tight">GORUT / Penghimpunan</h1>}
         description="Kelola penghimpunan infaq, verifikasi, penolakan, serta ekspor data secara operasional."
-        action={null}
         className="mb-4"
       />
 
-      <StatsGrid>
-        <StatCard icon={Coins} label="Total Penghimpunan Hari Ini" value={stats.totalSetoranHariIni} description="Jumlah penghimpunan yang masuk hari ini" trend="stable" trendDirection="stable" />
-        <StatCard icon={Clock} label="Pending Validasi" value={stats.pending} description="Menunggu verifikasi dari tim" trend="review" trendDirection="down" />
-        <StatCard icon={FileText} label="Total Nominal" value={formatRupiah(stats.totalNominal)} description="Akumulasi nominal penghimpunan" trend="up" trendDirection="up" />
-        <StatCard icon={MapPin} label="Penghimpunan Bulan Ini" value={stats.bulanIni} description="Penghimpunan pada bulan berjalan" trend="this month" trendDirection="up" />
-      </StatsGrid>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+        <MetricCard title="Total Penghimpunan Hari Ini" value={stats.totalSetoranHariIni} icon={Coins} description="Jumlah penghimpunan yang masuk hari ini" accent="from-emerald-500/15 via-emerald-500/5 to-transparent" iconTone="bg-emerald-500/10 text-emerald-600" />
+        <MetricCard title="Pending Validasi" value={stats.pending} icon={Clock} description="Menunggu verifikasi dari tim" accent="from-amber-500/15 via-amber-500/5 to-transparent" iconTone="bg-amber-500/10 text-amber-600" />
+        <MetricCard title="Total Nominal" value={formatRupiah(stats.totalNominal)} icon={FileText} description="Akumulasi nominal penghimpunan" accent="from-blue-500/15 via-blue-500/5 to-transparent" iconTone="bg-blue-500/10 text-blue-600" />
+        <MetricCard title="Penghimpunan Bulan Ini" value={stats.bulanIni} icon={MapPin} description="Penghimpunan pada bulan berjalan" accent="from-violet-500/15 via-violet-500/5 to-transparent" iconTone="bg-violet-500/10 text-violet-600" />
+      </div>
+
 
       <ContentCard title="Cari & Filter" description="Pilih kriteria untuk mempersempit daftar penghimpunan.">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -524,7 +526,9 @@ export default function SetoranKoinPage() {
                 }}
                 placeholder="Cari ID, kode munfiq, nama munfiq, PLPK, validator..."
                 className="pl-9"
+                aria-label="Cari setoran"
               />
+
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -629,11 +633,13 @@ export default function SetoranKoinPage() {
             columns={columns.map((c) => ({ id: c.id, label: c.label }))}
             rows={tableRows}
             selectable
-            emptyMessage={
+            emptyTitle="Belum ada data penghimpunan"
+            emptyDescription={
               search || kecamatan !== 'all' || plpk !== 'all' || status !== 'all' || tanggal !== 'all'
                 ? 'Tidak ada hasil untuk filter yang dipilih.'
-                : 'Belum ada data penghimpunan.'
+                : 'Ubah filter atau tunggu setoran masuk dari alur PLPK.'
             }
+
             bulkActions={[
               {
                 label: 'Bulk Validasi',

@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { ActionCard, EmptyState, MetricCard, PageSectionHeader } from '@/components/ui/ds-patterns'
 import { useToast } from '@/hooks/use-toast'
 import {
   Table,
@@ -46,7 +47,6 @@ import { useAssignedGorutKecamatan } from '@/lib/gorut/operational-scope'
 import { readGorutMunfiqItems, useGorutMunfiqItems, writeGorutMunfiqItems } from '@/lib/gorut/munfiq-control'
 import { cn } from '@/lib/utils'
 import {
-  ArrowRight,
   Calendar,
   Coins,
   Download,
@@ -260,13 +260,6 @@ export default function MunfiqPage() {
   const [isImporting, setIsImporting] = useState(false)
   const [heroOpen, setHeroOpen] = useState(false)
   const [advancedFilterOpen, setAdvancedFilterOpen] = useState(false)
-
-  useEffect(() => {
-    const normalized = ensureMunfiqCodeFields(munfiqItems)
-    if (!normalized.changed) return
-
-    void writeGorutMunfiqItems(normalized.items)
-  }, [munfiqItems])
 
   const filteredData = useMemo(() => {
     let filtered = [...munfiqItems]
@@ -632,28 +625,28 @@ export default function MunfiqPage() {
     <div className="space-y-6">
       <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleImportFile} />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Data Munfiq</h1>
-          <p className="text-sm text-muted-foreground">Kelola data donatur dan riwayat kontribusi</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={handleImportClick}>
-            <Upload className="size-4" />
-            Import Excel / CSV
-          </Button>
-          <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
-            <Download className="size-4" />
-            Export
-          </Button>
-          <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            Tambah Munfiq
-          </Button>
-        </div>
-      </div>
+      <PageSectionHeader
+        title={<h1 className="text-2xl font-bold tracking-tight">Data Munfiq</h1>}
+        description="Kelola data donatur dan riwayat kontribusi"
+        action={(
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="min-h-9 gap-2" aria-label="Import data munfiq dari Excel atau CSV" onClick={handleImportClick}>
+              <Upload className="size-4" />
+              Import Excel / CSV
+            </Button>
+            <Button variant="outline" size="sm" className="min-h-9 gap-2" aria-label="Export data munfiq" onClick={handleExport}>
+              <Download className="size-4" />
+              Export
+            </Button>
+            <Button size="sm" className="min-h-9 gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              Tambah Munfiq
+            </Button>
+          </div>
+        )}
+      />
 
-      <Card className="overflow-hidden border border-border/40 bg-card/90 shadow-sm backdrop-blur-sm">
+      <Card className="overflow-hidden border border-border/60 bg-card/90 shadow-sm">
         <CardContent className="p-0">
           <button
             type="button"
@@ -710,26 +703,8 @@ export default function MunfiqPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  <Link href="/gorut/transaksi" className="group rounded-2xl border border-border/40 bg-background/60 p-4 transition-all duration-300 hover:border-white/10 hover:shadow-[0_14px_32px_rgba(0,0,0,0.12)]">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                        <Coins className="size-5" />
-                      </div>
-                      <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100" />
-                    </div>
-                    <p className="mt-4 text-sm font-semibold">Buka Riwayat Transaksi</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Lacak kontribusi dan aktivitas setoran per munfiq.</p>
-                  </Link>
-                  <Link href="/gorut/rekap-bulanan" className="group rounded-2xl border border-border/40 bg-background/60 p-4 transition-all duration-300 hover:border-white/10 hover:shadow-[0_14px_32px_rgba(0,0,0,0.12)]">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex size-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600">
-                        <ShieldCheck className="size-5" />
-                      </div>
-                      <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100" />
-                    </div>
-                    <p className="mt-4 text-sm font-semibold">Lihat Ringkasan Basis Munfiq</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Pantau kesehatan data dan distribusi penugasan lapangan.</p>
-                  </Link>
+                  <ActionCard icon={Coins} iconTone="success" title="Buka Riwayat Transaksi" description="Lacak kontribusi dan aktivitas setoran per munfiq." href="/gorut/transaksi" />
+                  <ActionCard icon={ShieldCheck} iconTone="info" title="Lihat Ringkasan Basis Munfiq" description="Pantau kesehatan data dan distribusi penugasan lapangan." href="/gorut/rekap-bulanan" />
                 </div>
               </div>
             </div>
@@ -737,7 +712,7 @@ export default function MunfiqPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Filter cepat munfiq">
         {[
           { id: 'semua', label: 'Semua' },
           { id: 'aktif', label: 'Aktif' },
@@ -753,7 +728,7 @@ export default function MunfiqPage() {
               setCurrentPage(1)
             }}
             className={cn(
-              'inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all duration-200',
+              'inline-flex items-center rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200',
               quickFilter === tab.id
                 ? 'bg-emerald-500/15 text-emerald-600 ring-1 ring-emerald-500/30 dark:text-emerald-400'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -765,64 +740,14 @@ export default function MunfiqPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <Card className="border border-border/40 bg-card/90 shadow-sm backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-500/10">
-              <Users className="size-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Munfiq</p>
-              <p className="text-xl font-bold">{stats.totalMunfiq.toLocaleString('id-ID')}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/40 bg-card/90 shadow-sm backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10">
-              <UserCheck className="size-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Munfiq Aktif</p>
-              <p className="text-xl font-bold">{stats.aktivMunfiq.toLocaleString('id-ID')}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/40 bg-card/90 shadow-sm backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500/10">
-              <Coins className="size-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Setoran</p>
-              <p className="text-xl font-bold">{formatRupiah(stats.totalSetoran)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/40 bg-card/90 shadow-sm backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-violet-500/10">
-              <TrendingUp className="size-5 text-violet-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Rata-rata Setoran</p>
-              <p className="text-xl font-bold">{formatRupiah(stats.avgSetoran)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/40 bg-card/90 shadow-sm backdrop-blur-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-red-500/10">
-              <History className="size-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Nonaktif</p>
-              <p className="text-xl font-bold">{stats.nonaktifMunfiq.toLocaleString('id-ID')}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard title="Total Munfiq" value={stats.totalMunfiq.toLocaleString('id-ID')} icon={Users} accent="from-emerald-500/15 via-emerald-500/5 to-transparent" iconTone="bg-emerald-500/10 text-emerald-600" />
+        <MetricCard title="Munfiq Aktif" value={stats.aktivMunfiq.toLocaleString('id-ID')} icon={UserCheck} accent="from-blue-500/15 via-blue-500/5 to-transparent" iconTone="bg-blue-500/10 text-blue-600" />
+        <MetricCard title="Total Setoran" value={formatRupiah(stats.totalSetoran)} icon={Coins} accent="from-amber-500/15 via-amber-500/5 to-transparent" iconTone="bg-amber-500/10 text-amber-600" />
+        <MetricCard title="Rata-rata Setoran" value={formatRupiah(stats.avgSetoran)} icon={TrendingUp} accent="from-violet-500/15 via-violet-500/5 to-transparent" iconTone="bg-violet-500/10 text-violet-600" />
+        <MetricCard title="Nonaktif" value={stats.nonaktifMunfiq.toLocaleString('id-ID')} icon={History} accent="from-red-500/15 via-red-500/5 to-transparent" iconTone="bg-red-500/10 text-red-600" />
       </div>
 
-      <Card className="border border-border/40 bg-card/90 shadow-sm backdrop-blur-sm">
+      <Card className="border border-border/60 bg-card/90 shadow-sm">
         <CardHeader className="border-b border-border/50 pb-4">
           <div className="space-y-4">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr_1.1fr_1fr_1.4fr_auto]">
@@ -974,10 +899,10 @@ export default function MunfiqPage() {
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="icon" onClick={() => handleViewDetail(munfiq)} className="size-8 text-emerald-600">
+                          <Button variant="outline" size="icon" onClick={() => handleViewDetail(munfiq)} className="size-8 text-emerald-600" aria-label={`Lihat detail ${munfiq.nama}`}>
                             <Eye className="size-4" />
                           </Button>
-                          <Button variant="outline" size="icon" onClick={() => handleEditMunfiq(munfiq)} className="size-8 text-blue-600">
+                          <Button variant="outline" size="icon" onClick={() => handleEditMunfiq(munfiq)} className="size-8 text-blue-600" aria-label={`Edit data ${munfiq.nama}`}>
                             <Pencil className="size-4" />
                           </Button>
                         </div>
@@ -1039,11 +964,12 @@ export default function MunfiqPage() {
           </div>
 
           {filteredData.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Users className="mb-3 size-12 text-muted-foreground/50" />
-              <p className="text-muted-foreground">Tidak ada data munfiq yang ditemukan</p>
-              <p className="text-sm text-muted-foreground/70">Coba ubah filter atau kata kunci pencarian</p>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="Belum ada data Munfiq"
+              description="Data Munfiq diambil dari database GORUT dan akan tampil sesuai scope role aktif."
+              action={<Button variant="outline" size="sm" className="min-h-9" onClick={hasActiveFilters ? handleResetFilters : () => setCreateOpen(true)}>{hasActiveFilters ? 'Reset Filter' : 'Tambah Munfiq'}</Button>}
+            />
           )}
 
           {filteredData.length > 0 && (
@@ -1064,7 +990,7 @@ export default function MunfiqPage() {
               </div>
 
               <div className="flex items-center gap-1 self-end sm:self-auto">
-                <Button variant="outline" size="icon" className="size-8" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1}>
+                <Button variant="outline" size="icon" className="size-9" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} aria-label="Halaman sebelumnya">
                   <ChevronLeft className="size-4" />
                 </Button>
                 {visiblePages[0] && visiblePages[0] > 1 ? <span className="px-2 text-sm text-muted-foreground">1</span> : null}
@@ -1082,7 +1008,7 @@ export default function MunfiqPage() {
                 ))}
                 {visiblePages[visiblePages.length - 1] && visiblePages[visiblePages.length - 1] < totalPages - 1 ? <span className="px-1 text-sm text-muted-foreground">...</span> : null}
                 {visiblePages[visiblePages.length - 1] && visiblePages[visiblePages.length - 1] < totalPages ? <span className="px-2 text-sm text-muted-foreground">{totalPages}</span> : null}
-                <Button variant="outline" size="icon" className="size-8" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages}>
+                <Button variant="outline" size="icon" className="size-9" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} aria-label="Halaman berikutnya">
                   <ChevronRight className="size-4" />
                 </Button>
               </div>
