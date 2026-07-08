@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Search, Download, Loader2, Save, Send } from 'lucide-react'
+import {
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  Coins,
+  Download,
+  FileClock,
+  Filter,
+  Loader2,
+  Save,
+  Search,
+  Send,
+  Users,
+  WalletCards,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/lib/auth-context'
 import { formatRupiah } from '@/lib/gorut/data'
@@ -43,7 +57,7 @@ function PlpkTransaksiPage() {
   const [notes, setNotes] = useState('')
   const [confirmSubmit, setConfirmSubmit] = useState<{ type: 'new' } | { type: 'draft'; transaction: PlpkDashboardTransaction } | null>(null)
 
-  const loadPayload = async () => {
+  const loadPayload = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await fetch('/api/gorut/plpk-dashboard', { cache: 'no-store' })
@@ -55,11 +69,11 @@ function PlpkTransaksiPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     void loadPayload()
-  }, [])
+  }, [loadPayload])
 
   const munfiqRows = payload?.munfiq ?? []
   const transactions = payload?.transactions ?? []
@@ -156,16 +170,33 @@ function PlpkTransaksiPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted-foreground">
-        <Loader2 className="mr-2 size-4 animate-spin" />
-        Memuat data setoran PLPK...
+      <div className="space-y-6">
+        <PageSectionHeader
+          title={<h1 className="text-2xl font-bold tracking-tight">Input Setoran PLPK</h1>}
+          description="Menyiapkan data Munfiq, draft setoran, dan transaksi terbaru."
+        />
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {['Form setoran', 'Ringkasan', 'Riwayat'].map((item) => (
+            <Card key={item} className="border-border/60 bg-card/90 shadow-sm">
+              <CardContent className="flex min-h-32 items-center justify-center p-6 text-sm text-muted-foreground">
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                Memuat {item.toLowerCase()}...
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <PageSectionHeader title={<h1 className="text-2xl font-bold tracking-tight">Input Setoran PLPK</h1>} description="Setoran menunggu verifikasi sesuai alur operasional." />
+      <PageSectionHeader
+        title={<h1 className="text-2xl font-bold tracking-tight">Input Setoran PLPK</h1>}
+        description="Setoran menunggu verifikasi sesuai alur operasional."
+        action={<Badge variant="outline" className="border-emerald-500/25 bg-emerald-500/10 text-emerald-700">Fallback web PLPK</Badge>}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <Card className="border-border/60 bg-card/90 shadow-sm">
@@ -220,10 +251,10 @@ function PlpkTransaksiPage() {
             <CardDescription>Data dalam scope PLPK aktif.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <MetricCard title="Munfiq Saya" value={payload?.summary.totalMunfiq ?? 0} icon={Search} accent="from-blue-500/15 via-blue-500/5 to-transparent" iconTone="bg-blue-500/10 text-blue-600" />
-            <MetricCard title="Pending" value={payload?.summary.transaksiPending ?? 0} icon={Loader2} accent="from-amber-500/15 via-amber-500/5 to-transparent" iconTone="bg-amber-500/10 text-amber-600" />
-            <MetricCard title="Selesai" value={payload?.summary.transaksiSelesai ?? 0} icon={Send} accent="from-emerald-500/15 via-emerald-500/5 to-transparent" iconTone="bg-emerald-500/10 text-emerald-600" />
-            <MetricCard title="Setoran Bulan Ini" value={formatRupiah(payload?.summary.setoranBulanIni ?? 0)} icon={Download} accent="from-violet-500/15 via-violet-500/5 to-transparent" iconTone="bg-violet-500/10 text-violet-600" />
+            <MetricCard title="Munfiq Saya" value={payload?.summary.totalMunfiq ?? 0} icon={Users} accent="from-blue-500/15 via-blue-500/5 to-transparent" iconTone="bg-blue-500/10 text-blue-600" />
+            <MetricCard title="Pending" value={payload?.summary.transaksiPending ?? 0} icon={FileClock} accent="from-amber-500/15 via-amber-500/5 to-transparent" iconTone="bg-amber-500/10 text-amber-600" />
+            <MetricCard title="Selesai" value={payload?.summary.transaksiSelesai ?? 0} icon={CheckCircle2} accent="from-emerald-500/15 via-emerald-500/5 to-transparent" iconTone="bg-emerald-500/10 text-emerald-600" />
+            <MetricCard title="Setoran Bulan Ini" value={formatRupiah(payload?.summary.setoranBulanIni ?? 0)} icon={Coins} accent="from-violet-500/15 via-violet-500/5 to-transparent" iconTone="bg-violet-500/10 text-violet-600" />
           </CardContent>
         </Card>
       </div>
@@ -281,7 +312,7 @@ function PlpkTransaksiPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmSubmit(null)}>Batal</Button>
+            <Button variant="outline" disabled={isSaving} onClick={() => setConfirmSubmit(null)}>Batal</Button>
             <Button className="bg-emerald-600 hover:bg-emerald-700" disabled={isSaving} onClick={applySubmitConfirmation}>Ya, Submit Setoran</Button>
           </DialogFooter>
         </DialogContent>
@@ -366,8 +397,13 @@ function OperationalTransaksiPage() {
       />
 
         <Card className="border border-border/60 bg-card/90 shadow-sm">
-          <CardContent className="grid gap-3 p-4 md:grid-cols-5">
-            <Select value={upzisFilter} onValueChange={setUpzisFilter}>
+          <CardContent className="space-y-4 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Filter className="size-4" />
+              Filter data penghimpunan
+            </div>
+            <div className="grid gap-3 md:grid-cols-5">
+              <Select value={upzisFilter} onValueChange={setUpzisFilter}>
               <SelectTrigger aria-label="Filter UPZIS"><SelectValue placeholder="UPZIS" /></SelectTrigger>
               <SelectContent>{upzisOptions.map((item) => <SelectItem key={item} value={item}>{item === 'semua' ? 'Semua UPZIS' : item}</SelectItem>)}</SelectContent>
             </Select>
@@ -385,16 +421,17 @@ function OperationalTransaksiPage() {
             </Select>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Cari munfiq..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Cari munfiq" />
+                <Input className="pl-9" placeholder="Cari munfiq..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Cari munfiq" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard title="PLPK" value={summary.plpk} icon={Search} accent="from-emerald-500/15 via-emerald-500/5 to-transparent" iconTone="bg-emerald-500/10 text-emerald-600" />
-          <MetricCard title="Munfiq Aktif" value={`${summary.aktif} Munfiq`} icon={Search} accent="from-blue-500/15 via-blue-500/5 to-transparent" iconTone="bg-blue-500/10 text-blue-600" />
-          <MetricCard title="Munfiq Terjemput" value={`${summary.terjemput} Munfiq`} icon={Search} accent="from-indigo-500/15 via-indigo-500/5 to-transparent" iconTone="bg-indigo-500/10 text-indigo-600" />
-          <MetricCard title="Perolehan" value={formatRupiah(summary.perolehan)} icon={Search} accent="from-violet-500/15 via-violet-500/5 to-transparent" iconTone="bg-violet-500/10 text-violet-600" />
+          <MetricCard title="PLPK" value={summary.plpk} icon={ClipboardList} accent="from-emerald-500/15 via-emerald-500/5 to-transparent" iconTone="bg-emerald-500/10 text-emerald-600" />
+          <MetricCard title="Munfiq Aktif" value={`${summary.aktif} Munfiq`} icon={Users} accent="from-blue-500/15 via-blue-500/5 to-transparent" iconTone="bg-blue-500/10 text-blue-600" />
+          <MetricCard title="Munfiq Terjemput" value={`${summary.terjemput} Munfiq`} icon={CalendarDays} accent="from-indigo-500/15 via-indigo-500/5 to-transparent" iconTone="bg-indigo-500/10 text-indigo-600" />
+          <MetricCard title="Perolehan" value={formatRupiah(summary.perolehan)} icon={WalletCards} accent="from-violet-500/15 via-violet-500/5 to-transparent" iconTone="bg-violet-500/10 text-violet-600" />
         </div>
 
       <Card className="border border-border/60 bg-card/90">

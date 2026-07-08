@@ -22,6 +22,7 @@ import { Card, CardContent } from '@/components/ui/card'
 // ─── Icon Box ────────────────────────────────────────────────────────────────
 
 type IconTone = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 'muted'
+type IconToneValue = IconTone | string
 
 const iconToneClasses: Record<IconTone, string> = {
   primary: 'bg-primary/10 text-primary',
@@ -30,6 +31,10 @@ const iconToneClasses: Record<IconTone, string> = {
   destructive: 'bg-red-500/10 text-red-600',
   info: 'bg-blue-500/10 text-blue-600',
   muted: 'bg-muted text-muted-foreground',
+}
+
+function resolveIconToneClass(tone: IconToneValue) {
+  return tone in iconToneClasses ? iconToneClasses[tone as IconTone] : tone
 }
 
 const iconSizeClasses = {
@@ -45,12 +50,12 @@ function IconBox({
   className,
 }: {
   icon: LucideIcon
-  tone?: IconTone
+  tone?: IconToneValue
   size?: 'sm' | 'md' | 'lg'
   className?: string
 }) {
   return (
-    <div className={cn('flex shrink-0 items-center justify-center rounded-xl', iconToneClasses[tone], iconSizeClasses[size], className)}>
+    <div className={cn('flex shrink-0 items-center justify-center rounded-xl', resolveIconToneClass(tone), iconSizeClasses[size], className)}>
       <Icon />
     </div>
   )
@@ -71,7 +76,7 @@ function MetricCard({
   description?: string
   icon: LucideIcon
   accent?: string
-  iconTone?: IconTone
+  iconTone?: IconToneValue
 }) {
   return (
     <Card className="group overflow-hidden border-border shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -99,21 +104,34 @@ function MetricCard({
 
 function EmptyState({
   variant = 'inline',
+  inline = false,
+  icon: Icon,
   title,
   message,
+  description,
   action,
 }: {
   variant?: 'inline' | 'card'
+  inline?: boolean
+  icon?: LucideIcon
   title: string
   message?: string
+  description?: string
   action?: React.ReactNode
 }) {
-  if (variant === 'card') {
+  const body = description ?? message
+
+  if (!inline && variant === 'card') {
     return (
       <Card className="border-dashed border-border/60 bg-background/30 shadow-none">
         <CardContent className="flex flex-col items-center p-8 text-center">
+          {Icon ? (
+            <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+              <Icon className="size-6" />
+            </div>
+          ) : null}
           <p className="text-sm font-semibold text-foreground">{title}</p>
-          {message && <p className="mt-1 text-xs text-muted-foreground">{message}</p>}
+          {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
           {action && <div className="mt-4">{action}</div>}
         </CardContent>
       </Card>
@@ -122,8 +140,13 @@ function EmptyState({
 
   return (
     <div className="rounded-xl border border-dashed border-border/60 bg-background/30 p-5 text-center">
+      {Icon ? (
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+          <Icon className="size-6" />
+        </div>
+      ) : null}
       <p className="text-sm font-semibold text-foreground">{title}</p>
-      {message && <p className="mt-1 text-xs text-muted-foreground">{message}</p>}
+      {body && <p className="mt-1 text-xs text-muted-foreground">{body}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )
@@ -232,6 +255,7 @@ function ActionCard({
   description,
   icon,
   tone = 'primary',
+  iconTone,
   className,
   onClick,
   href,
@@ -239,7 +263,8 @@ function ActionCard({
   title: string
   description?: string
   icon: LucideIcon
-  tone?: IconTone
+  tone?: IconToneValue
+  iconTone?: IconToneValue
   className?: string
   onClick?: () => void
   href?: string
@@ -249,7 +274,7 @@ function ActionCard({
       'group flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/80 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md',
       className,
     )}>
-      <IconBox icon={icon} tone={tone} size="md" />
+      <IconBox icon={icon} tone={iconTone ?? tone} size="md" />
       <div className="min-w-0">
         <p className="text-sm font-semibold text-foreground">{title}</p>
         {description && <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>}
@@ -268,7 +293,31 @@ function ActionCard({
   )
 }
 
+// ─── Page Section Header ──────────────────────────────────────────────────────
+
+function PageSectionHeader({
+  title,
+  description,
+  action,
+  className,
+}: {
+  title: React.ReactNode
+  description?: string
+  action?: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between', className)}>
+      <div>
+        <div className="text-lg font-semibold leading-none text-foreground">{title}</div>
+        {description ? <p className="mt-1.5 text-sm text-muted-foreground">{description}</p> : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  )
+}
+
 // ─── Exports ──────────────────────────────────────────────────────────────────
 
-export { MetricCard, EmptyState, IconBox, LoadingCard, LoadingRow, InlineAlert, SectionLabel, ActionCard }
+export { MetricCard, EmptyState, IconBox, LoadingCard, LoadingRow, InlineAlert, SectionLabel, ActionCard, PageSectionHeader }
 export type { IconTone }

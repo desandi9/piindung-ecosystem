@@ -651,7 +651,9 @@ export default function MunfiqPage() {
           <button
             type="button"
             onClick={() => setHeroOpen((value) => !value)}
-            className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/20"
+            aria-expanded={heroOpen}
+            aria-label={heroOpen ? 'Tutup ringkasan operasional munfiq' : 'Buka ringkasan operasional munfiq'}
+            className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -727,6 +729,7 @@ export default function MunfiqPage() {
               setQuickFilter(tab.id as QuickFilter)
               setCurrentPage(1)
             }}
+            aria-pressed={quickFilter === tab.id}
             className={cn(
               'inline-flex items-center rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200',
               quickFilter === tab.id
@@ -813,7 +816,7 @@ export default function MunfiqPage() {
                 </div>
               </div>
 
-              <Button variant="outline" className="h-auto min-h-[76px] rounded-2xl px-4" onClick={() => setAdvancedFilterOpen((value) => !value)}>
+                <Button variant="outline" className="h-auto min-h-[76px] rounded-2xl px-4" aria-expanded={advancedFilterOpen} aria-label="Buka atau tutup filter lanjutan munfiq" onClick={() => setAdvancedFilterOpen((value) => !value)}>
                 <SlidersHorizontal className="mr-2 size-4" />
                 Filter Lainnya
               </Button>
@@ -929,7 +932,7 @@ export default function MunfiqPage() {
                         variant={munfiq.status === 'aktif' ? 'default' : 'secondary'}
                         className={cn(
                           'text-[10px]',
-                          munfiq.status === 'aktif' ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20' : 'bg-gray-500/10 text-gray-600'
+                          munfiq.status === 'aktif' ? 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20' : 'bg-red-500/10 text-red-600 hover:bg-red-500/20'
                         )}
                       >
                         {munfiq.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
@@ -951,10 +954,10 @@ export default function MunfiqPage() {
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEditMunfiq(munfiq)}>
+                    <Button variant="outline" size="sm" className="min-h-9 flex-1" aria-label={`Edit data ${munfiq.nama}`} onClick={() => handleEditMunfiq(munfiq)}>
                       Edit
                     </Button>
-                    <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => handleViewDetail(munfiq)}>
+                    <Button size="sm" className="min-h-9 flex-1 bg-emerald-600 hover:bg-emerald-700" aria-label={`Lihat detail ${munfiq.nama}`} onClick={() => handleViewDetail(munfiq)}>
                       Detail
                     </Button>
                   </div>
@@ -967,7 +970,7 @@ export default function MunfiqPage() {
             <EmptyState
               icon={Users}
               title="Belum ada data Munfiq"
-              description="Data Munfiq diambil dari database GORUT dan akan tampil sesuai scope role aktif."
+              description={hasActiveFilters ? 'Tidak ada munfiq yang cocok dengan filter saat ini. Reset filter untuk melihat seluruh data dalam scope role aktif.' : 'Data Munfiq diambil dari database GORUT dan akan tampil sesuai scope role aktif.'}
               action={<Button variant="outline" size="sm" className="min-h-9" onClick={hasActiveFilters ? handleResetFilters : () => setCreateOpen(true)}>{hasActiveFilters ? 'Reset Filter' : 'Tambah Munfiq'}</Button>}
             />
           )}
