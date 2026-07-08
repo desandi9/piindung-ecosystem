@@ -28,6 +28,13 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import {
   getPublishedNotifications,
   getUnreadNotificationsCount,
   markAllNotificationsAsRead,
@@ -174,15 +181,17 @@ export function Navbar() {
                   key={item.label}
                   href={item.href}
                   className={cn(
-                    "text-sm font-medium transition-all duration-200 ease-out relative py-2",
+                    "text-sm font-medium transition-all duration-300 ease-out relative py-2 group",
                     isActive 
                       ? "text-[#2e8b57]" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {item.label}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2e8b57]" />
+                  {isActive ? (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2e8b57] rounded-full" />
+                  ) : (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2e8b57] rounded-full origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 opacity-50" />
                   )}
                 </Link>
               )
@@ -191,14 +200,71 @@ export function Navbar() {
 
           {/* Right Side - Notification, Dark Mode Toggle, Profile */}
           <div className="flex items-center gap-2 lg:gap-3">
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-all duration-200 ease-out"
-              aria-label="Toggle menu"
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            {/* Mobile Menu Sheet */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <button 
+                  className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-all duration-200 ease-out"
+                  aria-label="Buka menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] border-r border-border p-6 flex flex-col justify-between">
+                <div className="flex-1">
+                  <SheetHeader className="p-0 mb-6">
+                    <SheetTitle className="text-left text-lg font-bold text-foreground">
+                      <Image
+                        src={getResolvedLogoUrl(settings.logoUrl, isDarkMode ? "dark" : "light")}
+                        alt={settings.websiteTitle}
+                        width={120}
+                        height={32}
+                        className="h-8 w-auto"
+                        style={{ width: "auto" }}
+                      />
+                    </SheetTitle>
+                  </SheetHeader>
+                  
+                  <nav className="flex flex-col gap-2 mt-4">
+                    {navItems.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={cn(
+                            "text-sm font-medium transition-all duration-200 ease-out py-3 px-4 rounded-xl flex items-center gap-3",
+                            isActive 
+                              ? "text-[#2e8b57] bg-[#2e8b57]/10" 
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                          )}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    })}
+                  </nav>
+                </div>
+                
+                <div className="border-t border-border pt-4">
+                  <div className="flex items-center gap-3 px-2 py-1">
+                    <Avatar className="w-10 h-10 shadow-sm bg-gradient-to-br from-[#0f3460] to-[#1a4a7a]">
+                      <AvatarImage src={user?.avatar || undefined} alt={user?.name || "User"} className="object-cover" />
+                      <AvatarFallback className="bg-transparent text-white">
+                        <User className="h-5 w-5 text-white" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground truncate max-w-[150px]">{user?.name || "User"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user ? roleDisplayNames[user.role] : "Loading..."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
 
             {/* Notification Bell */}
             <div className="relative" ref={notificationRef}>
@@ -213,8 +279,8 @@ export function Navbar() {
               >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#2e8b57] rounded-full text-[10px] font-medium text-white flex items-center justify-center">
-                    {unreadCount}
+                  <span className="absolute top-1 right-1 min-w-[1rem] h-4 px-0.5 bg-[#2e8b57] rounded-full text-[10px] font-medium text-white flex items-center justify-center tabular-nums">
+                    {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 )}
               </button>
@@ -326,9 +392,9 @@ export function Navbar() {
               <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className={cn(
-                  "flex items-center gap-3 p-2 rounded-xl transition-all duration-200 ease-out",
-                  "hover:bg-accent focus:outline-none focus:ring-2 focus:ring-[#2e8b57]/20",
-                  isDropdownOpen && "bg-accent"
+                  "flex items-center gap-3 p-2 rounded-xl transition-all duration-300 ease-out",
+                  "hover:bg-accent focus:outline-none focus:ring-2 focus:ring-[#2e8b57]/20 hover:shadow-sm",
+                  isDropdownOpen && "bg-accent shadow-sm"
                 )}
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
@@ -399,17 +465,17 @@ export function Navbar() {
                       key={item.label}
                       href={item.href}
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition-all duration-200 ease-out group"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition-all duration-300 ease-out group"
                       role="menuitem"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center group-hover:bg-[#2e8b57]/10 transition-colors duration-150">
-                        <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-[#2e8b57] transition-colors duration-150" />
+                      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center transition-all duration-300 group-hover:bg-[#2e8b57]/10 group-hover:scale-110 group-hover:rotate-3 shadow-sm group-hover:shadow-md">
+                        <item.icon className="h-4 w-4 text-muted-foreground transition-colors duration-300 group-hover:text-[#2e8b57]" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-foreground group-hover:text-[#2e8b57] transition-colors duration-150">
+                        <p className="text-sm font-medium text-foreground transition-all duration-300 group-hover:text-[#2e8b57] group-hover:translate-x-1">
                           {item.label}
                         </p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                        <p className="text-xs text-muted-foreground transition-all duration-300 group-hover:translate-x-1">{item.description}</p>
                       </div>
                     </Link>
                   ))}
@@ -436,31 +502,6 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <nav className="md:hidden border-t border-border py-4">
-            <div className="flex flex-col gap-2">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      "text-sm font-medium transition-all duration-200 ease-out py-2 px-3 rounded-lg",
-                      isActive 
-                        ? "text-[#2e8b57] bg-[#2e8b57]/10" 
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </div>
-          </nav>
-        )}
       </div>
     </header>
   )

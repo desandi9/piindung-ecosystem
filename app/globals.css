@@ -177,6 +177,11 @@ html[data-scroll-behavior="smooth"] {
   scroll-behavior: smooth;
 }
 
+@keyframes slideProgress {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
 @keyframes page-fade-slide-in {
   from {
     opacity: 0;
