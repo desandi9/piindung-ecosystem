@@ -76,34 +76,36 @@ export function PlpkDashboard() {
         <p className="mt-1 text-sm text-muted-foreground">Operasional utama PLPK akan tersedia melalui aplikasi mobile.</p>
       </div>
 
+      {/* NOTE: main DS MetricCard expects `iconTone` as Tailwind class strings
+          (not tone keywords like "success"/"warning" used by the GORUT-local copy). */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Total Munfiq Binaan"
           value={String(payload.summary.totalMunfiq)}
           description="Scope PLPK Anda"
           icon={Users}
-          iconTone="success"
+          iconTone="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
         />
         <MetricCard
           title="Setoran Bulan Ini"
           value={formatRupiah(payload.summary.setoranBulanIni)}
           description="FINAL_APPROVED bulan berjalan"
           icon={WalletCards}
-          iconTone="success"
+          iconTone="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
         />
         <MetricCard
           title="Transaksi Pending"
           value={String(payload.summary.transaksiPending)}
           description="Draft/menunggu/dikembalikan"
           icon={Clock}
-          iconTone="warning"
+          iconTone="bg-amber-500/10 text-amber-600 dark:text-amber-400"
         />
         <MetricCard
           title="Transaksi Selesai"
           value={String(payload.summary.transaksiSelesai)}
           description="Sudah final approved"
           icon={ReceiptText}
-          iconTone="success"
+          iconTone="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
         />
       </div>
 

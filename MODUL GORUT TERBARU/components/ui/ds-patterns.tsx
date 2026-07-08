@@ -2,6 +2,15 @@
  * ds-patterns.tsx — GORUT Module Design System Components
  * Shared primitive components for consistent UI across GORUT.
  * Compatible with the gorut module's Badge, Card, and Button components.
+ *
+ * ⚠️ CONTRACT NOTE: In the integrated PIINDUNG build, imports of
+ * `@/components/ui/ds-patterns` resolve to the MAIN project file
+ * (components/ui/ds-patterns.tsx), NOT this file. This copy is a module
+ * reference only. Key contract differences vs the main DS:
+ *  - ActionCard: main uses `iconTone` (keyword), this copy uses `tone`
+ *  - MetricCard: main `iconTone` is a Tailwind CLASS STRING, here a keyword
+ *  - InlineAlert: main uses `destructive`, this copy uses `error`
+ * When writing GORUT UI code, follow the MAIN component contracts.
  */
 
 import * as React from 'react'
