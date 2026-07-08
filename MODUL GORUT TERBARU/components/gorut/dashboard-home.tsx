@@ -22,6 +22,7 @@ import { hasRecentDashboardEntry } from '@/lib/gorut/dashboard-transition'
 import { generateDashboardInsights, type DashboardInsight } from '@/lib/gorut/insights'
 import { cn } from '@/lib/utils'
 import { ArrowRight, BellRing, FileCheck2, ReceiptText, ShieldAlert, WalletCards } from 'lucide-react'
+import { EmptyState } from '@/components/ui/ds-patterns'
 
 const initialInsights = generateDashboardInsights(statistikGorut, kecamatanData)
 
@@ -264,6 +265,13 @@ export function DashboardHome() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
+                {scopedPriorityApprovals.length === 0 && (
+                  <EmptyState
+                    variant="inline"
+                    title="Tidak ada approval pending"
+                    message="Semua approval sudah diproses atau belum ada yang masuk."
+                  />
+                )}
                 {scopedPriorityApprovals.map((item) => (
                   <div key={item.id} className="rounded-xl border border-border/40 bg-background/40 p-3 transition-all duration-300 hover:border-emerald-500/20 hover:bg-background/60 hover:shadow-[0_12px_30px_rgba(16,185,129,0.08)]">
                     <div className="flex items-start justify-between gap-3">
@@ -304,6 +312,13 @@ export function DashboardHome() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
+                {scopedPriorityNotifications.length === 0 && (
+                  <EmptyState
+                    variant="inline"
+                    title="Tidak ada alert prioritas"
+                    message="Sistem berjalan normal. Tidak ada peringatan kritis saat ini."
+                  />
+                )}
                 {scopedPriorityNotifications.map((item) => (
                   <div key={item.id} className="rounded-xl border border-border/40 bg-background/40 p-3 transition-all duration-300 hover:border-amber-500/20 hover:bg-background/60 hover:shadow-[0_12px_30px_rgba(245,158,11,0.08)]">
                     <div className="flex items-start justify-between gap-3">
