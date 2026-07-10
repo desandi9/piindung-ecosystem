@@ -57,7 +57,7 @@ export function SearchDropdown({ isOpen, onClose }: SearchDropdownProps) {
   return (
     <div className="fixed inset-0 z-40" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <div className="absolute left-1/2 top-24 w-full max-w-2xl -translate-x-1/2 rounded-2xl bg-card shadow-2xl border border-border/50">
+      <div className="absolute inset-x-3 top-16 max-h-[calc(100vh-5rem)] overflow-hidden rounded-2xl border border-border/50 bg-card shadow-2xl sm:left-1/2 sm:top-24 sm:inset-x-auto sm:w-full sm:max-w-2xl sm:-translate-x-1/2">
         {/* Search Input */}
         <div className="border-b border-border/50 p-4">
           <div className="relative group">
@@ -71,10 +71,12 @@ export function SearchDropdown({ isOpen, onClose }: SearchDropdownProps) {
               onClick={(e) => e.stopPropagation()}
             />
             {query && (
-              <button
-                onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
+               <button
+                 type="button"
+                 aria-label="Hapus pencarian"
+                 onClick={handleClearSearch}
+                 className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+               >
                 <X className="size-4" />
               </button>
             )}
@@ -103,7 +105,7 @@ export function SearchDropdown({ isOpen, onClose }: SearchDropdownProps) {
                     key={searchType}
                     onClick={() => setFilteredType(searchType)}
                     className={cn(
-                      'px-3 py-1 rounded-full text-xs font-medium transition-all',
+                      'min-h-[44px] rounded-full px-3 py-2 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       filteredType === type
                         ? 'bg-emerald-500/15 text-emerald-600'
                         : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -137,25 +139,26 @@ export function SearchDropdown({ isOpen, onClose }: SearchDropdownProps) {
               {filteredResults.slice(0, 15).map(result => {
                 const info = getCategoryInfo(result.type)
                 return (
-                  <button
-                    key={`${result.type}-${result.id}`}
-                    onClick={() => {
+                 <button
+                   key={`${result.type}-${result.id}`}
+                   type="button"
+                   onClick={() => {
                       if (result.link) window.location.href = result.link
                       onClose()
                     }}
-                    className="w-full px-4 py-3 hover:bg-muted/50 transition-colors text-left group"
+                    className="group flex min-h-[64px] w-full items-start px-4 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 text-lg">{info.icon}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-medium truncate">{result.title}</p>
+                           <p className="min-w-0 break-words text-sm font-medium">{result.title}</p>
                           <Badge variant="outline" className="text-xs shrink-0 bg-muted/50">
                             {info.label}
                           </Badge>
                         </div>
                         {result.subtitle && (
-                          <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
+                           <p className="break-words text-xs text-muted-foreground">{result.subtitle}</p>
                         )}
                         {result.description && (
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{result.description}</p>
@@ -180,7 +183,7 @@ export function SearchDropdown({ isOpen, onClose }: SearchDropdownProps) {
                     <button
                       key={idx}
                       onClick={() => handleSearch(search)}
-                      className="w-full px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all text-left group flex items-center justify-between"
+                       className="group flex min-h-[44px] w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-muted-foreground transition-all hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {search}
                       <ArrowRight className="size-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -203,7 +206,7 @@ export function SearchDropdown({ isOpen, onClose }: SearchDropdownProps) {
                       key={item.label}
                       href={item.link}
                       onClick={onClose}
-                      className="px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-all"
+                       className="flex min-h-[44px] items-center rounded-lg px-3 py-2 text-xs text-muted-foreground transition-all hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {item.label}
                     </Link>

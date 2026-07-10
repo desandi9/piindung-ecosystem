@@ -42,6 +42,8 @@ interface EnhancedTableProps {
   rowHoverHighlight?: boolean
   selectable?: boolean
   emptyMessage?: string
+  emptyTitle?: string
+  emptyDescription?: string
 }
 
 export function EnhancedTable({
@@ -51,7 +53,9 @@ export function EnhancedTable({
   bulkActions = [],
   rowHoverHighlight = true,
   selectable = false,
-  emptyMessage = 'No data available',
+  emptyMessage,
+  emptyTitle = 'No data available',
+  emptyDescription = 'Try adjusting your filters',
 }: EnhancedTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -91,9 +95,10 @@ export function EnhancedTable({
   if (rows.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card">
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <AlertCircle className="size-10 text-muted-foreground/50 mb-3" />
-          <p className="text-muted-foreground">{emptyMessage}</p>
+        <div className="mx-auto flex max-w-sm flex-col items-center justify-center px-4 py-10 text-center sm:py-12">
+          <AlertCircle className="mb-3 size-10 text-muted-foreground/50" />
+          <p className="font-medium text-foreground">{emptyTitle || emptyMessage}</p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-xs">{emptyDescription}</p>
         </div>
       </div>
     )
@@ -103,22 +108,23 @@ export function EnhancedTable({
     <div className="space-y-4">
       {/* Bulk Actions Toolbar */}
       {selectedRows.size > 0 && visibleBulkActions.length > 0 && (
-        <div className="sticky top-0 z-10 flex items-center gap-3 rounded-lg border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/30 p-3 animate-in fade-in slide-in-from-top">
+        <div className="sticky top-0 z-10 flex flex-col gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 animate-in fade-in slide-in-from-top dark:border-emerald-900 dark:bg-emerald-950/30 sm:flex-row sm:items-center">
           <span className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
             {selectedRows.size} selected
           </span>
-          <div className="flex-1" />
-          <div className="flex gap-2">
+          <div className="hidden flex-1 sm:block" />
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {visibleBulkActions.map(action => (
-              <Button
-                key={action.label}
-                size="sm"
-                variant={action.variant}
-                onClick={() => {
-                  action.onClick(Array.from(selectedRows))
-                  setSelectedRows(new Set())
-                }}
-              >
+                <Button
+                 key={action.label}
+                 size="sm"
+                 variant={action.variant}
+                 className="min-h-[44px] w-full sm:w-auto"
+                 onClick={() => {
+                   action.onClick(Array.from(selectedRows))
+                   setSelectedRows(new Set())
+                 }}
+               >
                 {action.icon && <action.icon className="size-4 mr-1.5" />}
                 {action.label}
               </Button>
@@ -128,13 +134,15 @@ export function EnhancedTable({
       )}
 
       {/* Table */}
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
+      <div className="overflow-hidden rounded-lg border border-border">
+        <div className="w-full overflow-x-auto overscroll-x-contain">
+        <Table className="min-w-[720px]">
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               {selectable && (
                 <TableHead className="w-12 px-4">
                   <Checkbox
+                    aria-label="Pilih semua baris"
                     checked={
                       selectedRows.size === rows.length && rows.length > 0
                         ? true
@@ -152,7 +160,7 @@ export function EnhancedTable({
                   className={cn(
                     'font-semibold',
                     column.width && `w-${column.width}`,
-                    column.sortable && 'cursor-pointer hover:text-foreground transition-colors'
+                    column.sortable && 'min-h-[44px] cursor-pointer hover:text-foreground transition-colors'
                   )}
                   onClick={() => column.sortable && handleSort(column.id)}
                 >
@@ -184,13 +192,14 @@ export function EnhancedTable({
                 {selectable && (
                   <TableCell className="px-4" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
+                      aria-label={`Pilih baris ${row.id}`}
                       checked={selectedRows.has(row.id)}
                       onChange={() => toggleRowSelection(row.id)}
                     />
                   </TableCell>
                 )}
                 {columns.map(column => (
-                  <TableCell key={`${row.id}-${column.id}`} className="py-3">
+                  <TableCell key={`${row.id}-${column.id}`} className="min-h-[44px] whitespace-normal break-words py-3 align-top">
                     {row[column.id]}
                   </TableCell>
                 ))}
@@ -198,6 +207,7 @@ export function EnhancedTable({
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   )
@@ -221,20 +231,21 @@ export function TablePagination({
   const endItem = Math.min(currentPage * pageSize, totalItems)
 
   return (
-    <div className="flex items-center justify-between gap-4 py-4">
+    <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
         Showing {startItem} to {endItem} of {totalItems} items
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="outline"
           size="sm"
+          className="min-h-[44px] flex-1 sm:flex-none"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
           Previous
         </Button>
-        <div className="flex items-center gap-1 px-3 py-2">
+        <div className="flex items-center gap-1 overflow-x-auto px-1 py-1 sm:px-3 sm:py-2">
           {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
             const pageNum = currentPage > 3 ? currentPage - 2 + i : i + 1
             if (pageNum > totalPages) return null
@@ -243,6 +254,7 @@ export function TablePagination({
                 key={pageNum}
                 variant={pageNum === currentPage ? 'default' : 'ghost'}
                 size="sm"
+                className="min-h-[44px] min-w-[44px]"
                 onClick={() => onPageChange(pageNum)}
               >
                 {pageNum}
@@ -253,6 +265,7 @@ export function TablePagination({
         <Button
           variant="outline"
           size="sm"
+          className="min-h-[44px] flex-1 sm:flex-none"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >

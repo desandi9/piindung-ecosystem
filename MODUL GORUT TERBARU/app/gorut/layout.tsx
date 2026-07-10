@@ -128,9 +128,8 @@ export default function GorutLayout({
         )}
         <main
           className={cn(
-            'relative z-10 min-w-0 flex-1',
-            isWelcomePage ? 'p-0' : 'px-4 py-5 sm:px-6 sm:py-6',
-            isDashboardPage && 'overflow-x-hidden'
+            'relative z-10 min-w-0 flex-1 overflow-x-hidden max-sm:[&_[data-slot=button]]:min-h-[44px] max-sm:[&_[data-slot=button]]:min-w-[44px] max-sm:[&_input]:min-h-[44px] max-sm:[&_select]:min-h-[44px]',
+            isWelcomePage ? 'p-0' : 'px-4 py-5 sm:px-6 sm:py-6'
           )}
         >
           {children}

@@ -30,8 +30,8 @@ export function EnhancedSheetBody({
   className?: string
 }) {
   return (
-    <div className={cn('flex-1 overflow-y-auto px-6', className)}>
-      <div className="space-y-6 py-6">
+    <div className={cn('flex-1 overflow-y-auto px-4 sm:px-6', className)}>
+      <div className="space-y-4 py-4 sm:space-y-6 sm:py-6">
         {children}
       </div>
     </div>
@@ -50,12 +50,12 @@ export function EnhancedSheetFooter({
   return (
     <div
       className={cn(
-        'border-t border-border px-6 py-4',
+        'border-t border-border px-4 py-4 sm:px-6',
         sticky && 'sticky bottom-0 bg-background',
         className
       )}
     >
-      <div className="flex gap-3 justify-end">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end [&_button]:min-h-[44px] [&_button]:w-full sm:[&_button]:w-auto">
         {children}
       </div>
     </div>
@@ -87,8 +87,8 @@ export function FormRow({
     <div
       className={cn(
         'grid gap-4',
-        columns === 2 && 'grid-cols-2',
-        columns === 3 && 'grid-cols-3',
+        columns === 2 && 'grid-cols-1 sm:grid-cols-2',
+        columns === 3 && 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
         className
       )}
     >
@@ -145,7 +145,7 @@ export function ActionBar({
   return (
     <div
       className={cn(
-        'flex items-center gap-3',
+        'flex flex-col-reverse gap-3 sm:flex-row sm:items-center [&_button]:min-h-[44px] [&_button]:w-full sm:[&_button]:w-auto',
         variant === 'compact' && 'justify-end',
         sticky && 'sticky bottom-0 bg-background border-t border-border p-4'
       )}
@@ -166,11 +166,11 @@ export function SplitViewDrawer({
   className?: string
 }) {
   return (
-    <div className={cn('grid grid-cols-2 gap-6', className)}>
-      <div className="space-y-6 border-r border-border pr-6">
+    <div className={cn('grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6', className)}>
+      <div className="space-y-4 border-b border-border pb-4 sm:space-y-6 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-6">
         {left}
       </div>
-      <div className="space-y-6">{right}</div>
+      <div className="space-y-4 sm:space-y-6">{right}</div>
     </div>
   )
 }

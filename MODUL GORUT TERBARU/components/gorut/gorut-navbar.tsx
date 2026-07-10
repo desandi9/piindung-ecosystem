@@ -72,11 +72,11 @@ export function GorutNavbar({
         {/* Mobile Menu Toggle */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="icon" className="size-10" aria-label="Buka navigasi GORUT">
+             <Button variant="ghost" size="icon" className="size-11" aria-label="Buka navigasi GORUT">
               <Menu className="size-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
+          <SheetContent side="left" className="w-[85vw] max-w-80 p-0">
             <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
             <div className="flex h-full flex-col">
               <div className="flex h-16 items-center border-b px-4">
@@ -117,7 +117,7 @@ export function GorutNavbar({
           </SheetContent>
         </Sheet>
 
-        <p className="max-w-[140px] truncate text-sm font-semibold tracking-tight lg:hidden" aria-label={`Halaman saat ini: ${currentPage}`}>
+        <p className="max-w-[200px] truncate text-sm font-semibold tracking-tight sm:max-w-xs lg:hidden" aria-label={`Halaman saat ini: ${currentPage}`}>
           {currentPage}
         </p>
 
@@ -151,13 +151,13 @@ export function GorutNavbar({
         </div>
 
         {/* Mobile Search Button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="size-10 md:hidden text-muted-foreground hover:text-foreground"
-          onClick={() => setSearchOpen(true)}
-          aria-label="Cari di GORUT"
-        >
+          <Button
+           variant="ghost"
+           size="icon"
+           className="size-11 text-muted-foreground hover:text-foreground md:hidden"
+           onClick={() => setSearchOpen(true)}
+           aria-label="Cari di GORUT"
+         >
           <Search className="size-5" />
         </Button>
 
@@ -165,8 +165,8 @@ export function GorutNavbar({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="size-10 text-muted-foreground hover:text-foreground" 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+           className="size-11 text-muted-foreground hover:text-foreground"
+           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         >
           <Sun className="size-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute size-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

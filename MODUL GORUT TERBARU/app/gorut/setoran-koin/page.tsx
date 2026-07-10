@@ -252,7 +252,7 @@ export default function SetoranKoinPage() {
       if (tanggal !== 'all' && r.tanggal.slice(0, 10) !== tanggal) return false
       return true
     })
-  }, [rows, search, kecamatan, plpk, status, tanggal])
+  }, [kecamatan, munfiqCodeByName, plpk, rows, search, status, tanggal])
 
   // ---------- Pagination ----------
   const [currentPage, setCurrentPage] = useState(1)

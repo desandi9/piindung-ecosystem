@@ -166,7 +166,7 @@ export default function AuditCenterPage() {
         matchesStatus
       )
     })
-  }, [search, activityFilter, severityFilter, userFilter, moduleFilter, statusFilter])
+  }, [activityFilter, auditLogs, moduleFilter, search, severityFilter, statusFilter, userFilter])
 
   // Calculate stats
   const totalLogs = auditLogs.length

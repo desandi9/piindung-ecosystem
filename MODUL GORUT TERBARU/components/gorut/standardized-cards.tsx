@@ -38,11 +38,11 @@ export function StandardCard({
   headerAction,
 }: StandardCardProps) {
   const paddingClass = {
-    xs: 'p-2',
-    sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-6',
-    xl: 'p-8',
+    xs: 'p-2.5 sm:p-2',
+    sm: 'p-3.5 sm:p-3',
+    md: 'p-4 sm:p-4',
+    lg: 'p-4 sm:p-6',
+    xl: 'p-5 sm:p-8',
   }[padding]
 
   return (
@@ -60,12 +60,12 @@ export function StandardCard({
       tabIndex={interactive ? 0 : undefined}
     >
       {(title || subtitle || headerAction) && (
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:gap-4">
+          <div className="min-w-0">
             {title && <h3 className="font-semibold text-foreground">{title}</h3>}
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+            {subtitle && <p className="text-sm leading-6 text-muted-foreground sm:text-xs">{subtitle}</p>}
           </div>
-          {headerAction && <div className="flex-shrink-0">{headerAction}</div>}
+          {headerAction && <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row [&_button]:min-h-[44px]">{headerAction}</div>}
         </div>
       )}
       {children}
@@ -139,10 +139,10 @@ export function StatCard({ label, value, change, icon, trend }: StatCardProps) {
 
   return (
     <StandardCard compact padding="lg">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-xs text-muted-foreground font-medium">{label}</p>
-          <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-1 break-words text-2xl font-bold text-foreground">{value}</p>
           {change && (
             <p className={cn('text-xs font-medium mt-2', trendClass)}>
               {change.isPositive ? '+' : '-'}{change.value}%
@@ -167,14 +167,14 @@ interface InfoCardProps {
 export function InfoCard({ icon, title, value, details, action }: InfoCardProps) {
   return (
     <StandardCard compact padding="md">
-      <div className="flex items-center gap-3">
-        {icon && <div className="flex-shrink-0 text-primary">{icon}</div>}
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted-foreground font-medium">{title}</p>
-          <p className="text-lg font-semibold text-foreground">{value}</p>
-          {details && <p className="text-xs text-muted-foreground mt-1">{details}</p>}
+      <div className="flex items-start gap-3">
+        {icon && <div className="shrink-0 text-primary">{icon}</div>}
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-muted-foreground">{title}</p>
+          <p className="break-words text-lg font-semibold text-foreground">{value}</p>
+          {details && <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-xs">{details}</p>}
         </div>
-        {action && <div className="flex-shrink-0">{action}</div>}
+        {action && <div className="flex shrink-0 [&_button]:min-h-[44px]">{action}</div>}
       </div>
     </StandardCard>
   )
@@ -212,8 +212,8 @@ export function ListCard({
           <div
             key={item.id}
             className={cn(
-              'flex items-center justify-between gap-3 p-2',
-              interactive && 'cursor-pointer hover:bg-muted rounded-md transition-colors',
+              'flex min-h-[44px] flex-col gap-2 rounded-md p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3',
+              interactive && 'cursor-pointer transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               divider && idx !== items.length - 1 && 'border-b border-border/30 pb-2',
             )}
             onClick={() => onItemClick?.(item.id)}

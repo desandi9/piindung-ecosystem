@@ -123,7 +123,7 @@ function ActionCard({ action, onOpenChange }: { action: QuickAction; onOpenChang
     <button
       onClick={() => onOpenChange(action.id)}
       className={cn(
-        'group h-full w-full text-left transition-all duration-300'
+         'group flex h-full min-h-[44px] w-full text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
       )}
     >
       <div
@@ -157,7 +157,7 @@ function ActionCard({ action, onOpenChange }: { action: QuickAction; onOpenChang
         </div>
         <div className="relative mt-4 flex-1">
           <h3 className="text-sm font-semibold tracking-tight text-foreground">{action.title}</h3>
-          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{action.description}</p>
+           <p className="mt-1.5 line-clamp-3 text-sm leading-6 text-muted-foreground sm:text-xs">{action.description}</p>
         </div>
         <div className="relative mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
           <span>Eksekusi cepat</span>
@@ -216,11 +216,11 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
             </div>
           ) : (
             <div className="space-y-4">
-              <Input placeholder="Nama Munfiq" value={formData.nama || ''} onChange={(e) => handleInputChange('nama', e.target.value)} />
-              <Input placeholder="NIK" value={formData.nik || ''} onChange={(e) => handleInputChange('nik', e.target.value)} />
-              <Input placeholder="No. Telepon" value={formData.noHp || ''} onChange={(e) => handleInputChange('noHp', e.target.value)} />
-              <Input placeholder="Alamat" value={formData.alamat || ''} onChange={(e) => handleInputChange('alamat', e.target.value)} />
-              <div className="flex gap-2 pt-4">
+               <Input placeholder="Nama Munfiq" className="min-h-[44px]" value={formData.nama || ''} onChange={(e) => handleInputChange('nama', e.target.value)} />
+               <Input placeholder="NIK" className="min-h-[44px]" value={formData.nik || ''} onChange={(e) => handleInputChange('nik', e.target.value)} />
+               <Input placeholder="No. Telepon" className="min-h-[44px]" value={formData.noHp || ''} onChange={(e) => handleInputChange('noHp', e.target.value)} />
+               <Input placeholder="Alamat" className="min-h-[44px]" value={formData.alamat || ''} onChange={(e) => handleInputChange('alamat', e.target.value)} />
+               <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end [&_button]:min-h-[44px]">
                 <DialogClose asChild>
                   <Button variant="outline" className="flex-1">Batal</Button>
                 </DialogClose>
@@ -253,10 +253,10 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
             </div>
           ) : (
             <div className="space-y-4">
-              <Input placeholder="Nama Munfiq" value={formData.munfiq || ''} onChange={(e) => handleInputChange('munfiq', e.target.value)} />
-              <Input placeholder="Jumlah Setoran (Rp)" type="number" value={formData.jumlah || ''} onChange={(e) => handleInputChange('jumlah', e.target.value)} />
-              <Input placeholder="Keterangan" value={formData.keterangan || ''} onChange={(e) => handleInputChange('keterangan', e.target.value)} />
-              <div className="flex gap-2 pt-4">
+               <Input placeholder="Nama Munfiq" className="min-h-[44px]" value={formData.munfiq || ''} onChange={(e) => handleInputChange('munfiq', e.target.value)} />
+               <Input placeholder="Jumlah Setoran (Rp)" className="min-h-[44px]" type="number" value={formData.jumlah || ''} onChange={(e) => handleInputChange('jumlah', e.target.value)} />
+               <Input placeholder="Keterangan" className="min-h-[44px]" value={formData.keterangan || ''} onChange={(e) => handleInputChange('keterangan', e.target.value)} />
+               <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end [&_button]:min-h-[44px]">
                 <DialogClose asChild>
                   <Button variant="outline" className="flex-1">Batal</Button>
                 </DialogClose>
@@ -289,9 +289,9 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
             </div>
           ) : (
             <div className="space-y-4">
-              <Input placeholder="Judul Pengumuman" value={formData.judul || ''} onChange={(e) => handleInputChange('judul', e.target.value)} />
-              <textarea className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Isi pengumuman..." value={formData.isi || ''} onChange={(e) => handleInputChange('isi', e.target.value)} rows={4} />
-              <div className="flex gap-2 pt-4">
+               <Input placeholder="Judul Pengumuman" className="min-h-[44px]" value={formData.judul || ''} onChange={(e) => handleInputChange('judul', e.target.value)} />
+               <textarea className="min-h-[88px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Isi pengumuman..." value={formData.isi || ''} onChange={(e) => handleInputChange('isi', e.target.value)} rows={4} />
+               <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end [&_button]:min-h-[44px]">
                 <DialogClose asChild>
                   <Button variant="outline" className="flex-1">Batal</Button>
                 </DialogClose>
@@ -324,13 +324,13 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
             </div>
           ) : (
             <div className="space-y-4">
-              <Input type="month" value={formData.periode || ''} onChange={(e) => handleInputChange('periode', e.target.value)} />
-              <select className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm" value={formData.format || 'xlsx'} onChange={(e) => handleInputChange('format', e.target.value)}>
+               <Input type="month" className="min-h-[44px]" value={formData.periode || ''} onChange={(e) => handleInputChange('periode', e.target.value)} />
+               <select className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.format || 'xlsx'} onChange={(e) => handleInputChange('format', e.target.value)}>
                 <option value="xlsx">Excel (.xlsx)</option>
                 <option value="pdf">PDF (.pdf)</option>
                 <option value="csv">CSV (.csv)</option>
               </select>
-              <div className="flex gap-2 pt-4">
+               <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end [&_button]:min-h-[44px]">
                 <DialogClose asChild>
                   <Button variant="outline" className="flex-1">Batal</Button>
                 </DialogClose>
@@ -363,15 +363,15 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
             </div>
           ) : (
             <div className="space-y-4">
-              <select className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm" value={formData.kecamatan || ''} onChange={(e) => handleInputChange('kecamatan', e.target.value)}>
+               <select className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.kecamatan || ''} onChange={(e) => handleInputChange('kecamatan', e.target.value)}>
                 <option value="">Pilih Kecamatan</option>
                 <option value="garut-kota">Garut Kota</option>
                 <option value="tarogong-kaler">Tarogong Kaler</option>
                 <option value="tarogong-kidul">Tarogong Kidul</option>
               </select>
-              <Input type="month" value={formData.periode || ''} onChange={(e) => handleInputChange('periode', e.target.value)} />
-              <Input placeholder="Target (Rp)" type="number" value={formData.target || ''} onChange={(e) => handleInputChange('target', e.target.value)} />
-              <div className="flex gap-2 pt-4">
+               <Input type="month" className="min-h-[44px]" value={formData.periode || ''} onChange={(e) => handleInputChange('periode', e.target.value)} />
+               <Input placeholder="Target (Rp)" className="min-h-[44px]" type="number" value={formData.target || ''} onChange={(e) => handleInputChange('target', e.target.value)} />
+               <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end [&_button]:min-h-[44px]">
                 <DialogClose asChild>
                   <Button variant="outline" className="flex-1">Batal</Button>
                 </DialogClose>
@@ -412,12 +412,12 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
                   { id: 3, munfiq: 'Budi Santoso', jumlah: 600000, tanggal: '2026-05-13' },
                 ].map((item) => (
                   <Card key={item.id} className="p-3 border-border/40">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium">{item.munfiq}</p>
+                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                       <div className="min-w-0">
+                         <p className="break-words text-sm font-medium">{item.munfiq}</p>
                         <p className="text-xs text-muted-foreground">Rp {item.jumlah.toLocaleString('id-ID')} • {item.tanggal}</p>
                       </div>
-                      <Button size="sm" onClick={handleSubmit} disabled={isLoading} className="bg-violet-600 hover:bg-violet-700">
+                       <Button size="sm" onClick={handleSubmit} disabled={isLoading} className="min-h-[44px] w-full bg-violet-600 hover:bg-violet-700 sm:w-auto">
                         {isLoading ? <Loader2 className="size-4 animate-spin" /> : 'Approve'}
                       </Button>
                     </div>
@@ -448,20 +448,20 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
             </div>
           ) : (
             <div className="mt-6 space-y-4">
-              <Input placeholder="Nama Dokumen" value={formData.namaDoc || ''} onChange={(e) => handleInputChange('namaDoc', e.target.value)} />
-              <select className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm" value={formData.kategori || ''} onChange={(e) => handleInputChange('kategori', e.target.value)}>
+               <Input placeholder="Nama Dokumen" className="min-h-[44px]" value={formData.namaDoc || ''} onChange={(e) => handleInputChange('namaDoc', e.target.value)} />
+               <select className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.kategori || ''} onChange={(e) => handleInputChange('kategori', e.target.value)}>
                 <option value="">Pilih Kategori</option>
                 <option value="financial">Financial Reports</option>
                 <option value="monthly">Monthly Reports</option>
                 <option value="berita-acara">Berita Acara</option>
                 <option value="templates">Templates</option>
               </select>
-              <div className="rounded-lg border-2 border-dashed border-border/50 bg-muted/30 p-6 text-center hover:border-border cursor-pointer transition-colors">
+               <div className="min-h-[120px] rounded-lg border-2 border-dashed border-border/50 bg-muted/30 p-6 text-center transition-colors hover:border-border">
                 <Upload className="mx-auto size-8 text-muted-foreground mb-2" />
                 <p className="text-sm font-medium">Klik atau drag file di sini</p>
                 <p className="text-xs text-muted-foreground">PDF, Excel, Word (Max 10MB)</p>
               </div>
-              <div className="flex gap-2 pt-4">
+               <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end [&_button]:min-h-[44px]">
                 <SheetClose asChild>
                   <Button variant="outline" className="flex-1">Batal</Button>
                 </SheetClose>
@@ -494,17 +494,18 @@ function QuickActionModals({ activeAction, onClose }: { activeAction: string | n
             </div>
           ) : (
             <div className="mt-6 space-y-4">
-              <Input placeholder="Nama Lengkap" value={formData.nama || ''} onChange={(e) => handleInputChange('nama', e.target.value)} />
-              <Input placeholder="Email" type="email" value={formData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
-              <select className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm" value={formData.role || ''} onChange={(e) => handleInputChange('role', e.target.value)}>
+               <Input placeholder="Nama Lengkap" className="min-h-[44px]" value={formData.nama || ''} onChange={(e) => handleInputChange('nama', e.target.value)} />
+               <Input placeholder="Email" className="min-h-[44px]" type="email" value={formData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
+               <select className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={formData.role || ''} onChange={(e) => handleInputChange('role', e.target.value)}>
+
                 <option value="">Pilih Role</option>
                 <option value="admin-pc">Admin PC</option>
                 <option value="upzis">UPZIS</option>
                 <option value="ranting">Ranting</option>
                 <option value="plpk">PLPK</option>
               </select>
-              <Input placeholder="Password" type="password" value={formData.password || ''} onChange={(e) => handleInputChange('password', e.target.value)} />
-              <div className="flex gap-2 pt-4">
+               <Input placeholder="Password" className="min-h-[44px]" type="password" value={formData.password || ''} onChange={(e) => handleInputChange('password', e.target.value)} />
+               <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:justify-end [&_button]:min-h-[44px]">
                 <SheetClose asChild>
                   <Button variant="outline" className="flex-1">Batal</Button>
                 </SheetClose>

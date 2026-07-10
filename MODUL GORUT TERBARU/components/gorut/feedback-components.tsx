@@ -85,7 +85,7 @@ export function SkeletonLoader({ count = 3, variant = 'card' }: { count?: number
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {skeletons.map((_, idx) => (
-        <div key={idx} className="rounded-lg border border-border bg-card p-6 space-y-4 animate-pulse">
+        <div key={idx} className="animate-pulse space-y-4 rounded-lg border border-border bg-card p-4 sm:p-6">
           <div className="h-8 bg-muted rounded w-1/2" />
           <div className="h-6 bg-muted rounded w-full" />
           <div className="h-6 bg-muted rounded w-3/4" />
@@ -98,9 +98,9 @@ export function SkeletonLoader({ count = 3, variant = 'card' }: { count?: number
 // Loading State Component
 export function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <Loader2 className="size-8 text-muted-foreground animate-spin mb-3" />
-      <p className="text-muted-foreground text-sm">{message}</p>
+    <div className="flex flex-col items-center justify-center px-4 py-10 text-center sm:py-12">
+      <Loader2 className="mb-3 size-8 animate-spin text-muted-foreground" />
+      <p className="text-sm leading-6 text-muted-foreground">{message}</p>
     </div>
   )
 }
@@ -116,10 +116,10 @@ export function EmptyState({
   icon?: React.ComponentType<{ className?: string }>
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <Icon className="size-12 text-muted-foreground/50 mb-3" />
+    <div className="mx-auto flex max-w-sm flex-col items-center justify-center px-4 py-10 text-center sm:py-12">
+      <Icon className="mb-3 size-12 text-muted-foreground/50" />
       <p className="font-medium text-foreground">{message}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
     </div>
   )
 }
@@ -127,10 +127,10 @@ export function EmptyState({
 // No Search Results Component
 export function NoSearchResults({ query }: { query: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <Search className="size-12 text-muted-foreground/50 mb-3" />
+    <div className="mx-auto flex max-w-sm flex-col items-center justify-center px-4 py-10 text-center sm:py-12">
+      <Search className="mb-3 size-12 text-muted-foreground/50" />
       <p className="font-medium text-foreground">No results found</p>
-      <p className="text-sm text-muted-foreground">We couldn&apos;t find anything for &quot;{query}&quot;</p>
+      <p className="mt-1 text-sm leading-6 text-muted-foreground">We couldn&apos;t find anything for &quot;{query}&quot;</p>
     </div>
   )
 }

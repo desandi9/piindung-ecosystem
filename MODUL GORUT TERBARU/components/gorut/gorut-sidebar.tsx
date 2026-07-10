@@ -145,7 +145,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
           <Button
             variant="ghost"
             size="icon"
-            className="z-10 size-8 shrink-0 text-muted-foreground hover:text-foreground"
+            className="z-10 size-11 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={() => handleCollapse(!collapsed)}
             aria-label={collapsed ? 'Buka menu GORUT' : 'Ciutkan menu GORUT'}
           >
@@ -161,7 +161,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
                 href="/"
                 className={cn(
                    'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  collapsed && 'w-10 justify-center px-0'
+                  collapsed && 'w-11 justify-center px-0'
                 )}
               >
                 <ArrowLeft className="size-4 shrink-0" />
@@ -301,7 +301,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
                                 key={subitem.href}
                                 href={subitem.href}
                                 className={cn(
-                                  'block min-h-[38px] rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                                  'block min-h-[44px] rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                                   isGorutPathActive(pathname, subitem.href)
                                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -329,7 +329,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
                 href="/gorut/help"
                 className={cn(
                    'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  collapsed && 'w-10 justify-center px-0'
+                  collapsed && 'w-11 justify-center px-0'
                 )}
               >
                 <HelpCircle className="size-4 shrink-0" />

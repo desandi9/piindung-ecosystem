@@ -32,7 +32,7 @@ export function FormField({
   return (
     <div className={cn('flex flex-col gap-1.5', layout === 'horizontal' && 'flex-row items-center')}>
       {label && (
-        <label className="text-sm font-medium text-foreground">
+        <label className="text-sm font-medium leading-6 text-foreground">
           {label}
           {required && <span className="ml-1 text-destructive">*</span>}
         </label>
@@ -74,8 +74,9 @@ export function StandardInput({
       )}
       <input
         className={cn(
-          getFormInputClass(error),
-          icon && 'pl-10',
+           getFormInputClass(error),
+           'min-h-[44px]',
+           icon && 'pl-10',
           suffix && 'pr-10',
           TRANSITIONS.color,
           className,
@@ -108,18 +109,19 @@ export function PasswordInput({
       <input
         type={showPassword ? 'text' : 'password'}
         className={cn(
-          getFormInputClass(error),
-          'pr-10',
+           getFormInputClass(error),
+           'min-h-[44px] pr-12',
           TRANSITIONS.color,
           className,
         )}
         {...props}
       />
-      <button
-        type="button"
-        onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-      >
+         <button
+         type="button"
+         aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+         onClick={() => setShowPassword(!showPassword)}
+         className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+       >
         {showPassword ? (
           <EyeOff className="size-4" />
         ) : (
@@ -146,7 +148,7 @@ export function StandardTextArea({
     <textarea
       rows={rows}
       className={cn(
-        'rounded-md border border-input bg-background px-3 py-2 text-sm',
+        'min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-3 text-base sm:text-sm',
         'placeholder:text-muted-foreground',
         'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
@@ -177,7 +179,7 @@ export function StandardSelect({
   return (
     <select
       className={cn(
-        'h-10 rounded-md border border-input bg-background px-3 py-2 text-sm',
+        'min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm',
         'placeholder:text-muted-foreground',
         'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
@@ -218,11 +220,11 @@ export function StandardCheckbox({
   ...props
 }: CheckboxProps) {
   return (
-    <label className="flex items-start gap-3 cursor-pointer">
+    <label className="flex min-h-[44px] cursor-pointer items-start gap-3 py-1">
       <input
         type="checkbox"
         className={cn(
-          'mt-1 h-4 w-4 rounded border border-input',
+          'mt-1 size-5 rounded border border-input sm:size-4',
           'checked:bg-primary checked:border-primary',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           'disabled:cursor-not-allowed disabled:opacity-50',
@@ -232,8 +234,8 @@ export function StandardCheckbox({
         {...props}
       />
       <div>
-        {label && <p className="text-sm font-medium text-foreground">{label}</p>}
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {label && <p className="text-base font-medium leading-none text-foreground sm:text-sm">{label}</p>}
+        {description && <p className="mt-1.5 text-sm text-muted-foreground sm:text-xs">{description}</p>}
       </div>
     </label>
   )
@@ -250,11 +252,11 @@ export function StandardRadio({
   ...props
 }: RadioProps) {
   return (
-    <label className="flex items-center gap-3 cursor-pointer">
+    <label className="flex min-h-[44px] cursor-pointer items-center gap-3 py-1">
       <input
         type="radio"
         className={cn(
-          'h-4 w-4 rounded-full border border-input',
+          'size-5 rounded-full border border-input sm:size-4',
           'checked:bg-primary checked:border-primary',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           'disabled:cursor-not-allowed disabled:opacity-50',

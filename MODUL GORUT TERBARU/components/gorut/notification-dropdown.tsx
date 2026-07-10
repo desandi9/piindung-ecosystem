@@ -79,7 +79,7 @@ export function NotificationDropdown() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative size-9 text-muted-foreground transition-all duration-200 hover:scale-[1.02] hover:bg-muted hover:text-foreground"
+           className="relative size-11 text-muted-foreground transition-all duration-200 hover:scale-[1.02] hover:bg-muted hover:text-foreground"
           aria-label="Notifikasi"
         >
           <Bell className="size-5 transition-transform duration-200" />
@@ -125,7 +125,7 @@ export function NotificationDropdown() {
             <div className="flex min-h-32 flex-col items-center justify-center px-4 py-8 text-center">
               <Bell className="mb-3 size-8 text-muted-foreground/50" />
               <p className="text-sm font-medium text-foreground">Tidak ada notifikasi</p>
-              <p className="text-xs text-muted-foreground">Semua aktivitas terbaru akan tampil di sini.</p>
+              <p className="max-w-xs text-sm leading-6 text-muted-foreground">Semua aktivitas terbaru akan tampil di sini.</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -143,7 +143,7 @@ export function NotificationDropdown() {
                     type="button"
                     onClick={() => handlePreviewClick(notification.id)}
                     className={cn(
-                      'flex w-full items-start gap-3 rounded-xl border border-transparent px-3 py-3 text-left transition-all duration-200 hover:border-border/60 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40',
+                       'flex min-h-[64px] w-full items-start gap-3 rounded-xl border border-transparent px-3 py-3 text-left transition-all duration-200 hover:border-border/60 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40',
                       !notification.isRead && 'bg-emerald-500/[0.06] hover:bg-emerald-500/[0.08]'
                     )}
                   >
@@ -153,7 +153,7 @@ export function NotificationDropdown() {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start gap-2">
-                        <p className={cn('line-clamp-1 text-sm font-medium text-foreground', !notification.isRead && 'pr-2')}>
+                         <p className={cn('line-clamp-2 break-words text-sm font-medium text-foreground', !notification.isRead && 'pr-2')}>
                           {notification.title}
                         </p>
                         {!notification.isRead && (
@@ -182,7 +182,7 @@ export function NotificationDropdown() {
         </div>
 
         <div className="border-t border-border/60 bg-muted/10 p-2">
-          <Button asChild variant="ghost" className="h-10 w-full justify-center rounded-xl text-sm font-medium transition-all duration-200 hover:bg-muted">
+          <Button asChild variant="ghost" className="min-h-[44px] w-full justify-center rounded-xl text-sm font-medium transition-all duration-200 hover:bg-muted">
             <Link href="/gorut/notifikasi" onClick={() => setOpen(false)}>
               Lihat Semua
             </Link>
