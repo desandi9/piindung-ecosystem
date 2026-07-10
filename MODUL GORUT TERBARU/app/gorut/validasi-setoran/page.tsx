@@ -32,7 +32,6 @@ import { formatRupiah, formatDateShort } from '@/lib/gorut/data'
 import { exportReportToPdf, exportRowsToSpreadsheet } from '@/lib/gorut/export'
 import type { SetoranKoin } from '@/lib/gorut/types'
 import { useAuth } from '@/lib/auth-context'
-import { useAssignedGorutKecamatan } from '@/lib/gorut/operational-scope'
 import { type MetodePembayaran, type ValidasiRow, type ValidasiWorkflowStage, processGorutVerification, useGorutValidasiRows } from '@/lib/gorut/validasi-control'
 import {
   CheckCircle2,
@@ -73,7 +72,6 @@ function toMetodeLabel(metode: MetodePembayaran) {
 export default function ValidasiSetoranPage({ stageOverride }: { stageOverride?: ValidasiWorkflowStage } = {}) {
   const { toast } = useToast()
   const { user } = useAuth()
-  const { assignedKecamatan, isScopedOperationalRole } = useAssignedGorutKecamatan()
   const validationStage: ValidasiWorkflowStage = stageOverride ?? (user?.role === 'admin_kordes' ? 'ranting' : 'upzis')
   const rows = useGorutValidasiRows(validationStage)
   const stageLabel = validationStage === 'pc' ? 'PC' : validationStage === 'upzis' ? 'UPZIS' : 'Ranting'
@@ -119,14 +117,14 @@ export default function ValidasiSetoranPage({ stageOverride }: { stageOverride?:
         const hay = [r.id, r.transactionCode ?? '', r.munfiqNama, r.kecamatan, r.plpk, r.validasi, r.catatanAdmin ?? '', r.notes ?? ''].join(' ').toLowerCase()
         if (!hay.includes(s)) return false
       }
-       if (kecamatan !== 'all' && r.kecamatan !== kecamatan) return false
-       if (isScopedOperationalRole && assignedKecamatan && r.kecamatan !== assignedKecamatan) return false
-       if (plpk !== 'all' && r.plpk !== plpk) return false
+      if (kecamatan !== 'all' && r.kecamatan !== kecamatan) return false
+      if (plpk !== 'all' && r.plpk !== plpk) return false
       if (status !== 'all' && r.validasi !== status) return false
+
       if (tanggal !== 'all' && r.tanggal.slice(0, 10) !== tanggal) return false
       return true
     })
-  }, [assignedKecamatan, isScopedOperationalRole, rows, search, kecamatan, plpk, status, tanggal])
+  }, [rows, search, kecamatan, plpk, status, tanggal])
 
   // ---------- Pagination ----------
   const [currentPage, setCurrentPage] = useState(1)
@@ -697,7 +695,8 @@ export default function ValidasiSetoranPage({ stageOverride }: { stageOverride?:
                             variant="default"
                             size="sm"
                           />
-                        }
+      }
+
                       />
                     </FormRow>
                     <FormRow columns={2}>
