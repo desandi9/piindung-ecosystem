@@ -7,13 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EnhancedTable, TablePagination } from '@/components/gorut/enhanced-table'
-import {
-  DashboardPage,
-  DashboardPageHeader,
-  StatsGrid,
-  StatCard,
-  ContentCard,
-} from '@/components/gorut/dashboard-layouts'
 import { StatusIndicator } from '@/components/gorut/status-components'
 import {
   EnhancedSheetBody,
@@ -37,21 +30,9 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { formatRupiah, formatDateShort } from '@/lib/gorut/data'
 import { exportReportToPdf, exportRowsToSpreadsheet } from '@/lib/gorut/export'
-import { useGorutMunfiqItems } from '@/lib/gorut/munfiq-control'
-import {
-  useGorutKordesUpzisRows,
-  useGorutPenghimpunanVerificationState,
-  useGorutPlpkKordesRows,
-  useGorutUpzisPcRows,
-  writeGorutPenghimpunanVerificationState,
-} from '@/lib/gorut/penghimpunan-control'
 import type { SetoranKoin } from '@/lib/gorut/types'
 import { useAuth } from '@/lib/auth-context'
-import { useAssignedGorutKecamatan } from '@/lib/gorut/operational-scope'
-import { readGorutApprovalTransactions, writeGorutApprovalTransactions } from '@/lib/gorut/approval-control'
-import { readGorutTransactions, writeGorutTransactions } from '@/lib/gorut/transaksi-control'
-import { canRoleProcessValidation, getGorutRoleLabel } from '@/lib/gorut/workflow'
-import { type MetodePembayaran, type RiwayatStatus, type ValidasiRow, useGorutValidasiRows, writeGorutValidasiRows } from '@/lib/gorut/validasi-control'
+import { type MetodePembayaran, type ValidasiRow, type ValidasiWorkflowStage, processGorutVerification, useGorutValidasiRows } from '@/lib/gorut/validasi-control'
 import {
   CheckCircle2,
   Download,
@@ -66,10 +47,9 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Checkbox } from '@/components/ui/checkbox'
+import { EmptyState, MetricCard, PageSectionHeader } from '@/components/ui/ds-patterns'
 
 type ValidasiFilter = 'all' | 'pending' | 'valid' | 'invalid'
-type PenghimpunanStage = 'plpk_kordes' | 'kordes_upzis' | 'upzis_pc'
 const STATUS_META: Record<
   'pending' | 'valid' | 'invalid',
   { label: string; status: 'pending' | 'approved' | 'rejected' }
@@ -89,141 +69,35 @@ function toMetodeLabel(metode: MetodePembayaran) {
   return metode === 'scan' ? 'Scan QRIS' : 'Manual'
 }
 
-function toTransactionMethod(metode: MetodePembayaran): 'tunai' | 'transfer' | 'qris' {
-  return metode === 'scan' ? 'qris' : 'tunai'
-}
-
-function makeMockBuktiDataUrl(label: string) {
-  const safe = label.replace(/[^\w\s-]/g, '').slice(0, 40)
-  const svg = encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="900" height="540">
-      <defs>
-        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#0f172a"/>
-          <stop offset="1" stop-color="#064e3b"/>
-        </linearGradient>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#g)"/>
-      <rect x="48" y="48" width="804" height="444" rx="24" fill="#0b1220" stroke="#22c55e" stroke-width="4" opacity="0.95"/>
-      <text x="72" y="140" font-family="ui-sans-serif, system-ui" font-size="40" fill="#34d399" font-weight="800">BUKTI SETOR</text>
-      <text x="72" y="208" font-family="ui-sans-serif, system-ui" font-size="24" fill="#e5e7eb" font-weight="600">${safe}</text>
-      <text x="72" y="272" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="18" fill="#93c5fd">Preview lokal bukti validasi</text>
-      <text x="72" y="376" font-family="ui-sans-serif, system-ui" font-size="18" fill="#f1f5f9">Download dan cetak tersedia dari panel detail</text>
-    </svg>
-  `)
-  return `data:image/svg+xml;charset=utf-8,${svg}`
-}
-
-export default function ValidasiSetoranPage() {
+export default function ValidasiSetoranPage({ stageOverride }: { stageOverride?: ValidasiWorkflowStage } = {}) {
   const { toast } = useToast()
   const { user } = useAuth()
-  const { assignedKecamatan, isScopedOperationalRole } = useAssignedGorutKecamatan()
-  const rows = useGorutValidasiRows()
-  const munfiqItems = useGorutMunfiqItems()
-  const plpkKordesRows = useGorutPlpkKordesRows()
-  const kordesUpzisRows = useGorutKordesUpzisRows()
-  const upzisPcRows = useGorutUpzisPcRows()
-  const verificationState = useGorutPenghimpunanVerificationState()
-  const canManageValidation = canRoleProcessValidation(user?.role)
-  const munfiqCodeByName = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const item of munfiqItems) {
-      if (item.munfiqCode) {
-        map.set(`${item.nama}:${item.kecamatan}`, item.munfiqCode)
-      }
-    }
-    return map
-  }, [munfiqItems])
+  const validationStage: ValidasiWorkflowStage = stageOverride ?? (user?.role === 'admin_kordes' ? 'ranting' : 'upzis')
+  const rows = useGorutValidasiRows(validationStage)
+  const stageLabel = validationStage === 'pc' ? 'PC' : validationStage === 'upzis' ? 'UPZIS' : 'Ranting'
+  const approvalRoleLabel = validationStage === 'pc' ? 'Admin PC' : validationStage === 'upzis' ? 'Admin UPZIS' : 'Admin Ranting/Kordes'
+  const canManageValidation = validationStage === 'pc' ? user?.role === 'admin_pc' : validationStage === 'upzis' ? user?.role === 'admin_upzis' : user?.role === 'admin_kordes'
 
   const penghimpunanQueue = useMemo(() => {
-    const plpkKordes = plpkKordesRows
-      .filter((item) => !verificationState.plpkKordesVerifiedIds.includes(item.id))
-      .map((item) => ({
-        id: item.id,
-        stage: 'plpk_kordes' as const,
-        stageLabel: 'PLPK - Kordes',
-        title: item.plpkCode,
-        subtitle: item.plpkName,
-        wilayah: `${item.ranting} • ${item.upzis}`,
-        periode: item.periode,
-        aktif: item.aktif,
-        terjemput: item.terjemput,
-        nominal: item.koinTerjemput,
-      }))
-
-    const kordesUpzis = kordesUpzisRows
-      .filter((item) => !verificationState.kordesUpzisVerifiedIds.includes(item.id))
-      .map((item) => ({
-        id: item.id,
-        stage: 'kordes_upzis' as const,
-        stageLabel: 'Kordes - UPZIS',
-        title: item.ranting,
-        subtitle: item.rantingCode,
-        wilayah: item.upzis,
-        periode: item.periode,
-        aktif: item.aktif,
-        terjemput: item.terjemput,
-        nominal: item.perolehan,
-      }))
-
-    const upzisPc = upzisPcRows
-      .filter((item) => !verificationState.upzisPcVerifiedIds.includes(item.id))
-      .map((item) => ({
-        id: item.id,
-        stage: 'upzis_pc' as const,
-        stageLabel: 'UPZIS - PC',
-        title: item.upzis,
-        subtitle: item.upzisCode,
-        wilayah: item.ketuaUpzis,
-        periode: item.periode,
-        aktif: item.aktif,
-        terjemput: item.terjemput,
-        nominal: item.koinTerjemput,
-      }))
-
-    return [...plpkKordes, ...kordesUpzis, ...upzisPc]
-  }, [kordesUpzisRows, plpkKordesRows, upzisPcRows, verificationState])
+    return rows.map((item) => ({
+      id: item.id,
+      stageLabel: validationStage === 'pc' ? 'UPZIS - PC' : validationStage === 'upzis' ? 'Ranting - UPZIS' : 'PLPK - Ranting',
+      title: item.transactionCode ?? item.id,
+      subtitle: item.plpk,
+      wilayah: item.kecamatan,
+      periode: new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date(item.tanggal)),
+      aktif: 1,
+      terjemput: 1,
+      nominal: item.nominal,
+    }))
+  }, [rows, validationStage])
 
   const penghimpunanStats = useMemo(() => ({
     pending: penghimpunanQueue.length,
-    plpkKordes: penghimpunanQueue.filter((item) => item.stage === 'plpk_kordes').length,
-    kordesUpzis: penghimpunanQueue.filter((item) => item.stage === 'kordes_upzis').length,
-    upzisPc: penghimpunanQueue.filter((item) => item.stage === 'upzis_pc').length,
+    plpkKordes: penghimpunanQueue.length,
+    kordesUpzis: 0,
+    upzisPc: 0,
   }), [penghimpunanQueue])
-
-  const handleVerifyPenghimpunan = (stage: PenghimpunanStage, id: string) => {
-    if (!canManageValidation) {
-      toast({
-        variant: 'destructive',
-        title: 'Aksi tidak diizinkan',
-        description: 'Verifikasi penghimpunan hanya bisa diproses oleh Admin UPZIS, Admin PC, atau Super Admin PC.',
-      })
-      return
-    }
-
-    const nextState = {
-      ...verificationState,
-      plpkKordesVerifiedIds:
-        stage === 'plpk_kordes' && !verificationState.plpkKordesVerifiedIds.includes(id)
-          ? [...verificationState.plpkKordesVerifiedIds, id]
-          : verificationState.plpkKordesVerifiedIds,
-      kordesUpzisVerifiedIds:
-        stage === 'kordes_upzis' && !verificationState.kordesUpzisVerifiedIds.includes(id)
-          ? [...verificationState.kordesUpzisVerifiedIds, id]
-          : verificationState.kordesUpzisVerifiedIds,
-      upzisPcVerifiedIds:
-        stage === 'upzis_pc' && !verificationState.upzisPcVerifiedIds.includes(id)
-          ? [...verificationState.upzisPcVerifiedIds, id]
-          : verificationState.upzisPcVerifiedIds,
-    }
-
-    void writeGorutPenghimpunanVerificationState(nextState)
-    toast({
-      variant: 'default',
-      title: 'Verifikasi penghimpunan tersimpan',
-      description: 'Status antrean penghimpunan berhasil diperbarui.',
-    })
-  }
 
   // ---------- Filters ----------
   const [search, setSearch] = useState('')
@@ -240,18 +114,16 @@ export default function ValidasiSetoranPage() {
     const s = search.trim().toLowerCase()
     return rows.filter((r) => {
       if (s) {
-        const munfiqCode = munfiqCodeByName.get(`${r.munfiqNama}:${r.kecamatan}`) ?? ''
-        const hay = [r.id, munfiqCode, r.munfiqNama, r.kecamatan, r.plpk, r.validasi, r.catatanAdmin ?? '', r.notes ?? ''].join(' ').toLowerCase()
+        const hay = [r.id, r.transactionCode ?? '', r.munfiqNama, r.kecamatan, r.plpk, r.validasi, r.catatanAdmin ?? '', r.notes ?? ''].join(' ').toLowerCase()
         if (!hay.includes(s)) return false
       }
       if (kecamatan !== 'all' && r.kecamatan !== kecamatan) return false
-      if (isScopedOperationalRole && assignedKecamatan && r.kecamatan !== assignedKecamatan) return false
       if (plpk !== 'all' && r.plpk !== plpk) return false
       if (status !== 'all' && r.validasi !== status) return false
       if (tanggal !== 'all' && r.tanggal.slice(0, 10) !== tanggal) return false
       return true
     })
-  }, [assignedKecamatan, isScopedOperationalRole, rows, search, kecamatan, plpk, status, tanggal])
+  }, [rows, search, kecamatan, plpk, status, tanggal])
 
   // ---------- Pagination ----------
   const [currentPage, setCurrentPage] = useState(1)
@@ -269,7 +141,7 @@ export default function ValidasiSetoranPage() {
   const [selectedRow, setSelectedRow] = useState<ValidasiRow | null>(null)
 
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [confirmAction, setConfirmAction] = useState<'valid' | 'invalid'>('valid')
+  const [confirmAction, setConfirmAction] = useState<'valid' | 'return' | 'invalid'>('valid')
   const [confirmIds, setConfirmIds] = useState<string[]>([])
 
   const openDetail = (row: ValidasiRow) => {
@@ -277,12 +149,12 @@ export default function ValidasiSetoranPage() {
     setDetailOpen(true)
   }
 
-  const openConfirm = (ids: string[], action: 'valid' | 'invalid') => {
+  const openConfirm = (ids: string[], action: 'valid' | 'return' | 'invalid') => {
     if (!canManageValidation) {
       toast({
         variant: 'destructive',
         title: 'Aksi tidak diizinkan',
-        description: 'Verifikasi penghimpunan hanya bisa diproses oleh Admin UPZIS, Admin PC, atau Super Admin PC.',
+        description: `Verifikasi ${stageLabel} hanya bisa diproses oleh ${approvalRoleLabel}.`,
       })
       return
     }
@@ -297,139 +169,38 @@ export default function ValidasiSetoranPage() {
       toast({
         variant: 'destructive',
         title: 'Aksi tidak diizinkan',
-        description: 'Verifikasi penghimpunan hanya bisa diproses oleh Admin UPZIS, Admin PC, atau Super Admin PC.',
+        description: `Verifikasi ${stageLabel} hanya bisa diproses oleh ${approvalRoleLabel}.`,
       })
       return
     }
 
-    const now = new Date().toISOString()
-    const nextValidator = user?.name || 'Petugas GORUT'
-    const actionLabel = confirmAction === 'valid' ? 'Validasi berhasil' : 'Penolakan berhasil'
-    const nextCatatan =
-      confirmAction === 'valid'
-        ? 'Disetujui admin. Penghimpunan siap diproses.'
-        : 'Ditolak admin. Mohon perbaikan bukti transfer atau berkas pendukung.'
+    const workflowAction = confirmAction === 'valid' ? validationStage === 'pc' ? 'final_close' : 'approve' : confirmAction === 'return' ? 'return' : 'reject'
+    const actionLabel = confirmAction === 'valid' ? validationStage === 'pc' ? 'Final close berhasil' : `Approve ${stageLabel} berhasil` : confirmAction === 'return' ? 'Pengembalian berhasil' : 'Penolakan berhasil'
+    const notes = confirmAction === 'valid'
+      ? validationStage === 'pc' ? 'Final approval dan closing Admin PC.' : `Disetujui ${approvalRoleLabel}.`
+      : confirmAction === 'return'
+        ? validationStage === 'pc' ? 'Dikembalikan ke UPZIS untuk revisi.' : validationStage === 'upzis' ? 'Dikembalikan ke Ranting/Kordes untuk revisi.' : 'Dikembalikan ke PLPK untuk revisi.'
+        : `Ditolak ${approvalRoleLabel}.`
 
-    const nextRows = rows.map((r) => {
-        if (!confirmIds.includes(r.id)) return r
-        const nextStatus = confirmAction as SetoranKoin['validasi']
-        return {
-          ...r,
-          validasi: nextStatus,
-          validator: nextValidator,
-          catatanAdmin: nextCatatan,
-          riwayat: [
-            ...r.riwayat,
-            {
-              id: `${r.id}-admin-${now}`,
-              tanggal: now,
-              aksi: confirmAction === 'valid' ? 'Validasi disetujui' : 'Validasi ditolak',
-              oleh: nextValidator,
-              status: nextStatus === 'valid' ? 'valid' : nextStatus === 'invalid' ? 'invalid' : 'pending',
-            },
-          ],
-          riwayatAdminTimeline: [
-            ...r.riwayatAdminTimeline,
-            {
-              id: `${r.id}-tl-admin-${now}`,
-              tanggal: now,
-              label: confirmAction === 'valid' ? 'Validasi disetujui' : 'Validasi ditolak',
-              status: confirmAction === 'valid' ? 'valid' : 'invalid',
-            },
-          ],
-        }
-      })
-
-    void writeGorutValidasiRows(nextRows)
+    void Promise.all(confirmIds.map((id) => processGorutVerification({ id, action: workflowAction, stage: validationStage, notes })))
       .then(() => {
-        const currentTransactions = readGorutTransactions()
-        const syncedTransactions = [...currentTransactions]
-        const currentApprovalRows = readGorutApprovalTransactions()
-        const syncedApprovalRows = [...currentApprovalRows]
-
-        for (const updatedRow of nextRows.filter((row) => confirmIds.includes(row.id))) {
-          const matchIndex = syncedTransactions.findIndex((trx) =>
-            trx.munfiqNama === updatedRow.munfiqNama &&
-            trx.nominal === updatedRow.nominal &&
-            trx.kecamatan === updatedRow.kecamatan
-          )
-
-          if (matchIndex >= 0) {
-            syncedTransactions[matchIndex] = {
-              ...syncedTransactions[matchIndex],
-              status: updatedRow.validasi,
-              validator: updatedRow.validator,
-              metodePembayaran: toTransactionMethod(updatedRow.metode),
-            }
-          } else {
-            syncedTransactions.unshift({
-              id: `trx-from-${updatedRow.id}`,
-              kode: `TRX-${updatedRow.tanggal.slice(0, 10).replace(/-/g, '')}-${updatedRow.id.slice(-3)}`,
-              tanggal: updatedRow.tanggal,
-              munfiqNama: updatedRow.munfiqNama,
-              munfiqId: updatedRow.id,
-              nominal: updatedRow.nominal,
-              metodePembayaran: toTransactionMethod(updatedRow.metode),
-              validator: updatedRow.validator,
-              status: updatedRow.validasi,
-              kecamatan: updatedRow.kecamatan,
-            })
-          }
-
-          const matchedTransaction = matchIndex >= 0
-            ? syncedTransactions[matchIndex]
-            : syncedTransactions[0]
-          const approvalMatchIndex = syncedApprovalRows.findIndex((trx) =>
-            trx.kode === matchedTransaction?.kode ||
-            (trx.munfiqNama === updatedRow.munfiqNama && trx.nominal === updatedRow.nominal && trx.kecamatan === updatedRow.kecamatan)
-          )
-
-          if (approvalMatchIndex >= 0) {
-            const approvalRow = syncedApprovalRows[approvalMatchIndex]
-            const alreadyFinal = approvalRow.overallStatus === 'approved' || approvalRow.overallStatus === 'rejected'
-
-            if (!alreadyFinal) {
-              syncedApprovalRows[approvalMatchIndex] = {
-                ...approvalRow,
-                currentStep: 'pc',
-                overallStatus: updatedRow.validasi === 'valid' ? 'approved' : 'rejected',
-                approvalHistory: [
-                  ...approvalRow.approvalHistory,
-                  {
-                    step: approvalRow.currentStep,
-                    status: updatedRow.validasi === 'valid' ? 'approved' : 'rejected',
-                    validator: updatedRow.validator || nextValidator,
-                    validatorRole: getGorutRoleLabel(user?.role),
-                    timestamp: now,
-                    notes: updatedRow.validasi === 'valid'
-                      ? 'Disinkronkan dari verifikasi penghimpunan.'
-                      : 'Ditolak melalui verifikasi penghimpunan.',
-                  },
-                ],
-              }
-            }
-          }
-        }
-
-        void writeGorutTransactions(syncedTransactions)
-        void writeGorutApprovalTransactions(syncedApprovalRows)
         setConfirmOpen(false)
         setConfirmIds([])
         if (selectedRow && confirmIds.includes(selectedRow.id)) {
-          const nextSelectedRow = nextRows.find((row) => row.id === selectedRow.id) ?? null
-          setSelectedRow(nextSelectedRow)
+          setSelectedRow(null)
+          setDetailOpen(false)
         }
         toast({
           variant: 'default',
           title: actionLabel,
-          description: 'Keputusan validasi berhasil disimpan.',
+          description: 'Workflow transaksi berhasil diperbarui.',
         })
       })
-      .catch(() => {
+      .catch((error) => {
         toast({
           variant: 'destructive',
           title: 'Gagal menyimpan validasi',
-          description: 'Perubahan validasi belum berhasil disimpan.',
+          description: error instanceof Error ? error.message : 'Perubahan validasi belum berhasil disimpan.',
         })
       })
   }
@@ -451,8 +222,8 @@ export default function ValidasiSetoranPage() {
         ],
         tables: [{
           title: 'Daftar Verifikasi Penghimpunan',
-          columns: ['ID', 'Kode Munfiq', 'Munfiq', 'Kecamatan', 'PLPK', 'Tanggal', 'Nominal', 'Metode', 'Status', 'Validator', 'Catatan'],
-          rows: exportRows.map((row) => [row.id, munfiqCodeByName.get(`${row.munfiqNama}:${row.kecamatan}`) ?? '-', row.munfiqNama, row.kecamatan, row.plpk, formatDateShort(row.tanggal), formatRupiah(row.nominal), toMetodeLabel(row.metode), row.validasi, row.validator ?? '-', row.catatanAdmin ?? '-']),
+          columns: ['ID', 'Kode Transaksi', 'Munfiq', 'Kecamatan', 'PLPK', 'Tanggal', 'Nominal', 'Metode', 'Status', 'Validator', 'Catatan'],
+          rows: exportRows.map((row) => [row.id, row.transactionCode ?? '-', row.munfiqNama, row.kecamatan, row.plpk, formatDateShort(row.tanggal), formatRupiah(row.nominal), toMetodeLabel(row.metode), row.validasi, row.validator ?? '-', row.catatanAdmin ?? '-']),
         }],
         notes: ['Gunakan Print to PDF pada dialog browser untuk menyimpan file.'],
       })
@@ -463,10 +234,10 @@ export default function ValidasiSetoranPage() {
       exportRowsToSpreadsheet({
         fileName: `verifikasi-penghimpunan-${new Date().toISOString().slice(0, 10)}.xlsx`,
         rows: [
-          ['ID Penghimpunan', 'Kode Munfiq', 'Nama Munfiq', 'Kecamatan', 'PLPK', 'Tanggal', 'Nominal', 'Metode', 'Status', 'Validator', 'Catatan Admin'],
+          ['ID Penghimpunan', 'Kode Transaksi', 'Nama Munfiq', 'Kecamatan', 'PLPK', 'Tanggal', 'Nominal', 'Metode', 'Status', 'Validator', 'Catatan Admin'],
           ...exportRows.map((row) => [
             row.id,
-            munfiqCodeByName.get(`${row.munfiqNama}:${row.kecamatan}`) ?? '',
+            row.transactionCode ?? '',
             row.munfiqNama,
             row.kecamatan,
             row.plpk,
@@ -480,13 +251,12 @@ export default function ValidasiSetoranPage() {
         ],
         format: 'xlsx',
       })
+      toast({
+        variant: 'default',
+        title: 'Export Excel siap',
+        description: `File Excel berhasil dibuat untuk ${count} data validasi.`,
+      })
     }
-
-    toast({
-      variant: 'default',
-      title: `Export ${format === 'pdf' ? 'PDF' : 'Excel'} siap`,
-      description: `${format === 'pdf' ? 'Laporan siap dicetak' : 'File Excel berhasil dibuat'} untuk ${count} data validasi.`,
-    })
   }
 
   // ---------- Stats ----------
@@ -518,7 +288,7 @@ export default function ValidasiSetoranPage() {
     const meta = statusBadgeFor(r.validasi)
     return {
       id: r.id,
-      munfiqNama: <div><span className="font-medium">{r.munfiqNama}</span><p className="text-xs text-muted-foreground">{munfiqCodeByName.get(`${r.munfiqNama}:${r.kecamatan}`) ?? '-'}</p></div>,
+      munfiqNama: <div><span className="font-medium">{r.munfiqNama}</span><p className="text-xs text-muted-foreground">{r.transactionCode ?? r.id}</p></div>,
       kecamatan: r.kecamatan,
       plpk: r.plpk,
       tanggal: <span className="text-sm">{formatDateShort(r.tanggal)}</span>,
@@ -543,30 +313,46 @@ export default function ValidasiSetoranPage() {
           <Button
             size="sm"
             variant="outline"
+            className="min-h-[40px]"
             onClick={(e) => {
               e.stopPropagation()
               openDetail(r)
             }}
           >
-            Detail
+            Lihat Detail
           </Button>
 
           <Button
             size="sm"
             variant={r.validasi === 'pending' ? 'default' : 'secondary'}
             disabled={r.validasi !== 'pending'}
+            className="min-h-[40px]"
             onClick={(e) => {
               e.stopPropagation()
               openConfirm([r.id], 'valid')
             }}
           >
-            Validasi
+            {validationStage === 'pc' ? 'Final Close' : 'Approve'}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={r.validasi !== 'pending'}
+            className="min-h-[40px]"
+            onClick={(e) => {
+              e.stopPropagation()
+              openConfirm([r.id], 'return')
+            }}
+          >
+            Kembalikan
           </Button>
 
           <Button
             size="sm"
             variant={r.validasi === 'pending' ? 'destructive' : 'secondary'}
             disabled={r.validasi !== 'pending'}
+            className="min-h-[40px]"
             onClick={(e) => {
               e.stopPropagation()
               openConfirm([r.id], 'invalid')
@@ -594,89 +380,94 @@ export default function ValidasiSetoranPage() {
   }
 
   return (
-    <DashboardPage>
-      <DashboardPageHeader
-        title="GORUT / Verifikasi Penghimpunan"
-        description="Penghimpunan masuk → diverifikasi admin → disetujui / ditolak."
-        action={null}
-        className="mb-4"
+    <div className="min-w-0 space-y-8" role="main" aria-label={validationStage === 'pc' ? 'Approval PC' : 'Validasi Setoran'}>
+      <PageSectionHeader
+        title={<h1 className="text-2xl font-bold tracking-tight">{validationStage === 'pc' ? 'Final Approval' : `Validasi ${stageLabel}`}</h1>}
+        description={`Pusat verifikasi untuk transaksi yang menunggu pemeriksaan ${approvalRoleLabel}.`}
       />
 
-      <StatsGrid>
-        <StatCard
-          icon={Clock}
-          label="Pending Verifikasi"
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Pending Verifikasi"
           value={stats.pending}
-          description="Menunggu verifikasi admin"
-          trend="review"
-          trendDirection="down"
+          description="Menunggu diperiksa"
+          icon={Clock}
+          iconTone="bg-amber-500/10 text-amber-600"
+          accent="from-amber-500/15 via-amber-500/5 to-transparent"
         />
-        <StatCard
-          icon={CheckCircle2}
-          label="Sudah Diverifikasi"
+        <MetricCard
+          title="Telah Disetujui"
           value={stats.valid}
-          description="Penghimpunan disetujui admin"
-          trend="up"
-          trendDirection="up"
+          description="Sudah divalidasi"
+          icon={CheckCircle2}
+          iconTone="bg-emerald-500/10 text-emerald-600"
+          accent="from-emerald-500/15 via-emerald-500/5 to-transparent"
         />
-        <StatCard
-          icon={XCircle}
-          label="Ditolak"
+        <MetricCard
+          title="Ditolak"
           value={stats.invalid}
-          description="Penghimpunan ditolak admin"
-          trend="-"
-          trendDirection="stable"
+          description="Dikembalikan atau batal"
+          icon={XCircle}
+          iconTone="bg-red-500/10 text-red-600"
+          accent="from-red-500/15 via-red-500/5 to-transparent"
         />
-        <StatCard
-          icon={Coins}
-          label="Total Nominal Pending"
+        <MetricCard
+          title="Nominal Pending"
           value={formatRupiah(stats.totalNominalPending)}
-          description="Akumulasi nominal menunggu"
-          trend="pending"
-          trendDirection="up"
+          description="Nilai antrean verifikasi"
+          icon={Coins}
+          iconTone="bg-violet-500/10 text-violet-600"
+          accent="from-violet-500/15 via-violet-500/5 to-transparent"
         />
-      </StatsGrid>
+      </div>
 
-      <ContentCard title="Verifikasi Penghimpunan" description="Pusat verifikasi bertingkat untuk alur PLPK, Kordes, UPZIS, dan PC.">
-        <div className="space-y-4">
+      <Card className="border border-border shadow-sm">
+        <CardContent className="space-y-4 p-5">
           <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-xl border border-border/50 bg-card p-4"><p className="text-xs text-muted-foreground">Pending Semua Tahap</p><p className="mt-2 text-2xl font-bold text-emerald-600">{penghimpunanStats.pending}</p></div>
-            <div className="rounded-xl border border-border/50 bg-card p-4"><p className="text-xs text-muted-foreground">PLPK - Kordes</p><p className="mt-2 text-2xl font-bold">{penghimpunanStats.plpkKordes}</p></div>
-            <div className="rounded-xl border border-border/50 bg-card p-4"><p className="text-xs text-muted-foreground">Kordes - UPZIS</p><p className="mt-2 text-2xl font-bold">{penghimpunanStats.kordesUpzis}</p></div>
-            <div className="rounded-xl border border-border/50 bg-card p-4"><p className="text-xs text-muted-foreground">UPZIS - PC</p><p className="mt-2 text-2xl font-bold">{penghimpunanStats.upzisPc}</p></div>
+            <div className="rounded-xl border border-border bg-muted/20 p-4"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Antrean Saat Ini</p><p className="mt-2 text-2xl font-bold text-emerald-600">{penghimpunanStats.pending}</p></div>
+            <div className="rounded-xl border border-border bg-muted/20 p-4"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">PLPK - Ranting</p><p className="mt-2 text-2xl font-bold">{validationStage === 'ranting' ? penghimpunanStats.plpkKordes : 0}</p></div>
+            <div className="rounded-xl border border-border bg-muted/20 p-4"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ranting - UPZIS</p><p className="mt-2 text-2xl font-bold">{validationStage === 'upzis' ? penghimpunanStats.pending : penghimpunanStats.kordesUpzis}</p></div>
+            <div className="rounded-xl border border-border bg-muted/20 p-4"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">UPZIS - PC</p><p className="mt-2 text-2xl font-bold">{validationStage === 'pc' ? penghimpunanStats.pending : penghimpunanStats.upzisPc}</p></div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-border/50">
+          <div className="overflow-x-auto rounded-xl border border-border">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Tahap</TableHead>
-                  <TableHead>Objek</TableHead>
-                  <TableHead>Wilayah</TableHead>
-                  <TableHead>Periode</TableHead>
-                  <TableHead className="text-right">Aktif</TableHead>
-                  <TableHead className="text-right">Terjemput</TableHead>
-                  <TableHead className="text-right">Nominal</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="font-semibold whitespace-nowrap">Tahap</TableHead>
+                  <TableHead className="font-semibold whitespace-nowrap">Objek</TableHead>
+                  <TableHead className="font-semibold whitespace-nowrap">Wilayah</TableHead>
+                  <TableHead className="font-semibold whitespace-nowrap">Periode</TableHead>
+                  <TableHead className="text-right font-semibold whitespace-nowrap">Aktif</TableHead>
+                  <TableHead className="text-right font-semibold whitespace-nowrap">Terjemput</TableHead>
+                  <TableHead className="text-right font-semibold whitespace-nowrap">Nominal</TableHead>
+                  <TableHead className="text-right font-semibold whitespace-nowrap">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {penghimpunanQueue.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">Tidak ada antrean verifikasi penghimpunan.</TableCell>
+                    <TableCell colSpan={8} className="p-6">
+                      <EmptyState
+                        inline
+                        icon={CheckCircle2}
+                        title={`Belum ada antrean verifikasi ${stageLabel}`}
+                        description={`Antrean kosong. Transaksi akan muncul setelah tahap sebelumnya mengirim setoran ke ${approvalRoleLabel}.`}
+                      />
+                    </TableCell>
                   </TableRow>
                 ) : (
                   penghimpunanQueue.map((item) => (
-                    <TableRow key={`${item.stage}-${item.id}`}>
-                      <TableCell><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600">{item.stageLabel}</span></TableCell>
-                      <TableCell><div><p className="font-medium">{item.title}</p><p className="text-xs text-muted-foreground">{item.subtitle}</p></div></TableCell>
-                      <TableCell>{item.wilayah}</TableCell>
-                      <TableCell>{item.periode}</TableCell>
+                    <TableRow key={item.id} className="hover:bg-muted/50">
+                      <TableCell><span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 border border-emerald-500/20">{item.stageLabel}</span></TableCell>
+                      <TableCell className="whitespace-nowrap"><div><p className="font-medium">{item.title}</p><p className="text-xs text-muted-foreground">{item.subtitle}</p></div></TableCell>
+                      <TableCell className="whitespace-nowrap">{item.wilayah}</TableCell>
+                      <TableCell className="whitespace-nowrap">{item.periode}</TableCell>
                       <TableCell className="text-right">{item.aktif.toLocaleString('id-ID')}</TableCell>
                       <TableCell className="text-right">{item.terjemput.toLocaleString('id-ID')}</TableCell>
-                      <TableCell className="text-right font-medium">{formatRupiah(item.nominal)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button size="sm" onClick={() => handleVerifyPenghimpunan(item.stage, item.id)} disabled={!canManageValidation}>Verifikasi</Button>
+                      <TableCell className="text-right font-medium whitespace-nowrap">{formatRupiah(item.nominal)}</TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button size="sm" onClick={() => openConfirm([item.id], 'valid')} disabled={!canManageValidation} className="min-h-[44px]">{validationStage === 'pc' ? 'Final Close' : 'Approve'}</Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -684,124 +475,130 @@ export default function ValidasiSetoranPage() {
               </TableBody>
             </Table>
           </div>
-        </div>
-      </ContentCard>
+        </CardContent>
+      </Card>
 
-      <ContentCard title="Filter & Pencarian" description="Pilih kriteria untuk mempersempit daftar penghimpunan masuk.">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex-1 space-y-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  setCurrentPage(1)
-                }}
-                placeholder="Cari ID, kode munfiq, nama munfiq, PLPK, catatan admin..."
-                className="pl-9"
-              />
+      <Card className="border border-border shadow-sm">
+        <CardContent className="space-y-4 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Search className="size-4 text-muted-foreground" />
+                Pencarian & Filter
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Pencarian</p>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value)
+                        setCurrentPage(1)
+                      }}
+                      placeholder="Cari..."
+                      className="min-h-[44px] pl-9 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Kecamatan</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={kecamatan}
+                    onChange={(e) => {
+                      setKecamatan(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                  >
+                    {kecamatans.map((v) => (
+                      <option key={v} value={v}>
+                        {v === 'all' ? 'Semua kecamatan' : v}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">PLPK</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={plpk}
+                    onChange={(e) => {
+                      setPlpk(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                  >
+                    {plpkList.map((v) => (
+                      <option key={v} value={v}>
+                        {v === 'all' ? 'Semua PLPK' : v}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Status</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={status}
+                    onChange={(e) => {
+                      setStatus(e.target.value as ValidasiFilter)
+                      setCurrentPage(1)
+                    }}
+                  >
+                    <option value="all">Semua status</option>
+                    <option value="pending">Pending</option>
+                    <option value="valid">Valid</option>
+                    <option value="invalid">Ditolak</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Tanggal</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={tanggal}
+                    onChange={(e) => {
+                      setTanggal(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                  >
+                    {tanggalList.map((d) => (
+                      <option key={d} value={d}>
+                        {d === 'all' ? 'Semua tanggal' : d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter Kecamatan</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={isScopedOperationalRole && assignedKecamatan ? assignedKecamatan : kecamatan}
-                  onChange={(e) => {
-                    if (isScopedOperationalRole) return
-                    setKecamatan(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                >
-                  {(isScopedOperationalRole && assignedKecamatan ? [assignedKecamatan] : kecamatans).map((v) => (
-                    <option key={v} value={v}>
-                      {v === 'all' ? 'Semua kecamatan' : v}
-                    </option>
-                  ))}
-                </select>
+            <div className="flex flex-col gap-3 lg:items-end">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={resetFilters}>
+                  Reset
+                </Button>
+                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => exportData(undefined, 'pdf')}>
+                  <FileText className="mr-2 size-4" />
+                  PDF
+                </Button>
+                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => exportData(undefined, 'excel')}>
+                  <FileSpreadsheet className="mr-2 size-4" />
+                  Excel
+                </Button>
               </div>
-
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter PLPK</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={plpk}
-                  onChange={(e) => {
-                    setPlpk(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                >
-                  {plpkList.map((v) => (
-                    <option key={v} value={v}>
-                      {v === 'all' ? 'Semua PLPK' : v}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter Status</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={status}
-                  onChange={(e) => {
-                    setStatus(e.target.value as ValidasiFilter)
-                    setCurrentPage(1)
-                  }}
-                >
-                  <option value="all">Semua status</option>
-                  <option value="pending">Pending</option>
-                  <option value="valid">Valid</option>
-                  <option value="invalid">Ditolak</option>
-                </select>
-              </div>
-
-              <div className="space-y-2 lg:col-span-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter Tanggal</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={tanggal}
-                  onChange={(e) => {
-                    setTanggal(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                >
-                  {tanggalList.map((d) => (
-                    <option key={d} value={d}>
-                      {d === 'all' ? 'Semua tanggal' : d}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <p className="text-xs text-muted-foreground">Setoran menunggu verifikasi.</p>
+              {!canManageValidation ? <p className="text-xs text-muted-foreground">Aksi validasi hanya aktif untuk {approvalRoleLabel}.</p> : null}
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="flex flex-col gap-2 sm:items-end">
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={resetFilters}>
-                Reset
-              </Button>
-
-              <Button variant="default" size="sm" onClick={() => exportData(undefined, 'pdf')}>
-                <FileText className="size-4 mr-2" />
-                Export PDF
-              </Button>
-
-              <Button variant="outline" size="sm" onClick={() => exportData(undefined, 'excel')}>
-                <FileSpreadsheet className="size-4 mr-2" />
-                Export Excel
-              </Button>
-            </div>
-
-            <p className="text-xs text-muted-foreground">Gunakan checkbox untuk bulk approve/reject.</p>
-            {!canManageValidation ? <p className="text-xs text-muted-foreground">Aksi validasi hanya aktif untuk Admin UPZIS, Admin PC, atau Super Admin PC.</p> : null}
-          </div>
-        </div>
-      </ContentCard>
-
-      <Card className="border-0 bg-transparent shadow-none">
+      <Card className="border border-border shadow-sm">
         <CardContent className="p-0">
           <EnhancedTable
             columns={columns.map((c) => ({ id: c.id, label: c.label }))}
@@ -812,9 +609,12 @@ export default function ValidasiSetoranPage() {
                 ? 'Tidak ada hasil untuk filter yang dipilih.'
                 : 'Belum ada data validasi.'
             }
+            emptyTitle={`Belum ada data validasi ${stageLabel}`}
+            emptyDescription="Jika PLPK sudah submit setoran, transaksi akan muncul di sini sesuai tahap workflow."
+            emptyAction={<Button variant="outline" size="sm" onClick={resetFilters} className="min-h-[44px]">Reset Filter</Button>}
             bulkActions={[
               {
-                label: 'Bulk Validasi',
+                label: validationStage === 'pc' ? 'Bulk Final Close' : 'Bulk Approve',
                 icon: CheckCircle2,
                 variant: 'default',
                 show: (count) => canManageValidation && count > 0,
@@ -827,6 +627,13 @@ export default function ValidasiSetoranPage() {
                 show: (count) => canManageValidation && count > 0,
                 onClick: (ids) => openConfirm(ids, 'invalid'),
               },
+              {
+                label: 'Bulk Kembalikan',
+                icon: AlertTriangle,
+                variant: 'secondary',
+                show: (count) => canManageValidation && count > 0,
+                onClick: (ids) => openConfirm(ids, 'return'),
+              },
             ]}
             onRowClick={(rowId) => {
               const r = rows.find((x) => x.id === rowId)
@@ -834,7 +641,7 @@ export default function ValidasiSetoranPage() {
             }}
           />
 
-          <div className="mt-4">
+          <div className="border-t border-border p-4">
             <TablePagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -873,7 +680,7 @@ export default function ValidasiSetoranPage() {
                     </FormRow>
                     <FormRow columns={2}>
                       <InfoItem label="Nama Munfiq" value={selectedRow.munfiqNama} />
-                      <InfoItem label="Kode Munfiq" value={<span className="font-mono">{munfiqCodeByName.get(`${selectedRow.munfiqNama}:${selectedRow.kecamatan}`) ?? '-'}</span>} />
+                      <InfoItem label="Kode Transaksi" value={<span className="font-mono">{selectedRow.transactionCode ?? selectedRow.id}</span>} />
                     </FormRow>
                     <FormRow columns={2}>
                       <InfoItem label="Kecamatan" value={selectedRow.kecamatan} />
@@ -999,9 +806,10 @@ export default function ValidasiSetoranPage() {
           </EnhancedSheetBody>
 
           <EnhancedSheetFooter>
-            <div className="flex gap-2 w-full justify-end">
+            <div className="flex gap-3 w-full justify-end">
               <Button
                 variant="outline"
+                className="min-h-[44px]"
                 onClick={() => {
                   setDetailOpen(false)
                   setSelectedRow(null)
@@ -1013,20 +821,29 @@ export default function ValidasiSetoranPage() {
               {selectedRow && selectedRow.validasi === 'pending' && canManageValidation && (
                 <>
                   <Button
-                    variant="default"
-                    onClick={() => openConfirm([selectedRow.id], 'valid')}
-                  >
-                    Validasi
-                  </Button>
-                  <Button
                     variant="destructive"
+                    className="min-h-[44px]"
                     onClick={() => openConfirm([selectedRow.id], 'invalid')}
                   >
                     Tolak
                   </Button>
+                  <Button
+                    variant="secondary"
+                    className="min-h-[44px]"
+                    onClick={() => openConfirm([selectedRow.id], 'return')}
+                  >
+                    Kembalikan
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="min-h-[44px]"
+                    onClick={() => openConfirm([selectedRow.id], 'valid')}
+                  >
+                    {validationStage === 'pc' ? 'Final Close' : 'Approve'}
+                  </Button>
                 </>
               )}
-              {selectedRow && selectedRow.validasi === 'pending' && !canManageValidation ? <p className="mr-auto text-sm text-muted-foreground">Hanya Admin UPZIS, Admin PC, atau Super Admin PC yang dapat memproses validasi.</p> : null}
+              {selectedRow && selectedRow.validasi === 'pending' && !canManageValidation ? <p className="mr-auto text-sm text-muted-foreground">Hanya {approvalRoleLabel} yang dapat memproses validasi {stageLabel}.</p> : null}
             </div>
           </EnhancedSheetFooter>
         </SheetContent>
@@ -1036,11 +853,13 @@ export default function ValidasiSetoranPage() {
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Konfirmasi Aksi Validasi</DialogTitle>
+            <DialogTitle>{confirmAction === 'valid' ? validationStage === 'pc' ? 'Konfirmasi Final Close' : 'Konfirmasi Approve' : confirmAction === 'return' ? 'Konfirmasi Kembalikan' : 'Konfirmasi Tolak'}</DialogTitle>
             <DialogDescription>
               {confirmAction === 'valid'
-                ? 'Setujui verifikasi penghimpunan untuk data terpilih.'
-                : 'Tolak penghimpunan untuk data terpilih.'}
+                ? validationStage === 'pc' ? 'Transaksi akan menjadi Selesai dan masuk laporan FINAL_APPROVED.' : 'Transaksi akan maju ke tahap verifikasi berikutnya.'
+                : confirmAction === 'return'
+                  ? validationStage === 'pc' ? 'Kembalikan penghimpunan ke UPZIS untuk revisi.' : validationStage === 'upzis' ? 'Kembalikan penghimpunan ke Ranting/Kordes untuk revisi.' : 'Kembalikan penghimpunan ke PLPK untuk revisi.'
+                  : 'Tolak penghimpunan untuk data terpilih.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -1048,7 +867,7 @@ export default function ValidasiSetoranPage() {
             <div className="rounded-lg border border-border/50 bg-card p-4">
               <p className="text-sm font-medium">Jumlah data: {confirmIds.length}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Perubahan akan disimpan ke histori validasi GORUT.
+                Perubahan akan disimpan ke histori validasi GORUT tanpa mengubah data AppRecord.
               </p>
               <div className="mt-3 space-y-2">
                 {confirmIds.slice(0, 4).map((id) => (
@@ -1065,19 +884,19 @@ export default function ValidasiSetoranPage() {
             </div>
           </ResponsiveDialogContent>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+          <DialogFooter className="border-t border-border pt-4">
+            <Button variant="outline" className="min-h-[44px]" onClick={() => setConfirmOpen(false)}>
               Batal
             </Button>
             <Button
-              variant={confirmAction === 'valid' ? 'default' : 'destructive'}
+              className={cn("min-h-[44px]", confirmAction === 'valid' ? 'bg-emerald-600 hover:bg-emerald-700' : confirmAction === 'return' ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80' : 'bg-red-600 hover:bg-red-700')}
               onClick={applyValidation}
             >
-              {confirmAction === 'valid' ? 'Ya, Validasi' : 'Ya, Tolak'}
+              {confirmAction === 'valid' ? validationStage === 'pc' ? 'Ya, Final Close' : 'Ya, Approve' : confirmAction === 'return' ? 'Ya, Kembalikan' : 'Ya, Tolak'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardPage>
+    </div>
   )
 }
