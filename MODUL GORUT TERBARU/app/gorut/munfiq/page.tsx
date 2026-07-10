@@ -622,23 +622,23 @@ export default function MunfiqPage() {
   const currentDetailTone = selectedMunfiq ? getEngagementTone(selectedMunfiq) : null
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-8" role="main" aria-label="Halaman data munfiq">
       <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleImportFile} />
 
       <PageSectionHeader
         title={<h1 className="text-2xl font-bold tracking-tight">Data Munfiq</h1>}
-        description="Kelola data donatur dan riwayat kontribusi"
+        description="Kelola data donatur, kontribusi, dan penugasan wilayah."
         action={(
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" className="min-h-9 gap-2" aria-label="Import data munfiq dari Excel atau CSV" onClick={handleImportClick}>
+            <Button variant="outline" size="sm" className="min-h-[44px] gap-2" aria-label="Import data munfiq dari Excel atau CSV" onClick={handleImportClick}>
               <Upload className="size-4" />
-              Import Excel / CSV
+              Import
             </Button>
-            <Button variant="outline" size="sm" className="min-h-9 gap-2" aria-label="Export data munfiq" onClick={handleExport}>
+            <Button variant="outline" size="sm" className="min-h-[44px] gap-2" aria-label="Export data munfiq" onClick={handleExport}>
               <Download className="size-4" />
               Export
             </Button>
-            <Button size="sm" className="min-h-9 gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => setCreateOpen(true)}>
+            <Button size="sm" className="min-h-[44px] gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => setCreateOpen(true)}>
               <Plus className="size-4" />
               Tambah Munfiq
             </Button>
@@ -646,26 +646,19 @@ export default function MunfiqPage() {
         )}
       />
 
-      <Card className="overflow-hidden border border-border/60 bg-card/90 shadow-sm">
+      <Card className="overflow-hidden border border-border shadow-sm">
         <CardContent className="p-0">
           <button
             type="button"
             onClick={() => setHeroOpen((value) => !value)}
             aria-expanded={heroOpen}
-            aria-label={heroOpen ? 'Tutup ringkasan operasional munfiq' : 'Buka ringkasan operasional munfiq'}
+            aria-label={heroOpen ? 'Tutup ringkasan' : 'Buka ringkasan'}
             className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="rounded-full border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-emerald-600">
-                  Munfiq Operations Hub
-                </Badge>
-                <Badge variant="outline" className="rounded-full border-border/60 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                  Akses Cepat & Monitoring
-                </Badge>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {heroOpen ? 'Tutup ringkasan operasional munfiq.' : 'Buka ringkasan operasional munfiq.'}
+              <p className="text-sm font-semibold text-foreground">Ringkasan Operasional</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Insight cepat tentang basis munfiq dan kontribusi.
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -675,38 +668,37 @@ export default function MunfiqPage() {
           </button>
 
           {heroOpen ? (
-            <div className="relative overflow-hidden border-t border-border/40 bg-gradient-to-br from-emerald-500/14 via-transparent to-blue-500/8 px-5 py-5">
-              <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-emerald-500/10 blur-3xl" />
-              <div className="relative grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
+            <div className="border-t border-border/40 px-5 py-5">
+              <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-xl font-semibold tracking-tight">Kelola donatur, kontribusi, dan penugasan wilayah dari satu layar.</h2>
-                    <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                      Halaman ini dirapikan untuk kebutuhan operasional harian: cari cepat, lihat status, buka detail, edit data, dan identifikasi munfiq yang perlu follow-up.
+                    <h2 className="text-lg font-semibold tracking-tight">Kelola donatur dari satu layar.</h2>
+                    <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
+                      Cari, lihat status, edit data, dan identifikasi munfiq yang perlu follow-up.
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-border/40 bg-background/60 p-4">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground/75">Top Kontributor</p>
+                    <div className="rounded-2xl border border-border bg-card p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Top Kontributor</p>
                       <p className="mt-2 text-sm font-semibold">{stats.topMunfiq?.nama ?? '-'}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{stats.topMunfiq ? formatRupiah(stats.topMunfiq.totalSetoran) : '-'}</p>
                     </div>
-                    <div className="rounded-2xl border border-border/40 bg-background/60 p-4">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground/75">Belum Setor</p>
+                    <div className="rounded-2xl border border-border bg-card p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Belum Setor</p>
                       <p className="mt-2 text-sm font-semibold">{stats.belumSetor} munfiq</p>
                       <p className="mt-1 text-xs text-muted-foreground">Perlu program reaktivasi</p>
                     </div>
-                    <div className="rounded-2xl border border-border/40 bg-background/60 p-4">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground/75">Registrasi Terpantau</p>
+                    <div className="rounded-2xl border border-border bg-card p-4">
+                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Registrasi Terpantau</p>
                       <p className="mt-2 text-sm font-semibold">{registeredThisCycle} data</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Sumber pertumbuhan basis munfiq</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Pertumbuhan basis munfiq</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  <ActionCard icon={Coins} iconTone="success" title="Buka Riwayat Transaksi" description="Lacak kontribusi dan aktivitas setoran per munfiq." href="/gorut/transaksi" />
-                  <ActionCard icon={ShieldCheck} iconTone="info" title="Lihat Ringkasan Basis Munfiq" description="Pantau kesehatan data dan distribusi penugasan lapangan." href="/gorut/rekap-bulanan" />
+                  <ActionCard icon={Coins} iconTone="success" title="Riwayat Transaksi" description="Lacak kontribusi dan aktivitas setoran." href="/gorut/transaksi" />
+                  <ActionCard icon={ShieldCheck} iconTone="info" title="Ringkasan Basis Munfiq" description="Distribusi penugasan dan kesehatan data." href="/gorut/rekap-bulanan" />
                 </div>
               </div>
             </div>
@@ -714,7 +706,7 @@ export default function MunfiqPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Filter cepat munfiq">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Filter cepat munfiq">
         {[
           { id: 'semua', label: 'Semua' },
           { id: 'aktif', label: 'Aktif' },
@@ -731,7 +723,7 @@ export default function MunfiqPage() {
             }}
             aria-pressed={quickFilter === tab.id}
             className={cn(
-              'inline-flex items-center rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200',
+              'inline-flex min-h-[40px] items-center rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200',
               quickFilter === tab.id
                 ? 'bg-emerald-500/15 text-emerald-600 ring-1 ring-emerald-500/30 dark:text-emerald-400'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -750,12 +742,12 @@ export default function MunfiqPage() {
         <MetricCard title="Nonaktif" value={stats.nonaktifMunfiq.toLocaleString('id-ID')} icon={History} accent="from-red-500/15 via-red-500/5 to-transparent" iconTone="bg-red-500/10 text-red-600" />
       </div>
 
-      <Card className="border border-border/60 bg-card/90 shadow-sm">
-        <CardHeader className="border-b border-border/50 pb-4">
+      <Card className="border border-border shadow-sm">
+        <CardHeader className="pb-4">
           <div className="space-y-4">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr_1.1fr_1fr_1.4fr_auto]">
-              <div className="rounded-2xl border border-border/50 bg-background/60 p-3">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">Pilih Kecamatan</p>
+              <div className="rounded-2xl border border-border bg-muted/20 p-3">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">Kecamatan</p>
                 <Select value={isScopedOperationalRole && assignedKecamatan ? assignedKecamatan : kecamatanFilter} onValueChange={(value) => {
                   if (isScopedOperationalRole) return
                   setKecamatanFilter(value)
@@ -774,8 +766,8 @@ export default function MunfiqPage() {
                 </Select>
               </div>
 
-              <div className="rounded-2xl border border-border/50 bg-background/60 p-3">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">Pilih PLPK</p>
+              <div className="rounded-2xl border border-border bg-muted/20 p-3">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">PLPK</p>
                 <Select value={plpkFilter} onValueChange={(value) => { setPlpkFilter(value); setCurrentPage(1) }}>
                   <SelectTrigger className="h-10 border-0 bg-transparent px-0 shadow-none focus:ring-0">
                     <SelectValue placeholder="PLPK" />
@@ -786,7 +778,7 @@ export default function MunfiqPage() {
                 </Select>
               </div>
 
-              <div className="rounded-2xl border border-border/50 bg-background/60 p-3">
+              <div className="rounded-2xl border border-border bg-muted/20 p-3">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">Status</p>
                 <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value as MunfiqStatus); setCurrentPage(1) }}>
                   <SelectTrigger className="h-10 border-0 bg-transparent px-0 shadow-none focus:ring-0">
@@ -800,7 +792,7 @@ export default function MunfiqPage() {
                 </Select>
               </div>
 
-              <div className="rounded-2xl border border-border/50 bg-background/60 p-3">
+              <div className="rounded-2xl border border-border bg-muted/20 p-3">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">Cari Munfiq</p>
                 <div className="relative">
                   <Search className="absolute left-0 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -823,7 +815,7 @@ export default function MunfiqPage() {
             </div>
 
             {advancedFilterOpen ? (
-              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border/50 bg-background/40 p-3">
+              <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-muted/20 p-3.5">
                 <div className="flex items-center gap-2">
                   <Filter className="size-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Urutkan</span>
@@ -902,10 +894,10 @@ export default function MunfiqPage() {
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="icon" onClick={() => handleViewDetail(munfiq)} className="size-8 text-emerald-600" aria-label={`Lihat detail ${munfiq.nama}`}>
+                          <Button variant="outline" size="icon" onClick={() => handleViewDetail(munfiq)} className="size-9 text-emerald-600" aria-label={`Lihat detail ${munfiq.nama}`}>
                             <Eye className="size-4" />
                           </Button>
-                          <Button variant="outline" size="icon" onClick={() => handleEditMunfiq(munfiq)} className="size-8 text-blue-600" aria-label={`Edit data ${munfiq.nama}`}>
+                          <Button variant="outline" size="icon" onClick={() => handleEditMunfiq(munfiq)} className="size-9 text-blue-600" aria-label={`Edit data ${munfiq.nama}`}>
                             <Pencil className="size-4" />
                           </Button>
                         </div>
@@ -920,12 +912,12 @@ export default function MunfiqPage() {
           <div className="grid gap-3 p-4 md:hidden">
             {paginatedData.map((munfiq) => {
               return (
-                <div key={munfiq.id} className="rounded-2xl border border-border/40 bg-background/50 p-4 shadow-sm">
+                <div key={munfiq.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">{munfiq.munfiqCode ?? munfiq.id}</p>
                       <p className="truncate text-sm font-semibold">{munfiq.nama}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{getGenderShortLabel(munfiq.jenisKelamin)} • {munfiq.plpkCode ?? '---'} - {munfiq.plpk}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{getGenderShortLabel(munfiq.jenisKelamin)} · {munfiq.plpkCode ?? '---'} · {munfiq.plpk}</p>
                     </div>
                     <div className="flex flex-col gap-1">
                       <Badge
@@ -954,10 +946,10 @@ export default function MunfiqPage() {
                     </div>
                   </div>
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" size="sm" className="min-h-9 flex-1" aria-label={`Edit data ${munfiq.nama}`} onClick={() => handleEditMunfiq(munfiq)}>
+                    <Button variant="outline" size="sm" className="min-h-[44px] flex-1" aria-label={`Edit data ${munfiq.nama}`} onClick={() => handleEditMunfiq(munfiq)}>
                       Edit
                     </Button>
-                    <Button size="sm" className="min-h-9 flex-1 bg-emerald-600 hover:bg-emerald-700" aria-label={`Lihat detail ${munfiq.nama}`} onClick={() => handleViewDetail(munfiq)}>
+                    <Button size="sm" className="min-h-[44px] flex-1 bg-emerald-600 hover:bg-emerald-700" aria-label={`Lihat detail ${munfiq.nama}`} onClick={() => handleViewDetail(munfiq)}>
                       Detail
                     </Button>
                   </div>
@@ -967,18 +959,24 @@ export default function MunfiqPage() {
           </div>
 
           {filteredData.length === 0 && (
-            <EmptyState
-              icon={Users}
-              title="Belum ada data Munfiq"
-              description={hasActiveFilters ? 'Tidak ada munfiq yang cocok dengan filter saat ini. Reset filter untuk melihat seluruh data dalam scope role aktif.' : 'Data Munfiq diambil dari database GORUT dan akan tampil sesuai scope role aktif.'}
-              action={<Button variant="outline" size="sm" className="min-h-9" onClick={hasActiveFilters ? handleResetFilters : () => setCreateOpen(true)}>{hasActiveFilters ? 'Reset Filter' : 'Tambah Munfiq'}</Button>}
-            />
+            <div className="p-6">
+              <EmptyState
+                icon={Users}
+                title="Belum ada data munfiq"
+                description={hasActiveFilters ? 'Tidak ada munfiq yang cocok dengan filter saat ini. Coba reset filter atau ubah kata kunci pencarian.' : 'Belum ada munfiq terdaftar dalam scope role Anda.'}
+                action={
+                  <Button variant="outline" size="sm" className="min-h-[44px]" onClick={hasActiveFilters ? handleResetFilters : () => setCreateOpen(true)}>
+                    {hasActiveFilters ? 'Reset Filter' : 'Tambah Munfiq'}
+                  </Button>
+                }
+              />
+            </div>
           )}
 
           {filteredData.length > 0 && (
-            <div className="flex flex-col gap-3 border-t border-border/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Rows per page</span>
+                <span>Baris per halaman</span>
                 <Select value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setCurrentPage(1) }}>
                   <SelectTrigger className="h-9 w-[84px]">
                     <SelectValue />

@@ -6,13 +6,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EnhancedTable, TablePagination } from '@/components/gorut/enhanced-table'
-import {
-  DashboardPage,
-  DashboardPageHeader,
-  StatsGrid,
-  StatCard,
-  ContentCard,
-} from '@/components/gorut/dashboard-layouts'
 import { StatusIndicator } from '@/components/gorut/status-components'
 import {
   EnhancedSheetBody,
@@ -497,135 +490,165 @@ export default function SetoranKoinPage() {
 
   // ---------- UI ----------
   return (
-    <DashboardPage>
+    <div className="min-w-0 space-y-8" role="main" aria-label="Validasi Setoran">
       <PageSectionHeader
-        title={<h1 className="text-2xl font-bold tracking-tight">GORUT / Penghimpunan</h1>}
-        description="Kelola penghimpunan infaq, verifikasi, penolakan, serta ekspor data secara operasional."
-        className="mb-4"
+        title={<h1 className="text-2xl font-bold tracking-tight">Validasi Setoran Koin</h1>}
+        description="Verifikasi setoran yang masuk dari PLPK."
       />
 
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-        <MetricCard title="Total Penghimpunan Hari Ini" value={stats.totalSetoranHariIni} icon={Coins} description="Jumlah penghimpunan yang masuk hari ini" accent="from-emerald-500/15 via-emerald-500/5 to-transparent" iconTone="bg-emerald-500/10 text-emerald-600" />
-        <MetricCard title="Pending Validasi" value={stats.pending} icon={Clock} description="Menunggu verifikasi dari tim" accent="from-amber-500/15 via-amber-500/5 to-transparent" iconTone="bg-amber-500/10 text-amber-600" />
-        <MetricCard title="Total Nominal" value={formatRupiah(stats.totalNominal)} icon={FileText} description="Akumulasi nominal penghimpunan" accent="from-blue-500/15 via-blue-500/5 to-transparent" iconTone="bg-blue-500/10 text-blue-600" />
-        <MetricCard title="Penghimpunan Bulan Ini" value={stats.bulanIni} icon={MapPin} description="Penghimpunan pada bulan berjalan" accent="from-violet-500/15 via-violet-500/5 to-transparent" iconTone="bg-violet-500/10 text-violet-600" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Setoran Hari Ini"
+          value={stats.totalSetoranHariIni}
+          description="Jumlah laporan masuk hari ini"
+          icon={Coins}
+          iconTone="bg-emerald-500/10 text-emerald-600"
+          accent="from-emerald-500/15 via-emerald-500/5 to-transparent"
+        />
+        <MetricCard
+          title="Menunggu Validasi"
+          value={stats.pending}
+          description="Total laporan pending"
+          icon={Clock}
+          iconTone="bg-amber-500/10 text-amber-600"
+          accent="from-amber-500/15 via-amber-500/5 to-transparent"
+        />
+        <MetricCard
+          title="Total Valid (Bulan Ini)"
+          value={formatRupiah(stats.totalNominal)}
+          description="Total nominal validasi bulan ini"
+          icon={CheckCircle2}
+          iconTone="bg-blue-500/10 text-blue-600"
+          accent="from-blue-500/15 via-blue-500/5 to-transparent"
+        />
+        <MetricCard
+          title="Rekap Kinerja Validasi"
+          value={stats.bulanIni}
+          description="Laporan divalidasi bulan ini"
+          icon={MapPin}
+          iconTone="bg-violet-500/10 text-violet-600"
+          accent="from-violet-500/15 via-violet-500/5 to-transparent"
+        />
       </div>
 
+      <Card className="border border-border shadow-sm">
+        <CardContent className="space-y-4 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Search className="size-4 text-muted-foreground" />
+                Pencarian & Filter
+              </div>
 
-      <ContentCard title="Cari & Filter" description="Pilih kriteria untuk mempersempit daftar penghimpunan.">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex-1 space-y-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  handleFiltersChanged()
-                }}
-                placeholder="Cari ID, kode munfiq, nama munfiq, PLPK, validator..."
-                className="pl-9"
-                aria-label="Cari setoran"
-              />
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Pencarian</p>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Cari..."
+                      className="min-h-[44px] pl-9 text-sm"
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value)
+                        handleFiltersChanged()
+                      }}
+                    />
+                  </div>
+                </div>
 
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Kecamatan</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={kecamatan}
+                    onChange={(e) => {
+                      setKecamatan(e.target.value)
+                      handleFiltersChanged()
+                    }}
+                  >
+                    {kecamatans.map((v) => (
+                      <option key={v} value={v}>
+                        {v === 'all' ? 'Semua kecamatan' : v}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">PLPK</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={plpk}
+                    onChange={(e) => {
+                      setPlpk(e.target.value)
+                      handleFiltersChanged()
+                    }}
+                  >
+                    {plpkList.map((v) => (
+                      <option key={v} value={v}>
+                        {v === 'all' ? 'Semua PLPK' : v}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Status</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={status}
+                    onChange={(e) => {
+                      setStatus(e.target.value as ValidasiFilter)
+                      handleFiltersChanged()
+                    }}
+                  >
+                    <option value="all">Semua status</option>
+                    <option value="pending">Pending</option>
+                    <option value="valid">Validasi</option>
+                    <option value="invalid">Ditolak</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Tanggal</p>
+                  <select
+                    className="min-h-[44px] w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    value={tanggal}
+                    onChange={(e) => {
+                      setTanggal(e.target.value)
+                      handleFiltersChanged()
+                    }}
+                  >
+                    {tanggalList.map((d) => (
+                      <option key={d} value={d}>
+                        {d === 'all' ? 'Semua tanggal' : d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter Kecamatan</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={kecamatan}
-                  onChange={(e) => {
-                    setKecamatan(e.target.value)
-                    handleFiltersChanged()
-                  }}
-                >
-                  {kecamatans.map((v) => (
-                    <option key={v} value={v}>
-                      {v === 'all' ? 'Semua kecamatan' : v}
-                    </option>
-                  ))}
-                </select>
+            <div className="flex flex-col gap-3 lg:items-end">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={resetFilters}>
+                  Reset
+                </Button>
+                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => exportData(undefined, 'pdf')}>
+                  <FileText className="mr-2 size-4" />
+                  PDF
+                </Button>
+                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => exportData(undefined, 'excel')}>
+                  <FileSpreadsheet className="mr-2 size-4" />
+                  Excel
+                </Button>
               </div>
-
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter PLPK</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={plpk}
-                  onChange={(e) => {
-                    setPlpk(e.target.value)
-                    handleFiltersChanged()
-                  }}
-                >
-                  {plpkList.map((v) => (
-                    <option key={v} value={v}>
-                      {v === 'all' ? 'Semua PLPK' : v}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter Status</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={status}
-                  onChange={(e) => {
-                    setStatus(e.target.value as ValidasiFilter)
-                    handleFiltersChanged()
-                  }}
-                >
-                  <option value="all">Semua status</option>
-                  <option value="pending">Pending</option>
-                  <option value="valid">Validasi</option>
-                  <option value="invalid">Ditolak</option>
-                </select>
-              </div>
-
-              <div className="space-y-2 lg:col-span-2">
-                <p className="text-xs font-medium text-muted-foreground">Filter Tanggal</p>
-                <select
-                  className="h-10 w-full rounded-md border border-border/50 bg-background px-3 text-sm"
-                  value={tanggal}
-                  onChange={(e) => {
-                    setTanggal(e.target.value)
-                    handleFiltersChanged()
-                  }}
-                >
-                  {tanggalList.map((d) => (
-                    <option key={d} value={d}>
-                      {d === 'all' ? 'Semua tanggal' : d}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <p className="hidden text-xs text-muted-foreground lg:block">Pilih baris tabel untuk bulk action.</p>
             </div>
           </div>
-
-          <div className="flex flex-col gap-2 sm:items-end">
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={resetFilters}>
-                Reset
-              </Button>
-
-              <Button variant="default" size="sm" onClick={() => exportData(undefined, 'pdf')}>
-                <FileText className="size-4 mr-2" />
-                Export PDF
-              </Button>
-
-              <Button variant="outline" size="sm" onClick={() => exportData(undefined, 'excel')}>
-                <FileSpreadsheet className="size-4 mr-2" />
-                Export Excel
-              </Button>
-            </div>
-
-            <p className="text-xs text-muted-foreground">Tip: gunakan checkbox untuk bulk action.</p>
-          </div>
-        </div>
-      </ContentCard>
+        </CardContent>
+      </Card>
 
       <Card className="border-0 bg-transparent shadow-none">
         <CardContent className="p-0">
@@ -893,50 +916,27 @@ export default function SetoranKoinPage() {
 
       {/* Confirmation modal */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-md">
+        <ResponsiveDialogContent>
           <DialogHeader>
-            <DialogTitle>Konfirmasi Tindakan</DialogTitle>
+            <DialogTitle>Konfirmasi Validasi</DialogTitle>
             <DialogDescription>
-              {confirmAction === 'valid'
-                ? 'Setujui verifikasi penghimpunan untuk data terpilih ini.'
-                : 'Tolak penghimpunan untuk data terpilih ini.'}
+              Anda akan {confirmAction === 'valid' ? 'menyetujui' : 'menolak'} {confirmIds.length} data.
+              Lanjutkan?
             </DialogDescription>
           </DialogHeader>
-
-          <ResponsiveDialogContent>
-            <div className="rounded-lg border border-border/50 bg-card p-4">
-              <p className="text-sm font-medium">Jumlah data: {confirmIds.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Perubahan akan diterapkan ke state lokal dan langsung muncul di tabel.
-              </p>
-              <div className="mt-3 space-y-2">
-                {confirmIds.slice(0, 4).map((id) => (
-                  <div key={id} className="text-xs text-muted-foreground">
-                    • {id}
-                  </div>
-                ))}
-                {confirmIds.length > 4 && (
-                  <div className="text-xs text-muted-foreground">
-                    • ... dan {confirmIds.length - 4} lainnya
-                  </div>
-                )}
-              </div>
-            </div>
-          </ResponsiveDialogContent>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Batal
             </Button>
             <Button
-              variant={confirmAction === 'valid' ? 'default' : 'destructive'}
+              className={confirmAction === 'valid' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}
               onClick={applyValidation}
             >
-              {confirmAction === 'valid' ? 'Ya, Validasi' : 'Ya, Tolak'}
+              Ya, Lanjutkan
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </ResponsiveDialogContent>
       </Dialog>
-    </DashboardPage>
+    </div>
   )
 }
