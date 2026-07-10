@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useAssignedGorutKecamatan } from '@/lib/gorut/operational-scope'
+import { useGorutDashboard } from '@/lib/gorut/dashboard-control'
 import {
   StatsCards,
   RevenueCard,
@@ -15,25 +16,36 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { InsightPanel, CriticalInsightBanner } from '@/components/gorut/insight-cards'
-import { kecamatanData, notificationData, recentActivities, statistikGorut } from '@/lib/gorut/data'
-import { useGorutApprovalTransactions } from '@/lib/gorut/approval-control'
 import { getGorutWorkflowStatusMetaFromApproval, getGorutWorkflowStepLabel } from '@/lib/gorut/workflow'
 import { hasRecentDashboardEntry } from '@/lib/gorut/dashboard-transition'
-import { generateDashboardInsights, type DashboardInsight } from '@/lib/gorut/insights'
+import { generateDashboardInsights } from '@/lib/gorut/insights'
 import { cn } from '@/lib/utils'
-import { ArrowRight, BellRing, FileCheck2, ReceiptText, ShieldAlert, WalletCards } from 'lucide-react'
-import { EmptyState } from '@/components/ui/ds-patterns'
-
-const initialInsights = generateDashboardInsights(statistikGorut, kecamatanData)
+import {
+  ArrowRight,
+  BellRing,
+  FileCheck2,
+  ReceiptText,
+  ShieldAlert,
+  WalletCards,
+} from 'lucide-react'
+import {
+  EmptyState,
+  ActionCard,
+  PageSectionHeader,
+  IconBox,
+} from '@/components/ui/ds-patterns'
 
 export function DashboardHome() {
   const { user } = useAuth()
   const { assignedKecamatan, isScopedUpzis } = useAssignedGorutKecamatan()
-  const approvalRows = useGorutApprovalTransactions()
+  const dashboard = useGorutDashboard()
   const [pinnedInsightIds, setPinnedInsightIds] = useState<string[]>([])
   const [dismissedCriticalInsight, setDismissedCriticalInsight] = useState(false)
-  const [insights] = useState<DashboardInsight[]>(initialInsights)
   const [showIntro, setShowIntro] = useState(false)
+  const insights = useMemo(
+    () => generateDashboardInsights(dashboard.stats, dashboard.kecamatanData),
+    [dashboard.kecamatanData, dashboard.stats]
+  )
 
   useEffect(() => {
     if (!hasRecentDashboardEntry()) return
@@ -56,13 +68,13 @@ export function DashboardHome() {
   )
 
   const priorityApprovals = useMemo(
-    () => approvalRows.filter((item) => item.overallStatus === 'pending').slice(0, 3),
-    [approvalRows]
+    () => dashboard.priorityApprovals.filter((item) => item.overallStatus === 'pending').slice(0, 3),
+    [dashboard.priorityApprovals]
   )
 
   const priorityNotifications = useMemo(
-    () => notificationData.filter((item) => item.priority === 'critical' || item.priority === 'warning').slice(0, 3),
-    []
+    () => dashboard.priorityNotifications.filter((item) => item.priority === 'critical' || item.priority === 'warning').slice(0, 3),
+    [dashboard.priorityNotifications]
   )
 
   const scopedPriorityApprovals = useMemo(
@@ -75,102 +87,71 @@ export function DashboardHome() {
     [assignedKecamatan, isScopedUpzis, priorityNotifications]
   )
 
-  const executiveDeck = [
-    {
-      title: 'Approval Mendesak',
-        value: scopedPriorityApprovals.length,
-      description: 'Butuh keputusan berjenjang hari ini',
-      href: '/gorut/approval',
-      icon: FileCheck2,
-      accent: 'text-emerald-600',
-      bg: 'bg-emerald-500/10',
-      ring: 'group-hover:shadow-emerald-500/20',
-      badge: 'border-emerald-500/20 text-emerald-600',
-    },
-    {
-      title: 'Validasi Pending',
-      value: statistikGorut.kotakPending,
-      description: 'Perlu dibersihkan sebelum closing',
-      href: '/gorut/validasi',
-      icon: ReceiptText,
-      accent: 'text-amber-600',
-      bg: 'bg-amber-500/10',
-      ring: 'group-hover:shadow-amber-500/20',
-      badge: 'border-amber-500/20 text-amber-600',
-    },
-    {
-      title: 'Laporan Bulanan',
-      value: 'Ready',
-      description: 'Akses rekap dan closing bulanan',
-      href: '/gorut/rekap-bulanan',
-      icon: WalletCards,
-      accent: 'text-blue-600',
-      bg: 'bg-blue-500/10',
-      ring: 'group-hover:shadow-blue-500/20',
-      badge: 'border-blue-500/20 text-blue-600',
-    },
-    {
-      title: 'Executive Alerts',
-        value: scopedPriorityNotifications.length,
-      description: 'Alert operasional prioritas tinggi',
-      href: '/gorut/notifikasi',
-      icon: ShieldAlert,
-      accent: 'text-violet-600',
-      bg: 'bg-violet-500/10',
-      ring: 'group-hover:shadow-violet-500/20',
-      badge: 'border-violet-500/20 text-violet-600',
-    },
-  ]
-
-  const visibleCommandDeck = useMemo(() => {
-    if (user?.role === 'admin_upzis') {
-      return executiveDeck.filter((item) => item.href !== '/gorut/rekap-bulanan')
+  const visibleQuickActions = useMemo(() => {
+    const actions = [
+      {
+        title: 'Approval Mendesak',
+        description: `${scopedPriorityApprovals.length} item menunggu keputusan`,
+        href: '/gorut/approval',
+        icon: FileCheck2,
+        iconTone: 'success' as const,
+      },
+      {
+        title: 'Validasi Pending',
+        description: `${dashboard.stats.kotakPending} item perlu ditindaklanjuti`,
+        href: '/gorut/validasi',
+        icon: ReceiptText,
+        iconTone: 'warning' as const,
+      },
+      {
+        title: 'Rekap Bulanan',
+        description: 'Laporan dan closing bulanan',
+        href: '/gorut/rekap-bulanan',
+        icon: WalletCards,
+        iconTone: 'info' as const,
+      },
+      {
+        title: 'Notifikasi',
+        description: `${scopedPriorityNotifications.length} peringatan aktif`,
+        href: '/gorut/notifikasi',
+        icon: ShieldAlert,
+        iconTone: 'muted' as const,
+      },
+    ]
+    if (user?.role === 'admin_upzis' || user?.role === 'admin_kordes') {
+      return actions.filter((item) => item.href !== '/gorut/rekap-bulanan')
     }
+    return actions
+  }, [user?.role, scopedPriorityApprovals.length, dashboard.stats.kotakPending, scopedPriorityNotifications.length])
 
-    if (user?.role === 'admin_kordes') {
-      return executiveDeck.filter((item) => item.href !== '/gorut/rekap-bulanan')
-    }
-
-    return executiveDeck
-  }, [executiveDeck, user?.role])
-
-  const commandDeckTitle = user?.role === 'super_admin_pc' || user?.role === 'admin_pc' ? 'Executive Command Deck' : 'Command Deck'
-  const commandDeckDescription =
-    user?.role === 'super_admin_pc' || user?.role === 'admin_pc'
-      ? 'Akses tercepat ke area yang paling sering dipakai super admin.'
-      : 'Shortcut cepat ke area operasional yang paling sering dipakai.'
-  const commandDeckBadge =
-    user?.role === 'super_admin_pc' || user?.role === 'admin_pc' ? 'Super Admin Priority' : assignedKecamatan || 'Operasional Kecamatan'
+  const scopeLabel = assignedKecamatan
+    ? `${user?.role ?? 'Operasional'} · ${assignedKecamatan}`
+    : 'Super Admin'
 
   const introClassName = () =>
     cn(
       'transition-all ease-out',
       showIntro ? 'translate-y-5 opacity-0 blur-[8px]' : 'translate-y-0 opacity-100 blur-0',
-      `duration-[720ms]`
+      'duration-[720ms]'
     )
 
   return (
-    <div className="min-w-0 space-y-6">
+    <div className="min-w-0 space-y-10" role="main" aria-label="Dashboard GORUT">
       <div className={introClassName()} style={{ transitionDelay: showIntro ? '40ms' : '0ms' }}>
-        <div className="flex flex-col gap-3 rounded-2xl border border-border/40 bg-card/60 px-5 py-4 shadow-sm backdrop-blur-sm">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="rounded-full border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-emerald-600">
-              Executive Overview
-            </Badge>
-            <Badge variant="outline" className="rounded-full border-border/60 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              {assignedKecamatan ? `${user?.role ?? 'operasional'} - ${assignedKecamatan}` : 'Super Admin Console'}
-            </Badge>
-          </div>
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard GORUT</h1>
-            <p className="text-sm text-muted-foreground">
-              Selamat datang di sistem operasional Gerakan Koin Infak NU Garut
-            </p>
-          </div>
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {scopeLabel}
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Dashboard GORUT
+          </h1>
+          <p className="max-w-lg text-sm text-muted-foreground">
+            Pantau operasional Gerakan Koin Infak NU Garut dari satu tempat.
+          </p>
         </div>
       </div>
 
-      {!dismissedCriticalInsight && (
+      {!dismissedCriticalInsight && criticalInsights.length > 0 && (
         <div className={introClassName()} style={{ transitionDelay: showIntro ? '110ms' : '0ms' }}>
           <CriticalInsightBanner
             insights={criticalInsights}
@@ -179,148 +160,148 @@ export function DashboardHome() {
         </div>
       )}
 
-      <div className={introClassName()} style={{ transitionDelay: showIntro ? '170ms' : '0ms' }}>
-        <div className="rounded-lg border border-border/50 bg-muted/20 p-4">
+      {insights.length > 0 && (
+        <div className={introClassName()} style={{ transitionDelay: showIntro ? '170ms' : '0ms' }}>
           <InsightPanel
             insights={insights}
             onPin={handlePinInsight}
             pinnedIds={pinnedInsightIds}
           />
         </div>
-      </div>
+      )}
 
       <div className={introClassName()} style={{ transitionDelay: showIntro ? '240ms' : '0ms' }}>
-        <RevenueCard stats={statistikGorut} />
-      </div>
-      <div className={introClassName()} style={{ transitionDelay: showIntro ? '290ms' : '0ms' }}>
-        <StatsCards stats={statistikGorut} />
+        <RevenueCard stats={dashboard.stats} />
       </div>
 
-      <div className={introClassName()} style={{ transitionDelay: showIntro ? '340ms' : '0ms' }}>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold">{commandDeckTitle}</h2>
-              <p className="text-sm text-muted-foreground">{commandDeckDescription}</p>
-            </div>
-            <Badge variant="outline" className="hidden rounded-full border-border/60 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground md:flex">
-              {commandDeckBadge}
-            </Badge>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {visibleCommandDeck.map((item) => (
-              <Link
-                key={item.title}
+      <div className={introClassName()} style={{ transitionDelay: showIntro ? '290ms' : '0ms' }}>
+        <StatsCards stats={dashboard.stats} />
+      </div>
+
+      <section
+        className={introClassName()}
+        style={{ transitionDelay: showIntro ? '340ms' : '0ms' }}
+        aria-label="Aksi cepat"
+      >
+        <div className="space-y-5">
+          <PageSectionHeader
+            title="Aksi Cepat"
+            description="Pintasan ke tugas operasional utama."
+          />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {visibleQuickActions.map((item) => (
+              <ActionCard
+                key={item.href}
+                icon={item.icon}
+                title={item.title}
+                description={item.description}
                 href={item.href}
-                className={cn(
-                  'group relative overflow-hidden rounded-2xl border border-border/40 bg-card/90 p-4 shadow-sm transition-all duration-300 hover:border-white/10 hover:bg-card hover:shadow-[0_18px_40px_rgba(0,0,0,0.16)] hover:-translate-y-1',
-                  item.ring
-                )}
-              >
-                <div className={cn('absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-[0.08]', item.bg)} />
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                <div className="flex items-start justify-between gap-3">
-                  <div className={cn('relative flex size-11 items-center justify-center rounded-xl border border-white/5 transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl', item.bg)}>
-                    <item.icon className={cn('size-5', item.accent)} />
-                  </div>
-                  <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100" />
-                </div>
-                <div className="mt-4 space-y-1">
-                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground/75">{item.title}</p>
-                  <p className="text-2xl font-semibold tracking-tight text-foreground">{item.value}</p>
-                  <p className="text-xs leading-relaxed text-muted-foreground">{item.description}</p>
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3 text-[11px] text-muted-foreground">
-                  <Badge variant="outline" className={cn('rounded-full px-2 py-0.5 text-[10px]', item.badge)}>
-                    Priority
-                  </Badge>
-                  <span className="font-medium text-foreground/80">Open</span>
-                </div>
-              </Link>
+                iconTone={item.iconTone}
+              />
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
       <div className={introClassName()} style={{ transitionDelay: showIntro ? '410ms' : '0ms' }}>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="min-w-0 space-y-6 lg:col-span-2">
-            <KecamatanChart data={kecamatanData} />
-            <RecentActivity activities={recentActivities} />
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="min-w-0 space-y-8 lg:col-span-2">
+            <KecamatanChart data={dashboard.kecamatanData} />
+            <RecentActivity activities={dashboard.recentActivities} />
           </div>
+
           <div className="min-w-0 space-y-6">
-            <Card className="group border border-border/40 bg-card/90 shadow-sm transition-all duration-300 backdrop-blur-sm hover:border-white/10 hover:shadow-[0_18px_40px_rgba(0,0,0,0.16)]">
-              <CardHeader className="border-b border-border/40 pb-3">
+            <Card className="border-border shadow-sm" aria-label="Antrian approval prioritas">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                      <FileCheck2 className="size-4 text-emerald-600" />
-                      Approval Priority Queue
-                    </CardTitle>
-                    <p className="mt-1 text-xs text-muted-foreground">Antrian approval yang paling perlu atensi cepat.</p>
+                  <div className="flex items-center gap-3">
+                    <IconBox icon={FileCheck2} size="sm" tone="success" />
+                    <div>
+                      <CardTitle className="text-sm font-semibold">
+                        Antrian Approval
+                      </CardTitle>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Perlu atensi segera
+                      </p>
+                    </div>
                   </div>
-                  <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600">
-                  {scopedPriorityApprovals.length} prioritas
-                  </Badge>
+                  {scopedPriorityApprovals.length > 0 && (
+                    <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-emerald-600">
+                      {scopedPriorityApprovals.length}
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 pt-4">
+              <CardContent className="space-y-3 pt-0">
                 {scopedPriorityApprovals.length === 0 && (
                   <EmptyState
                     variant="inline"
-                    title="Tidak ada approval pending"
-                    message="Semua approval sudah diproses atau belum ada yang masuk."
+                    title="Semua approval sudah diproses"
+                    message="Tidak ada item yang menunggu."
                   />
                 )}
                 {scopedPriorityApprovals.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-border/40 bg-background/40 p-3 transition-all duration-300 hover:border-emerald-500/20 hover:bg-background/60 hover:shadow-[0_12px_30px_rgba(16,185,129,0.08)]">
+                  <div key={item.id} className="rounded-xl border border-border bg-card p-3.5 transition-colors hover:bg-muted/30">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">{item.kode}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{item.munfiqNama} • {item.kecamatan}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {item.munfiqNama} · {item.kecamatan}
+                        </p>
                       </div>
-                      <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px] uppercase">
+                      <Badge variant="secondary" className="shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase">
                         {getGorutWorkflowStepLabel(item.currentStep)}
                       </Badge>
                     </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="mt-2.5 flex items-center justify-between text-xs text-muted-foreground">
                       <span>{getGorutWorkflowStatusMetaFromApproval(item).label}</span>
-                      <span className="font-medium text-foreground">Rp {(item.nominal).toLocaleString('id-ID')}</span>
+                      <span className="font-medium text-foreground">
+                        Rp {(item.nominal).toLocaleString('id-ID')}
+                      </span>
                     </div>
                   </div>
                 ))}
-                <Button asChild variant="ghost" size="sm" className="w-full justify-between rounded-xl border border-border/40 bg-background/40 text-xs hover:bg-muted/40">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 w-full min-h-[44px] justify-between rounded-xl text-xs"
+                  aria-label="Buka seluruh approval"
+                >
                   <Link href="/gorut/approval">
-                    Buka seluruh approval
+                    Lihat semua approval
                     <ArrowRight className="size-3.5" />
                   </Link>
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="group border border-border/40 bg-card/90 shadow-sm transition-all duration-300 backdrop-blur-sm hover:border-white/10 hover:shadow-[0_18px_40px_rgba(0,0,0,0.16)]">
-              <CardHeader className="border-b border-border/40 pb-3">
+            <Card className="border-border shadow-sm" aria-label="Notifikasi penting">
+              <CardHeader className="pb-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                      <ShieldAlert className="size-4 text-amber-600" />
-                      Executive Watchlist
-                    </CardTitle>
-                    <p className="mt-1 text-xs text-muted-foreground">Alert dan notifikasi penting yang sebaiknya dibaca lebih dulu.</p>
+                  <div className="flex items-center gap-3">
+                    <IconBox icon={BellRing} size="sm" tone="warning" />
+                    <div>
+                      <CardTitle className="text-sm font-semibold">
+                        Peringatan
+                      </CardTitle>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Perhatian yang diperlukan
+                      </p>
+                    </div>
                   </div>
-                  <BellRing className="size-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3 pt-4">
+              <CardContent className="space-y-3 pt-0">
                 {scopedPriorityNotifications.length === 0 && (
                   <EmptyState
                     variant="inline"
-                    title="Tidak ada alert prioritas"
-                    message="Sistem berjalan normal. Tidak ada peringatan kritis saat ini."
+                    title="Tidak ada peringatan"
+                    message="Semua berjalan normal."
                   />
                 )}
                 {scopedPriorityNotifications.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-border/40 bg-background/40 p-3 transition-all duration-300 hover:border-amber-500/20 hover:bg-background/60 hover:shadow-[0_12px_30px_rgba(245,158,11,0.08)]">
+                  <div key={item.id} className="rounded-xl border border-border bg-card p-3.5 transition-colors hover:bg-muted/30">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold leading-snug">{item.title}</p>
@@ -329,7 +310,7 @@ export function DashboardHome() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          'rounded-full px-2 py-0.5 text-[10px] uppercase',
+                          'shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase',
                           item.priority === 'critical' ? 'border-red-500/20 text-red-600' : 'border-amber-500/20 text-amber-600'
                         )}
                       >
@@ -338,16 +319,22 @@ export function DashboardHome() {
                     </div>
                   </div>
                 ))}
-                <Button asChild variant="ghost" size="sm" className="w-full justify-between rounded-xl border border-border/40 bg-background/40 text-xs hover:bg-muted/40">
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="mt-1 w-full min-h-[44px] justify-between rounded-xl text-xs"
+                  aria-label="Buka pusat notifikasi"
+                >
                   <Link href="/gorut/notifikasi">
-                    Buka pusat notifikasi
+                    Lihat semua notifikasi
                     <ArrowRight className="size-3.5" />
                   </Link>
                 </Button>
               </CardContent>
             </Card>
 
-            <PendingValidations count={scopedPriorityApprovals.length} />
+            <PendingValidations count={dashboard.stats.kotakPending} />
           </div>
         </div>
       </div>
