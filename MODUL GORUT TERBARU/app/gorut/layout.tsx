@@ -66,10 +66,10 @@ export default function GorutLayout({
                 {user ? <ShieldAlert className="h-8 w-8" /> : <AlertCircle className="h-8 w-8" />}
               </div>
               <div className="space-y-2">
-                <CardTitle className="text-2xl">Akses GORUT Sementara Khusus Super Admin</CardTitle>
+                <CardTitle className="text-2xl">Akses GORUT Belum Tersedia</CardTitle>
                 <CardDescription className="mx-auto max-w-2xl text-sm leading-relaxed">
-                  Modul GORUT saat ini masih difokuskan untuk penyelesaian tampilan dan kontrol <span className="font-medium text-foreground">super admin</span>, <span className="font-medium text-foreground">admin PC</span>, <span className="font-medium text-foreground">admin UPZIS</span>, dan <span className="font-medium text-foreground">admin Kordes</span> dengan scope menu bertahap.
-                  {user ? ` Role ${roleDisplayNames[user.role]} belum dibuka ke area ini untuk sementara.` : ' Silakan login menggunakan akun super admin, admin PC, admin UPZIS, atau admin Kordes untuk melanjutkan.'}
+                  Modul GORUT saat ini tersedia untuk <span className="font-medium text-foreground">super admin</span>, <span className="font-medium text-foreground">admin PC</span>, <span className="font-medium text-foreground">admin UPZIS</span>, dan <span className="font-medium text-foreground">admin Kordes</span> sesuai scope operasional.
+                  {user ? ` Role ${roleDisplayNames[user.role]} belum memiliki akses ke area ini.` : ' Silakan login menggunakan akun yang memiliki akses GORUT untuk melanjutkan.'}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -80,7 +80,7 @@ export default function GorutLayout({
                   Status Sementara
                 </div>
                 <p>
-                  Scope menu untuk tiap role masih dibuka bertahap sesuai kebutuhan kerja operasional masing-masing.
+                  Menu yang tampil mengikuti peran dan wilayah kerja masing-masing akun.
                 </p>
               </div>
 
@@ -129,7 +129,7 @@ export default function GorutLayout({
         <main
           className={cn(
             'relative z-10 min-w-0 flex-1',
-            isWelcomePage ? 'p-0' : 'p-6',
+            isWelcomePage ? 'p-0' : 'px-4 py-5 sm:px-6 sm:py-6',
             isDashboardPage && 'overflow-x-hidden'
           )}
         >

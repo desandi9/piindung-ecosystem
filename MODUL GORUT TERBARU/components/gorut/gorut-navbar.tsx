@@ -72,7 +72,7 @@ export function GorutNavbar({
         {/* Mobile Menu Toggle */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="icon" className="size-9">
+            <Button variant="ghost" size="icon" className="size-10" aria-label="Buka navigasi GORUT">
               <Menu className="size-5" />
             </Button>
           </SheetTrigger>
@@ -90,20 +90,20 @@ export function GorutNavbar({
                       className="object-contain p-1"
                     />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-base font-bold text-emerald-600">GORUT</span>
-                    <span className="text-[10px] text-muted-foreground">Koin Infak NU Garut</span>
-                  </div>
+               <div className="flex flex-col">
+                 <span className="text-base font-bold text-emerald-600">GORUT</span>
+                 <span className="text-[10px] text-muted-foreground">Operasional Koin Infak</span>
+               </div>
                 </div>
               </div>
-              <nav className="flex-1 space-y-1 p-4">
+              <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Navigasi GORUT mobile">
                 {mobileNavItems.map(({ href, title }) => (
                   <Link
                     key={href}
                     href={href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                       'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       isGorutPathActive(pathname, href)
                         ? 'bg-emerald-500/10 text-emerald-600'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -117,9 +117,15 @@ export function GorutNavbar({
           </SheetContent>
         </Sheet>
 
-        {/* Page Title / Breadcrumb */}
+        <p className="max-w-[140px] truncate text-sm font-semibold tracking-tight lg:hidden" aria-label={`Halaman saat ini: ${currentPage}`}>
+          {currentPage}
+        </p>
+
         <div className="hidden lg:block">
-          <h1 className="text-lg font-semibold tracking-tight">{currentPage}</h1>
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">GORUT</p>
+            <p className="text-lg font-semibold leading-none tracking-tight">{currentPage}</p>
+          </div>
         </div>
       </div>
 
@@ -129,7 +135,8 @@ export function GorutNavbar({
         <div className="relative hidden md:block">
           <button
             onClick={() => setSearchOpen(true)}
-            className="w-full group relative transition-all"
+            className="group relative w-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label="Cari menu dan data di GORUT"
           >
             <div className="relative flex items-center cursor-pointer">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-foreground" />
@@ -147,8 +154,9 @@ export function GorutNavbar({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="size-9 md:hidden text-muted-foreground hover:text-foreground"
+          className="size-10 md:hidden text-muted-foreground hover:text-foreground"
           onClick={() => setSearchOpen(true)}
+          aria-label="Cari di GORUT"
         >
           <Search className="size-5" />
         </Button>
@@ -157,12 +165,12 @@ export function GorutNavbar({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="size-9 text-muted-foreground hover:text-foreground" 
+          className="size-10 text-muted-foreground hover:text-foreground" 
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         >
           <Sun className="size-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute size-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">Ubah tema tampilan</span>
         </Button>
 
         <NotificationDropdown />
@@ -170,7 +178,7 @@ export function GorutNavbar({
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2 pl-2 pr-3 hover:bg-muted">
+            <Button variant="ghost" className="min-h-[44px] gap-2 pl-2 pr-3 hover:bg-muted" aria-label="Buka menu akun">
               <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-sm">
                 <span className="text-sm font-semibold">{resolvedUserName.charAt(0)}</span>
               </div>

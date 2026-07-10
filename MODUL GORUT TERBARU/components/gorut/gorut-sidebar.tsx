@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
@@ -44,24 +44,27 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
 
   const pendingValidasiCount = validasiRows.filter((item) => item.validasi === 'pending').length
 
-  const navGroups = getGorutNavGroupsForRole(user?.role).map((group) => ({
-    ...group,
-    items: group.items.map((item) => {
-      if (item.title === 'Penghimpunan') {
-        return { ...item, badge: pendingPenghimpunanCount || undefined }
-      }
+  const navGroups = useMemo(
+    () => getGorutNavGroupsForRole(user?.role).map((group) => ({
+      ...group,
+      items: group.items.map((item) => {
+        if (item.title === 'Input & Setoran') {
+          return { ...item, badge: pendingPenghimpunanCount || undefined }
+        }
 
-      if (item.title === 'Verifikasi Penghimpunan' || item.title === 'Verifikasi') {
-        return { ...item, badge: pendingValidasiCount || undefined }
-      }
+        if (item.title === 'Validasi Setoran') {
+          return { ...item, badge: pendingValidasiCount || undefined }
+        }
 
-      if (item.title === 'Rekapitulasi') {
-        return { ...item, badge: upzisPcRows.filter((row) => !verificationState.upzisPcVerifiedIds.includes(row.id)).length || undefined }
-      }
+        if (item.title === 'Approval Akhir') {
+          return { ...item, badge: upzisPcRows.filter((row) => !verificationState.upzisPcVerifiedIds.includes(row.id)).length || undefined }
+        }
 
-      return item
-    }),
-  }))
+        return item
+      }),
+    })),
+    [pendingPenghimpunanCount, pendingValidasiCount, user?.role, verificationState.upzisPcVerifiedIds]
+  )
 
   const handleCollapse = (value: boolean) => {
     if (value !== collapsed) {
@@ -106,13 +109,12 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
            collapsed ? 'w-[72px]' : 'w-[280px]'
           )}
         >
-        {/* Header with Logo */}
         <div className={cn(
           'flex h-20 items-center justify-between gap-2 border-b border-border/50 px-3 py-3',
           !collapsed && 'px-4'
         )}>
           {!collapsed ? (
-            <Link href="/gorut" className="group flex min-w-0 flex-1 items-center gap-3">
+            <Link href="/gorut" className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" aria-label="Buka beranda GORUT">
               <div className="relative flex size-12 items-center justify-center overflow-hidden rounded-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
                 <Image
                   src="/gorut-logo-icon.png"
@@ -125,11 +127,11 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-sm font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent dark:from-emerald-400 dark:to-emerald-300">GORUT</span>
-                <span className="text-[11px] text-muted-foreground font-medium truncate">Koin Infak NU</span>
+                 <span className="text-[11px] text-muted-foreground font-medium truncate">Operasional Koin Infak</span>
               </div>
             </Link>
           ) : (
-            <Link href="/gorut" className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl transition-transform hover:scale-105" title="GORUT">
+            <Link href="/gorut" className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" title="GORUT" aria-label="Buka beranda GORUT">
               <Image
                 src="/gorut-logo-icon.png"
                 alt="GORUT"
@@ -145,7 +147,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
             size="icon"
             className="z-10 size-8 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={() => handleCollapse(!collapsed)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={collapsed ? 'Buka menu GORUT' : 'Ciutkan menu GORUT'}
           >
             {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
           </Button>
@@ -158,7 +160,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
               <Link
                 href="/"
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-muted hover:text-foreground',
+                   'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   collapsed && 'w-10 justify-center px-0'
                 )}
               >
@@ -197,9 +199,11 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
                             {hasSubmenu && !collapsed ? (
                               <button
                                 type="button"
+                                aria-expanded={isExpanded}
+                                aria-label={`${isExpanded ? 'Tutup' : 'Buka'} submenu ${item.title}`}
                                 onClick={() => toggleExpandItem(item.title)}
                                 className={cn(
-                                  'group relative w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-left',
+                                  'group relative flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                                   isActive
                                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -239,7 +243,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
                               <Link
                                 href={item.href}
                                 className={cn(
-                                  'group relative w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-left',
+                                  'group relative flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                                   isActive
                                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -297,7 +301,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
                                 key={subitem.href}
                                 href={subitem.href}
                                 className={cn(
-                                  'block rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200',
+                                  'block min-h-[38px] rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                                   isGorutPathActive(pathname, subitem.href)
                                     ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -324,7 +328,7 @@ export function GorutSidebar({ collapsed = false, onCollapsedChange }: GorutSide
               <Link
                 href="/gorut/help"
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-muted hover:text-foreground',
+                   'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   collapsed && 'w-10 justify-center px-0'
                 )}
               >

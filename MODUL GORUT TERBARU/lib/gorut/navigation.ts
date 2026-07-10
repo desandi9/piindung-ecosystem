@@ -48,70 +48,75 @@ const gorutKordesRoles: AppRole[] = ['super_admin_pc', 'admin_pc', 'admin_kordes
 
 export const gorutNavGroups: GorutNavGroup[] = [
   {
-    title: 'Dashboard',
-    items: [{ title: 'Dashboard', href: '/gorut/dashboard', icon: LayoutDashboard }],
+    title: 'Utama',
+    items: [{ title: 'Beranda GORUT', href: '/gorut/dashboard', icon: LayoutDashboard }],
   },
   {
     title: 'Operasional',
     items: [
-      { title: 'Data Munfiq', href: '/gorut/munfiq', icon: Users, roles: gorutOperationalRoles },
+      { title: 'Munfiq', href: '/gorut/munfiq', icon: Users, roles: gorutOperationalRoles },
       {
-        title: 'Alur Penghimpunan',
+        title: 'Input & Setoran',
         href: '/gorut/transaksi',
         icon: Coins,
         roles: gorutOperationalRoles,
         submenu: [
-          { title: 'Tahap Munfiq ke PLPK', href: '/gorut/transaksi' },
-          { title: 'Tahap PLPK ke Kordes', href: '/gorut/monitoring-plpk' },
-          { title: 'Tahap Kordes ke UPZIS', href: '/gorut/ranting' },
+          { title: 'Setoran dari Munfiq', href: '/gorut/transaksi' },
+          { title: 'Setoran PLPK ke Kordes', href: '/gorut/monitoring-plpk' },
+          { title: 'Setoran Kordes ke UPZIS', href: '/gorut/ranting' },
         ],
       },
-      { title: 'Verifikasi Penghimpunan', href: '/gorut/validasi', icon: CheckCircle2, badge: 8, roles: gorutOperationalRoles },
     ],
   },
   {
-    title: 'Analytics',
+    title: 'Verifikasi',
     items: [
-      { title: 'Analytics', href: '/gorut/analytics', icon: BarChart3, roles: gorutSuperAndPcRoles },
-      { title: 'Target & Performance', href: '/gorut/performance', icon: Target, roles: gorutSuperAndPcRoles },
-      { title: 'Dashboard Keuangan', href: '/gorut/keuangan', icon: Wallet, roles: gorutSuperAndPcRoles },
+      { title: 'Validasi Setoran', href: '/gorut/validasi', icon: CheckCircle2, badge: 8, roles: gorutOperationalRoles },
+    ],
+  },
+  {
+    title: 'Analisis',
+    items: [
+      { title: 'Analisis Operasional', href: '/gorut/analytics', icon: BarChart3, roles: gorutSuperAndPcRoles },
+      { title: 'Target & Kinerja', href: '/gorut/performance', icon: Target, roles: gorutSuperAndPcRoles },
+      { title: 'Keuangan', href: '/gorut/keuangan', icon: Wallet, roles: gorutSuperAndPcRoles },
     ],
   },
   {
     title: 'Wilayah',
     items: [
-      { title: 'Referensi Wilayah', href: '/gorut/kecamatan', icon: Building2, roles: gorutSuperAndPcRoles },
+      { title: 'Data Wilayah', href: '/gorut/kecamatan', icon: Building2, roles: gorutSuperAndPcRoles },
     ],
   },
   {
     title: 'Laporan',
     items: [
       { title: 'Statistik', href: '/gorut/statistik', icon: BarChart3, roles: gorutSuperAndPcRoles },
-      { title: 'Laporan & Export', href: '/gorut/laporan', icon: FileText, roles: gorutOperationalRoles },
-      { title: 'Digital Archive', href: '/gorut/archive', icon: Archive, roles: gorutSuperAndPcRoles },
+      { title: 'Laporan', href: '/gorut/laporan', icon: FileText, roles: gorutOperationalRoles },
+      { title: 'Arsip Digital', href: '/gorut/archive', icon: Archive, roles: gorutSuperAndPcRoles },
       { title: 'Rekap Bulanan', href: '/gorut/rekap', icon: Calendar, roles: gorutSuperAdminOnlyRoles },
     ],
   },
   {
-    title: 'Komunikasi',
+    title: 'Info & Bantuan',
     items: [
-      { title: 'Announcement Center', href: '/gorut/announcement', icon: Megaphone, roles: gorutSuperAndPcRoles },
+      { title: 'Pengumuman', href: '/gorut/announcement', icon: Megaphone, roles: gorutSuperAndPcRoles },
       { title: 'Template WhatsApp', href: '/gorut/whatsapp', icon: MessageSquare, roles: gorutSuperAndPcRoles },
       { title: 'Notifikasi', href: '/gorut/notifikasi', icon: Bell, badge: 5, roles: gorutOperationalRoles },
     ],
   },
   {
-    title: 'Mobile',
-    items: [{ title: 'Mobile Ecosystem', href: '/gorut/mobile', icon: Smartphone, roles: gorutSuperAdminOnlyRoles }],
+    title: 'Aplikasi',
+    items: [{ title: 'Aplikasi Mobile', href: '/gorut/mobile', icon: Smartphone, roles: gorutSuperAdminOnlyRoles }],
   },
   {
     title: 'Sistem',
     items: [
-      { title: 'System Monitoring', href: '/gorut/monitoring', icon: Activity, roles: gorutSuperAdminOnlyRoles },
-      { title: 'Audit Center', href: '/gorut/audit', icon: Lock, roles: gorutSuperAdminOnlyRoles },
-      { title: 'Activity Log', href: '/gorut/activity', icon: Activity, roles: gorutSuperAdminOnlyRoles },
+      { title: 'Monitoring Sistem', href: '/gorut/monitoring', icon: Activity, roles: gorutSuperAdminOnlyRoles },
+      { title: 'Audit', href: '/gorut/audit', icon: Lock, roles: gorutSuperAdminOnlyRoles },
+      { title: 'Log Aktivitas', href: '/gorut/activity', icon: Activity, roles: gorutSuperAdminOnlyRoles },
       { title: 'Hak Akses', href: '/gorut/akses', icon: Shield, roles: gorutSuperAdminOnlyRoles },
-      { title: 'Backup Data', href: '/gorut/backup', icon: Database, roles: gorutSuperAdminOnlyRoles },
+      { title: 'Cadangan Data', href: '/gorut/backup', icon: Database, roles: gorutSuperAdminOnlyRoles },
       { title: 'Pengaturan', href: '/gorut/settings', icon: Cog, roles: gorutSuperAdminOnlyRoles },
     ],
   },
@@ -119,40 +124,50 @@ export const gorutNavGroups: GorutNavGroup[] = [
 
 const gorutUpzisNavGroups: GorutNavGroup[] = [
   {
-    title: 'Dashboard',
-    items: [{ title: 'Dashboard UPZIS', href: '/gorut/dashboard', icon: LayoutDashboard }],
+    title: 'Utama',
+    items: [{ title: 'Beranda GORUT', href: '/gorut/dashboard', icon: LayoutDashboard }],
   },
   {
-    title: 'Penghimpunan',
+    title: 'Operasional',
     items: [
-      { title: 'Data Munfiq', href: '/gorut/munfiq', icon: Users },
+      { title: 'Munfiq', href: '/gorut/munfiq', icon: Users },
       {
-        title: 'Alur Penghimpunan',
+        title: 'Input & Setoran',
         href: '/gorut/transaksi',
         icon: Coins,
         submenu: [
-          { title: 'Tahap Munfiq ke PLPK', href: '/gorut/transaksi' },
-          { title: 'Tahap PLPK ke Kordes', href: '/gorut/monitoring-plpk' },
-          { title: 'Tahap Kordes ke UPZIS', href: '/gorut/ranting' },
+          { title: 'Setoran dari Munfiq', href: '/gorut/transaksi' },
+          { title: 'Setoran PLPK ke Kordes', href: '/gorut/monitoring-plpk' },
+          { title: 'Setoran Kordes ke UPZIS', href: '/gorut/ranting' },
         ],
       },
-      { title: 'Verifikasi Penghimpunan', href: '/gorut/validasi', icon: CheckCircle2, badge: 8 },
-      { title: 'Rekapitulasi', href: '/gorut/approval', icon: Calendar, badge: 4 },
+    ],
+  },
+  {
+    title: 'Verifikasi',
+    items: [
+      { title: 'Validasi Setoran', href: '/gorut/validasi', icon: CheckCircle2, badge: 8 },
+      { title: 'Approval Akhir', href: '/gorut/approval', icon: Calendar, badge: 4 },
+    ],
+  },
+  {
+    title: 'Laporan',
+    items: [
       { title: 'Laporan', href: '/gorut/laporan', icon: FileText },
     ],
   },
   {
-    title: 'Master',
+    title: 'Wilayah',
     items: [
-      { title: 'Wilayah', href: '/gorut/kecamatan', icon: MapPin },
-      { title: 'Kategori', href: '/gorut/archive', icon: Archive },
+      { title: 'Data Wilayah', href: '/gorut/kecamatan', icon: MapPin },
+      { title: 'Arsip', href: '/gorut/archive', icon: Archive },
     ],
   },
   {
-    title: 'Pengaturan',
+    title: 'Akun & Bantuan',
     items: [
-      { title: 'User & Role', href: '/gorut/profil', icon: Shield },
-      { title: 'Pengaturan', href: '/gorut/pengaturan-akun', icon: Cog },
+      { title: 'Profil', href: '/gorut/profil', icon: Shield },
+      { title: 'Pengaturan Akun', href: '/gorut/pengaturan-akun', icon: Cog },
     ],
   },
 ]
