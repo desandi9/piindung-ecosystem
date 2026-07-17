@@ -1,380 +1,97 @@
 "use client"
 
-import { type FormEvent, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Navbar } from "@/components/piindung/navbar"
-import { SimpleFooter } from "@/components/piindung/simple-footer"
+import { ArrowRight, ChevronDown, HelpCircle, KeyRound, Search, Settings, Wrench } from "lucide-react"
+import { Poppins } from "next/font/google"
+import { useMemo, useState } from "react"
+import { PublicFooter } from "@/components/piindung/public-footer"
+import { PublicNavbar } from "@/components/piindung/public-navbar"
+import { PublicThemeDefault } from "@/components/piindung/public-theme-default"
+import { DEFAULT_INTEGRATED_APPS } from "@/lib/integrated-apps"
 import { cn } from "@/lib/utils"
-import { addInboxMessage } from "@/lib/admin-inbox"
-import { useHelpFaqCategories, type HelpFaqCategory, type HelpFaqIconKey } from "@/lib/faq-manager"
-import {
-  ChevronLeft,
-  ChevronDown,
-  HelpCircle,
-  MessageCircle,
-  Mail,
-  Phone,
-  FileText,
-  Users,
-  Shield,
-  CreditCard,
-  Settings,
-  ExternalLink,
-} from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 
-// Quick Help Cards Data
-const quickHelpCards = [
-  {
-    title: "Panduan Pengguna",
-    description: "Pelajari cara menggunakan fitur-fitur PIINDUNG",
-    icon: FileText,
-    href: "#faq-bantuan",
-  },
-  {
-    title: "Video Tutorial",
-    description: "Tonton video panduan langkah demi langkah",
-    icon: HelpCircle,
-    href: "#bantuan-langsung",
-  },
-  {
-    title: "FAQ Lengkap",
-    description: "Temukan jawaban pertanyaan umum",
-    icon: MessageCircle,
-    href: "#faq-bantuan",
-  },
+const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
+const appLogos = Object.fromEntries(DEFAULT_INTEGRATED_APPS.map((app) => [app.id, app.iconUrl]))
+
+const products = [
+  { name: "GORUT", logo: appLogos.gorut, label: "Bantuan Tersedia", status: "Aktif" },
+  { name: "E-Tasyaruf", logo: appLogos.etasyaruf, label: "Panduan Segera Hadir", status: "Segera Hadir" },
+  { name: "Mobisnu", logo: appLogos.mobisnu, label: "Panduan Segera Hadir", status: "Segera Hadir" },
+  { name: "Arsip Digital", logo: appLogos.arsip, label: "Panduan Segera Hadir", status: "Segera Hadir" },
+  { name: "LAZISNU POS", label: "Panduan Segera Hadir", status: "Segera Hadir" },
 ]
 
-export default function BantuanPage() {
-  const router = useRouter()
-  const faqCategories = useHelpFaqCategories()
-  const [openFaq, setOpenFaq] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" })
-  const [formError, setFormError] = useState<string | null>(null)
-  const [submitState, setSubmitState] = useState<"idle" | "success">("idle")
+const topics = [
+  { title: "Memulai PIINDUNG", description: "Informasi dasar mengenai ekosistem dan cara mengakses layanan.", icon: HelpCircle },
+  { title: "Akun dan Akses", description: "Bantuan mengenai login, hak akses, dan penggunaan akun.", icon: KeyRound },
+  { title: "Penggunaan Produk", description: "Panduan singkat untuk memahami fitur produk yang tersedia.", icon: Settings },
+  { title: "Kendala Teknis", description: "Solusi awal ketika mengalami masalah saat menggunakan sistem.", icon: Wrench },
+]
 
-  const toggleFaq = (id: string) => {
-    setOpenFaq(openFaq === id ? null : id)
-  }
+const faqs = [
+  { q: "Apa itu PIINDUNG?", a: "PIINDUNG adalah ekosistem digital NU Care–LAZISNU Garut yang membantu pengelolaan informasi, layanan, dan proses organisasi dalam satu lingkungan yang lebih tertata." },
+  { q: "Siapa yang dapat menggunakan PIINDUNG?", a: "PIINDUNG digunakan oleh pengurus dan petugas yang memiliki akses sesuai peran masing-masing. Beberapa informasi publik tetap dapat dibuka tanpa login." },
+  { q: "Bagaimana cara masuk ke dalam sistem?", a: "Pengguna yang memiliki akun dapat masuk melalui halaman login. Setelah masuk, sistem akan menyesuaikan akses berdasarkan peran pengguna." },
+  { q: "Produk apa saja yang tersedia?", a: "Ekosistem PIINDUNG mencakup GORUT serta produk pendukung seperti E-Tasyaruf, Mobisnu, Arsip Digital, dan LAZISNU POS sesuai tahapan pengembangan." },
+  { q: "Apa yang harus dilakukan jika tidak bisa masuk?", a: "Periksa kembali data login dan pastikan akun sudah memiliki akses. Jika masih bermasalah, hubungi tim PIINDUNG melalui halaman kontak." },
+  { q: "Bagaimana cara menghubungi tim bantuan?", a: "Gunakan halaman Kontak untuk mengirimkan pertanyaan atau kebutuhan bantuan kepada tim NU Care–LAZISNU Garut." },
+]
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+export default function HelpPage() {
+  const [query, setQuery] = useState("")
+  const [openFaq, setOpenFaq] = useState<string | null>(faqs[0].q)
 
-    if (!form.email.trim() && !form.phone.trim()) {
-      setFormError("Isi email atau nomor WhatsApp agar tim support dapat membalas.")
-      return
-    }
+  const normalizedQuery = query.trim().toLowerCase()
+  const filteredProducts = useMemo(() => products.filter((product) => `${product.name} ${product.label} ${product.status}`.toLowerCase().includes(normalizedQuery)), [normalizedQuery])
+  const filteredTopics = useMemo(() => topics.filter((topic) => `${topic.title} ${topic.description}`.toLowerCase().includes(normalizedQuery)), [normalizedQuery])
+  const filteredFaqs = useMemo(() => faqs.filter((faq) => `${faq.q} ${faq.a}`.toLowerCase().includes(normalizedQuery)), [normalizedQuery])
+  const hasResults = filteredProducts.length || filteredTopics.length || filteredFaqs.length
 
-    addInboxMessage({
-      source: "Bantuan",
-      title: `Permintaan bantuan dari ${form.name.trim()}`,
-      senderName: form.name.trim(),
-      senderEmail: form.email.trim(),
-      senderPhone: form.phone.trim(),
-      message: form.message.trim(),
-    })
-
-    setForm({ name: "", email: "", phone: "", message: "" })
-    setFormError(null)
-    setSubmitState("success")
-  }
+  const resetSearch = () => setQuery("")
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Navbar />
-      
-      <main className="container mx-auto max-w-5xl flex-1 px-4 py-6 lg:py-8">
-        {/* Back Navigation */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
-          onClick={() => router.back()}
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Kembali
-        </Button>
-
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-2xl lg:text-3xl font-bold">Pusat Bantuan</h1>
-          <p className="text-muted-foreground mt-1">Temukan jawaban dan hubungi tim support kami</p>
-        </div>
-
-        <div className="space-y-6">
-          {/* Quick Help Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {quickHelpCards.map((card) => (
-              <Link key={card.title} href={card.href} className="block">
-                <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                        <card.icon className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
-                          {card.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {card.description}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+    <div className={poppins.className}>
+      <main className="min-h-screen overflow-x-hidden bg-[#f7faf8] text-slate-950 dark:bg-slate-950 dark:text-white">
+        <PublicThemeDefault />
+        <PublicNavbar />
+        <section className="relative overflow-hidden px-4 pb-10 pt-32 text-center sm:px-6 sm:pb-14 sm:pt-36 lg:px-8 lg:pt-40">
+          <div className="pointer-events-none absolute left-[12%] top-16 h-56 w-56 rounded-full bg-[#15945b]/10 blur-[95px]" aria-hidden="true" />
+          <div className="pointer-events-none absolute right-[12%] top-20 h-64 w-64 rounded-full bg-sky-200/25 blur-[100px] dark:bg-sky-500/10" aria-hidden="true" />
+          <div className="relative mx-auto max-w-[720px] animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both motion-reduce:animate-none">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15945b]">PUSAT BANTUAN</p>
+            <h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-[#0b1f33] dark:text-white sm:text-5xl lg:text-[60px]">Apa yang Bisa <span className="text-[#15945b]">Kami Bantu?</span></h1>
+            <p className="mt-6 text-base leading-8 text-[#566473] dark:text-slate-300 sm:text-lg lg:text-xl">Temukan panduan singkat, jawaban atas pertanyaan umum, dan informasi bantuan untuk menggunakan ekosistem PIINDUNG.</p>
           </div>
-
-          {/* Contact Admin Section */}
-          <Card id="bantuan-langsung" className="shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-[#2e8b57] to-[#3da06a] p-6 lg:p-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="text-white">
-                  <h2 className="text-xl lg:text-2xl font-bold mb-2">Butuh Bantuan Langsung?</h2>
-                  <p className="text-white/80 text-sm lg:text-base">
-                    Tim support kami siap membantu Anda 24/7
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {/* WhatsApp Button */}
-                  <Button 
-                    asChild
-                    className="bg-white text-[#25D366] hover:bg-white/90 font-semibold gap-2"
-                  >
-                    <a 
-                      href="https://wa.me/6281234567890?text=Halo,%20saya%20butuh%20bantuan%20terkait%20PIINDUNG" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                      </svg>
-                      WhatsApp
-                    </a>
-                  </Button>
-                  
-                  {/* Email Button */}
-                  <Button 
-                    asChild
-                    variant="outline"
-                    className="bg-white/10 border-white/30 text-white hover:bg-white/20 font-semibold gap-2"
-                  >
-                    <a href="mailto:support@piindung.id">
-                      <Mail className="h-5 w-5" />
-                      Email Support
-                    </a>
-                  </Button>
-                </div>
-              </div>
+          <div className="relative mx-auto mt-10 max-w-[880px] animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both motion-reduce:animate-none" style={{ animationDelay: "120ms" }}>
+            <label htmlFor="help-search" className="sr-only">Cari panduan atau pertanyaan</label>
+            <div className="flex h-16 items-center gap-3 rounded-[20px] border border-[#dde7e2] bg-white px-5 text-left shadow-[0_18px_50px_rgba(7,20,38,0.08)] transition focus-within:border-[#15945b]/45 focus-within:ring-4 focus-within:ring-[#15945b]/10 dark:border-white/10 dark:bg-slate-900">
+              <Search className="h-5 w-5 shrink-0 text-[#15945b]" aria-hidden="true" />
+              <input id="help-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari panduan atau pertanyaan" className="min-w-0 flex-1 bg-transparent text-base text-[#0b1f33] outline-none placeholder:text-[#7b8792] dark:text-white dark:placeholder:text-slate-400 sm:text-lg" />
+              <span className="hidden rounded-full bg-[#15945b] px-4 py-2 text-xs font-semibold text-white sm:inline-flex">Cari</span>
             </div>
-            
-            {/* Contact Details */}
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <Phone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Telepon</p>
-                    <p className="font-medium">+62 812-3456-7890</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <Mail className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Email</p>
-                    <p className="font-medium">support@piindung.id</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
-                  <div className="p-2 rounded-lg bg-[#25D366]/10 text-[#25D366]">
-                    <MessageCircle className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">WhatsApp</p>
-                    <p className="font-medium">+62 812-3456-7890</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
+        </section>
 
-          {/* FAQ Section */}
-          <Card id="faq-bantuan" className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <HelpCircle className="h-5 w-5 text-primary" />
-                Pertanyaan yang Sering Diajukan (FAQ)
-              </CardTitle>
-              <CardDescription>Temukan jawaban cepat untuk pertanyaan umum</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {faqCategories.map((category) => (
-                <div key={category.id} className="border border-border rounded-xl overflow-hidden">
-                  {(() => {
-                    const CategoryIcon = categoryIcon(category.iconKey)
+        {hasResults ? (
+          <>
+            {filteredProducts.length > 0 && <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8" aria-labelledby="products-help-heading"><div className="mb-8 text-center"><h2 id="products-help-heading" className="text-3xl font-bold tracking-tight text-[#0b1f33] dark:text-white">Pilih Produk</h2><p className="mt-3 text-base text-[#566473] dark:text-slate-300">Pilih produk yang ingin dipelajari atau mendapatkan bantuan.</p></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{filteredProducts.map((product, index) => <article key={product.name} className="animate-in fade-in slide-in-from-bottom-4 rounded-[22px] border border-[#dde7e2] bg-white p-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-[#15945b]/35 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-white/10 dark:bg-slate-900" style={{ animationDelay: `${index * 80}ms` }}><div className="mx-auto flex h-16 items-center justify-center">{product.logo ? <Image src={product.logo} alt={`Logo ${product.name}`} width={96} height={96} className="max-h-14 w-auto max-w-[130px] object-contain" /> : <span className="rounded-xl border border-dashed border-[#dde7e2] px-3 py-2 text-xs font-medium text-[#7b8792] dark:border-white/10 dark:text-slate-400">Logo belum tersedia</span>}</div><h3 className="mt-5 text-base font-bold text-[#0b1f33] dark:text-white">{product.name}</h3><p className="mt-2 text-sm text-[#566473] dark:text-slate-300">{product.label}</p><span className={cn("mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold", product.status === "Aktif" ? "bg-[#e6f7ee] text-[#15945b]" : "bg-amber-50 text-amber-700 dark:bg-amber-300/10 dark:text-amber-200")}>{product.status}</span></article>)}</div></section>}
 
-                    return (
-                      <>
-                  {/* Category Header */}
-                  <div className="flex items-center gap-3 p-4 bg-muted/30">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <CategoryIcon className="h-4 w-4" />
-                    </div>
-                    <h3 className="font-semibold">{category.title}</h3>
-                  </div>
-                  
-                  {/* Questions */}
-                  <div className="divide-y divide-border">
-                    {category.questions.map((faq, idx) => {
-                      const faqId = `${category.id}-${idx}`
-                      const isOpen = openFaq === faqId
-                      
-                      return (
-                        <div key={faqId}>
-                          <button
-                            onClick={() => toggleFaq(faqId)}
-                            className="w-full flex items-center justify-between p-4 text-left hover:bg-accent/50 transition-colors"
-                          >
-                            <span className="font-medium text-sm pr-4">{faq.q}</span>
-                            <ChevronDown 
-                              className={cn(
-                                "h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200",
-                                isOpen && "rotate-180"
-                              )} 
-                            />
-                          </button>
-                          <div 
-                            className={cn(
-                              "overflow-hidden transition-all duration-200",
-                              isOpen ? "max-h-40" : "max-h-0"
-                            )}
-                          >
-                            <p className="px-4 pb-4 text-sm text-muted-foreground">
-                              {faq.a}
-                            </p>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                      </>
-                    )
-                  })()}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+            {filteredTopics.length > 0 && <section className="border-y border-[#dde7e2] bg-white px-4 py-16 dark:border-white/10 dark:bg-slate-950 sm:px-6 sm:py-20 lg:px-8" aria-labelledby="help-topics-heading"><div className="mx-auto max-w-7xl"><div className="mb-10 text-center"><h2 id="help-topics-heading" className="text-3xl font-bold tracking-tight text-[#0b1f33] dark:text-white">Topik Bantuan</h2></div><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{filteredTopics.map(({ title, description, icon: Icon }, index) => <article key={title} className="animate-in fade-in slide-in-from-bottom-4 rounded-[22px] border border-[#dde7e2] bg-white p-6 shadow-sm duration-700 fill-mode-both motion-reduce:animate-none dark:border-white/10 dark:bg-slate-900" style={{ animationDelay: `${index * 90}ms` }}><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e6f7ee] text-[#15945b] dark:bg-emerald-300/10 dark:text-emerald-300"><Icon className="h-6 w-6" aria-hidden="true" /></div><h3 className="mt-6 text-lg font-semibold text-[#0b1f33] dark:text-white">{title}</h3><p className="mt-3 text-sm leading-7 text-[#566473] dark:text-slate-300">{description}</p></article>)}</div></div></section>}
 
-          {/* Additional Support */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg">Masih Butuh Bantuan?</CardTitle>
-              <CardDescription>Hubungi administrator untuk masalah yang lebih kompleks</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button asChild className="flex-1 gap-2 bg-[#2e8b57] hover:bg-[#256b45]">
-                  <a 
-                    href="https://wa.me/6281234567890?text=Halo,%20saya%20butuh%20bantuan%20terkait%20PIINDUNG" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Chat via WhatsApp
-                    <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                </Button>
-                <Button asChild variant="outline" className="flex-1 gap-2">
-                  <a href="mailto:support@piindung.id">
-                    <Mail className="h-4 w-4" />
-                    Kirim Email
-                  </a>
-                </Button>
-                <Button asChild variant="outline" className="flex-1 gap-2">
-                  <a href="tel:+6281234567890">
-                    <Phone className="h-4 w-4" />
-                    Telepon
-                  </a>
-                </Button>
-              </div>
+            {filteredFaqs.length > 0 && <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8" aria-labelledby="faq-heading"><div className="mb-8 text-center"><h2 id="faq-heading" className="text-3xl font-bold tracking-tight text-[#0b1f33] dark:text-white">Pertanyaan yang Sering Diajukan</h2></div><div className="space-y-3">{filteredFaqs.map((faq) => { const isOpen = openFaq === faq.q; return <div key={faq.q} className="rounded-[18px] border border-[#dde7e2] bg-white shadow-sm dark:border-white/10 dark:bg-slate-900"><button type="button" onClick={() => setOpenFaq(isOpen ? null : faq.q)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-[#0b1f33] transition hover:text-[#15945b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b] dark:text-white"><span>{faq.q}</span><ChevronDown className={cn("h-5 w-5 shrink-0 text-[#15945b] transition-transform duration-[350ms]", isOpen && "rotate-180")} aria-hidden="true" /></button><div className={cn("grid transition-all duration-[400ms]", isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+<div className="overflow-hidden"><p className="px-5 pb-5 text-sm leading-7 text-[#566473] dark:text-slate-300">{faq.a}</p></div></div></div> })}</div></section>}
+          </>
+        ) : (
+          <section className="mx-auto max-w-xl px-4 py-16 text-center sm:px-6 lg:px-8"><div className="rounded-[24px] border border-[#dde7e2] bg-white px-6 py-10 shadow-sm dark:border-white/10 dark:bg-slate-900"><h2 className="text-2xl font-bold text-[#0b1f33] dark:text-white">Bantuan tidak ditemukan</h2><p className="mt-3 leading-7 text-[#566473] dark:text-slate-300">Coba gunakan kata kunci lain atau hubungi tim PIINDUNG.</p><div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center"><button type="button" onClick={resetSearch} className="inline-flex h-11 items-center justify-center rounded-full bg-[#15945b] px-5 text-sm font-semibold text-white">Hapus Pencarian</button><Link href="/kontak" className="inline-flex h-11 items-center justify-center rounded-full border border-[#dde7e2] bg-white px-5 text-sm font-semibold text-[#0b1f33] dark:border-white/10 dark:bg-white/5 dark:text-white">Hubungi Kami</Link></div></div></section>
+        )}
 
-              <div className="mt-6 border-t border-border pt-6">
-                <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">Kirim Pesan ke Tim Support</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Pesan bantuan akan otomatis masuk ke inbox Admin Dashboard.
-                  </p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <Input
-                      value={form.name}
-                      onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                      placeholder="Nama lengkap"
-                      required
-                      className="rounded-xl"
-                    />
-                    <Input
-                      value={form.email}
-                      onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                      placeholder="Email aktif"
-                      type="email"
-                      className="rounded-xl"
-                    />
-                  </div>
-
-                  <Input
-                    value={form.phone}
-                    onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                    placeholder="Nomor WhatsApp"
-                    className="rounded-xl"
-                  />
-
-                  <Textarea
-                    value={form.message}
-                    onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
-                    placeholder="Jelaskan kendala atau pertanyaan Anda"
-                    required
-                    className="min-h-32 rounded-xl"
-                  />
-
-                  {formError ? <p className="text-xs text-destructive">{formError}</p> : null}
-                  {submitState === "success" ? (
-                    <p className="text-xs text-[#2e8b57]">Pesan bantuan berhasil dikirim ke admin.</p>
-                  ) : null}
-
-                  <div className="flex justify-end">
-                    <Button type="submit" className="gap-2 rounded-xl bg-[#2e8b57] hover:bg-[#256b45]">
-                      <MessageCircle className="h-4 w-4" />
-                      Kirim ke Admin
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <section className="relative isolate overflow-hidden px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8" aria-labelledby="help-cta-heading" style={{ backgroundImage: "url('/BACKGROUND.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
+          <div className="absolute inset-0 -z-10 bg-[#071426]/50" aria-hidden="true" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both motion-reduce:animate-none lg:grid-cols-[1fr_auto] lg:gap-12"><div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">BANTUAN PIINDUNG</p><h2 id="help-cta-heading" className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">Masih Membutuhkan Bantuan?</h2><p className="mt-5 max-w-xl text-base leading-8 text-white/80 sm:text-lg">Hubungi tim NU Care–LAZISNU Garut untuk mendapatkan informasi lebih lanjut mengenai penggunaan PIINDUNG.</p></div><div className="flex flex-col gap-3 sm:flex-row lg:justify-end"><Link href="/kontak" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-[#071426] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#071426]">Hubungi Kami <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link><Link href="/" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/70 bg-white/5 px-5 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#071426]">Kembali ke Beranda <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link></div></div>
+        </section>
       </main>
-      
-      <SimpleFooter />
+      <PublicFooter />
     </div>
   )
-}
-
-function categoryIcon(iconKey: HelpFaqIconKey) {
-  if (iconKey === "credit-card") return CreditCard
-  if (iconKey === "shield") return Shield
-  if (iconKey === "settings") return Settings
-  return Users
 }

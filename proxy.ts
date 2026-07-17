@@ -114,6 +114,7 @@ function canAccessGorutPath(role: string | null | undefined, pathname: string) {
 }
 
 function isPublicPath(pathname: string) {
+  if (pathname === "/produk" || pathname === "/dampak" || pathname === "/artikel" || pathname.startsWith("/artikel/")) return true
   return ["/", "/login", "/program", "/informasi", "/laporan", "/rekening-donasi", "/qris-donasi", "/bantuan", "/kontak", "/galeri", "/download", "/notifications", "/notifikasi", "/verify"].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
