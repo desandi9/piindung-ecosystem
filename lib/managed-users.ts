@@ -219,7 +219,10 @@ export async function updateManagedUser(id: string, updates: Partial<Omit<Manage
     }),
   })
 
-  if (!response.ok) throw new Error("Failed to update user")
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null
+    throw new Error(payload?.error || "Gagal memperbarui pengguna.")
+  }
 
   const payload = (await response.json()) as { user: ManagedUser }
   await fetchManagedUsers()

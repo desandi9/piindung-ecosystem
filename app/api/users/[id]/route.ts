@@ -1,7 +1,14 @@
 import bcrypt from "bcryptjs"
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { getPrismaClient } from "@/lib/prisma"
+import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 import { normalizePhoneNumber } from "@/lib/phone"
+import type { AppRole } from "@/types/auth"
+
+const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
+const validRoles: AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
+const validStatuses = ["Aktif", "Nonaktif"] as const
 
 function formatLastLogin(lastLoginAt: Date | null) {
   if (!lastLoginAt) return "Belum pernah login"
@@ -41,6 +48,11 @@ function mapUser(user: {
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value
+    const session = token ? await verifySessionToken(token, AUTH_SECRET) : null
+    if (!session) return NextResponse.json({ error: "Sesi tidak ditemukan." }, { status: 401 })
+    if (session.role !== "super_admin_pc") return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
+
     const prisma = getPrismaClient()
     const { id } = await Promise.resolve(params)
     const body = (await request.json()) as {
@@ -68,6 +80,25 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const currentUser = currentUsers[0]
     if (!currentUser) return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 })
+
+    if (body.role !== undefined && !validRoles.includes(body.role as AppRole)) {
+      return NextResponse.json({ error: "Role pengguna tidak valid." }, { status: 400 })
+    }
+    if (body.status !== undefined && !validStatuses.includes(body.status as (typeof validStatuses)[number])) {
+      return NextResponse.json({ error: "Status akun tidak valid." }, { status: 400 })
+    }
+    if (id === session.sub && (body.role !== undefined || body.status !== undefined)) {
+      return NextResponse.json({ error: "Role dan status akun sendiri tidak dapat diubah." }, { status: 403 })
+    }
+
+    const nextRole = body.role ?? currentUser.role
+    const nextStatus = body.status ?? currentUser.status
+    if (currentUser.role === "super_admin_pc" && currentUser.status === "Aktif" && (nextRole !== "super_admin_pc" || nextStatus !== "Aktif")) {
+      const activeSuperAdmins = await prisma.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS count FROM "User" WHERE role = 'super_admin_pc' AND status = 'Aktif'`
+      if (Number(activeSuperAdmins[0]?.count ?? 0) <= 1) {
+        return NextResponse.json({ error: "Aksi diblokir: sistem harus memiliki minimal satu Super Admin PC aktif." }, { status: 409 })
+      }
+    }
 
     const nextPasswordHash = body.password ? await bcrypt.hash(body.password, 10) : currentUser.passwordHash
     const phone = body.phone ? normalizePhoneNumber(body.phone) : currentUser.phone
