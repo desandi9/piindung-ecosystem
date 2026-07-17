@@ -657,7 +657,7 @@ function UserDialog({
                 <select
                   id="role"
                   value={form.role}
-                  onChange={(event) => onFormChange({ ...form, role: event.target.value as UserRole, gorutKecamatan: gorutScopedOperationalRoles.includes(event.target.value as UserRole) ? form.gorutKecamatan : "" })}
+                  onChange={(event) => onFormChange({ ...form, role: event.target.value as UserRole, gorutKecamatan: ["admin_upzis", "admin_kordes"].includes(event.target.value as UserRole) ? form.gorutKecamatan : "" })}
                   disabled={isDetail}
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition-all duration-200 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 disabled:opacity-50"
                 >
@@ -666,7 +666,7 @@ function UserDialog({
                   ))}
                 </select>
               </div>
-              {gorutScopedOperationalRoles.includes(form.role) ? (
+              {["admin_upzis", "admin_kordes"].includes(form.role) ? (
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="gorutKecamatan">Kecamatan Operasional GORUT</Label>
                   <select
