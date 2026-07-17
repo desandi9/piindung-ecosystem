@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Navbar } from "@/components/piindung/navbar"
-import { HeroBanner } from "@/components/piindung/hero-banner"
 import { AppCards } from "@/components/piindung/app-cards"
-import { QuickActions } from "@/components/piindung/quick-actions"
 import { InfoSection } from "@/components/piindung/info-section"
 import { Footer } from "@/components/piindung/footer"
 import { PopupAnnouncement } from "@/components/piindung/popup-announcement"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAuth, roleDisplayNames } from "@/lib/auth-context"
 import {
   MetricCard,
   InlineAlert,
@@ -29,6 +29,9 @@ import {
   Layers,
   TrendingUp,
   HandHeart,
+  LogOut,
+  Settings,
+  User,
 } from "lucide-react"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,33 +83,12 @@ function DashboardSkeleton() {
       </header>
 
       <div className="flex-1 container mx-auto px-4 lg:px-8 py-8 space-y-10">
-        {/* HeroBanner skeleton */}
-        <div className="h-[320px] md:h-[400px] w-full bg-gradient-to-br from-emerald-950/10 via-card to-zinc-900/30 rounded-2xl border border-border animate-pulse flex flex-col justify-end p-6 md:p-8 space-y-4">
-          <div className="w-2/3 md:w-1/2 h-8 rounded-lg bg-muted" />
-          <div className="w-1/2 md:w-1/3 h-4 rounded-md bg-muted" />
-          <div className="w-28 h-10 rounded-xl bg-muted" />
-        </div>
-
         {/* KPI Cards skeleton */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 4 }).map((_, idx) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton
             <LoadingCard key={idx} className="h-[136px]" />
           ))}
-        </div>
-
-        {/* QuickActions skeleton */}
-        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-          <div className="w-36 h-4 rounded bg-muted animate-pulse mb-5" />
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
-            {Array.from({ length: 6 }).map((_, idx) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton
-              <div key={idx} className="flex flex-col items-center gap-2.5">
-                <div className="w-12 h-12 rounded-2xl bg-muted animate-pulse" />
-                <div className="w-14 h-3 rounded bg-muted animate-pulse" />
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* AppCards skeleton */}
@@ -197,6 +179,52 @@ const KPI_METRICS = [
     iconTone: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
   },
 ]
+
+function DashboardWelcomeSection() {
+  const { user, logout } = useAuth()
+  const displayName = user?.name || "Pengguna"
+  const roleLabel = user ? roleDisplayNames[user.role] : "Pengguna"
+  const initials = displayName.split(" ").map((part) => part[0]).join("").toUpperCase().slice(0, 2) || "PG"
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/login"
+  }
+
+  return (
+    <section className="container mx-auto px-4 lg:px-8 pt-8 lg:pt-10" aria-labelledby="dashboard-welcome-heading">
+      <div className="grid items-center gap-5 md:grid-cols-[1fr_auto]">
+        <div>
+          <h1 id="dashboard-welcome-heading" className="text-3xl font-bold tracking-tight text-[#0b1f33] dark:text-white lg:text-4xl">Selamat datang kembali, {displayName}</h1>
+          <p className="mt-3 text-base leading-7 text-muted-foreground">Kelola informasi, aktivitas, dan layanan PIINDUNG melalui dashboard Anda.</p>
+        </div>
+        <div className="flex w-full items-center justify-between gap-4 rounded-[20px] border border-border bg-card p-5 shadow-sm md:w-[360px]">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar className="h-12 w-12 shrink-0 bg-gradient-to-br from-[#0f3460] to-[#1a4a7a] shadow-sm">
+              <AvatarImage src={user?.avatar || undefined} alt={displayName} className="object-cover" />
+              <AvatarFallback className="bg-transparent text-sm font-semibold text-white">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+              <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <Link href="/profil" className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Buka profil">
+              <User className="h-4 w-4" />
+            </Link>
+            <Link href="/pengaturan-profil" className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Pengaturan profil">
+              <Settings className="h-4 w-4" />
+            </Link>
+            <button type="button" onClick={handleLogout} className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-destructive transition-colors hover:bg-destructive/10" aria-label="Logout">
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function DashboardKPISection() {
   return (
@@ -379,9 +407,9 @@ export default function DashboardPage() {
         id="main-content"
         aria-label="Konten utama dashboard PIINDUNG"
       >
-        {/* 1. Hero Banner — primary CTA + brand statement */}
+        {/* 1. Welcome and profile */}
         <RevealBlock delay={160}>
-          <HeroBanner />
+          <DashboardWelcomeSection />
         </RevealBlock>
 
         {/* 2. KPI Metrics — institutional snapshot */}
@@ -389,34 +417,29 @@ export default function DashboardPage() {
           <DashboardKPISection />
         </RevealBlock>
 
-        {/* 3. Quick Actions — highest-frequency user tasks */}
-        <RevealBlock delay={280}>
-          <QuickActions />
-        </RevealBlock>
-
-        {/* 4. Integrated Apps — GORUT & other modules */}
-        <RevealBlock delay={360}>
+        {/* 2. Integrated Apps — GORUT & other modules */}
+        <RevealBlock delay={240}>
           <AppCards />
         </RevealBlock>
 
-        {/* 5. Info Section — program, gallery, download, contacts */}
-        <RevealBlock delay={440}>
+        {/* 3. Info Section — program, gallery, download, contacts */}
+        <RevealBlock delay={320}>
           <InfoSection />
         </RevealBlock>
 
-        {/* 6. Announcements — key institutional links */}
-        <RevealBlock delay={520}>
+        {/* 4. Announcements — key institutional links */}
+        <RevealBlock delay={400}>
           <AnnouncementWidget />
         </RevealBlock>
 
-        {/* 7. Activity — recent account actions (empty until Sprint 7) */}
-        <RevealBlock delay={600}>
+        {/* 5. Activity — recent account actions (empty until Sprint 7) */}
+        <RevealBlock delay={480}>
           <ActivityWidget />
         </RevealBlock>
       </main>
 
       {/* Footer */}
-      <RevealBlock delay={680}>
+      <RevealBlock delay={560}>
         <Footer />
       </RevealBlock>
 
