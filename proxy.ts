@@ -5,7 +5,7 @@ import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
 const protectedUiPrefixes = ["/dashboard", "/admin", "/profil", "/pengaturan-profil", "/gorut"]
-const adminApiPrefixes = ["/api/users", "/api/records"]
+const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-scopes"]
 const publicReadableRecordScopes = new Set([
   "maintenance-mode",
   "system-settings",
@@ -170,7 +170,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    if (pathname.startsWith("/api/records") || pathname.startsWith("/api/users")) {
+    if (pathname.startsWith("/api/records") || pathname.startsWith("/api/users") || pathname.startsWith("/api/user-operational-scopes")) {
       if (!canAccessAdminDashboard(session.role)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }

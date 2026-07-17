@@ -1,7 +1,10 @@
 "use client"
 
 import { createCollectionClient } from "@/services/api/record-client"
-import type { UserRole } from "@/lib/auth-context"
+import type { AppRole as UserRole } from "@/types/auth"
+import { globalOperationalRoles, gorutScopedOperationalRoles } from "@/lib/user-operational-scope-rules"
+
+export { globalOperationalRoles, gorutScopedOperationalRoles } from "@/lib/user-operational-scope-rules"
 
 export interface UserOperationalScope {
   id: string
@@ -12,8 +15,6 @@ export interface UserOperationalScope {
 }
 
 export const USER_OPERATIONAL_SCOPE_EVENT = "user-operational-scope-updated"
-
-export const gorutScopedOperationalRoles: UserRole[] = ["admin_upzis", "admin_kordes"]
 
 export type OperationalScopeStatus = "Lengkap" | "Belum Ditentukan" | "Tidak Diperlukan"
 
@@ -56,17 +57,25 @@ export function readUserOperationalScopes() {
   return userOperationalScopeClient.readItemsSync()
 }
 
-export async function upsertUserOperationalScope(scope: Omit<UserOperationalScope, "id">) {
-  const existing = readUserOperationalScopes().find((item) => item.userId === scope.userId)
-  if (existing) {
-    return userOperationalScopeClient.updateItem(existing.id, {
-      ...existing,
-      ...scope,
-    })
-  }
+export async function refreshUserOperationalScopes() {
+  return userOperationalScopeClient.readItems()
+}
 
-  return userOperationalScopeClient.createItem({
-    id: `user-scope-${scope.userId}`,
-    ...scope,
+export interface UserOperationalScopeSaveOptions {
+  clearStaleLocalScope?: boolean
+  confirmStaleScope?: boolean
+}
+
+export async function upsertUserOperationalScope(scope: Omit<UserOperationalScope, "id">, options: UserOperationalScopeSaveOptions = {}) {
+  const response = await fetch("/api/user-operational-scopes", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...scope, ...options }),
   })
+
+  const payload = (await response.json().catch(() => null)) as { scope?: UserOperationalScope | null; error?: string } | null
+  if (!response.ok) throw new Error(payload?.error || "Gagal menyimpan penempatan operasional.")
+
+  return payload?.scope ?? null
 }
