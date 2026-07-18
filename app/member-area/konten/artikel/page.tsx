@@ -176,7 +176,10 @@ export default function MemberArticleDirectoryPage() {
             <h1 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">Kelola Artikel Publik</h1>
             <p className="mt-3 max-w-3xl text-muted-foreground">Lihat artikel, status publikasi, kategori, dan konten unggulan PIINDUNG melalui satu pusat pengelolaan.</p>
           </div>
-          <button onClick={() => router.push("/member-area/konten/artikel/baru")} disabled={deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] px-5 text-sm font-semibold text-white transition hover:bg-[#107947] disabled:opacity-60"><Plus className="h-4 w-4" /> Tambah Artikel</button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button onClick={() => router.push("/member-area/konten/artikel/migrasi")} disabled={deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-5 text-sm font-semibold hover:bg-accent disabled:opacity-60"><RotateCcw className="h-4 w-4" /> Tinjau Konten Lama</button>
+            <button onClick={() => router.push("/member-area/konten/artikel/baru")} disabled={deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] px-5 text-sm font-semibold text-white transition hover:bg-[#107947] disabled:opacity-60"><Plus className="h-4 w-4" /> Tambah Artikel</button>
+          </div>
         </div>
       </motion.section>
 
