@@ -4,7 +4,7 @@ import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
-const protectedUiPrefixes = ["/dashboard", "/admin", "/profil", "/pengaturan-profil", "/gorut"]
+const protectedUiPrefixes = ["/dashboard", "/admin", "/profil", "/pengaturan-profil", "/gorut", "/member-area"]
 const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-scopes"]
 const publicReadableRecordScopes = new Set([
   "maintenance-mode",

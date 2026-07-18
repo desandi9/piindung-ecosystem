@@ -49,7 +49,7 @@ export const memberMenuSections = [
   },
   {
     title: "KONTEN",
-    items: [{ id: "konten-publik", label: "Konten Publik", href: "#", icon: Search, status: "Segera Tersedia" }],
+    items: [{ id: "konten-publik", label: "Konten Publik", href: "/member-area/konten", icon: Search }],
   },
   {
     title: "PEMANTAUAN",
