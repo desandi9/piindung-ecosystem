@@ -15,7 +15,6 @@ const publicReadableRecordScopes = new Set([
   "download-center",
   "popup-announcements",
   "integrated-apps",
-  "faq-manager",
   "public-products",
 ])
 const publicAssetPattern = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$/i
@@ -157,7 +156,7 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/")) {
     if (isAuthApiPath(pathname)) return NextResponse.next()
 
-    if (request.method === "GET" && pathname === "/api/homepage-content/public") return NextResponse.next()
+    if (request.method === "GET" && (pathname === "/api/homepage-content/public" || pathname === "/api/help-content")) return NextResponse.next()
 
     const recordScope = extractRecordScope(pathname)
     if (request.method === "GET" && recordScope && publicReadableRecordScopes.has(recordScope)) {

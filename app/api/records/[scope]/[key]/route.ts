@@ -10,7 +10,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
@@ -30,7 +30,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
@@ -56,7 +56,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
       const protection = await protectHomepageContentMutation("delete", key)
       if (protection.response) return protection.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }

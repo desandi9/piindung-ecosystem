@@ -10,7 +10,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sco
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
