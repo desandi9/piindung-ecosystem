@@ -1,295 +1,48 @@
 "use client"
 
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useEffect, useState } from "react"
 import Link from "next/link"
-import {
-  ArrowLeft,
-  Check,
-  Clock,
-  Copy,
-  ExternalLink,
-  Facebook,
-  Instagram,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Music2,
-  Phone,
-} from "lucide-react"
-import { SimpleFooter } from "@/components/piindung/simple-footer"
-import { Navbar } from "@/components/piindung/navbar"
+import { ArrowLeft, Clock, Mail, MapPin, MessageCircle, Phone, ExternalLink } from "lucide-react"
+import { PublicFooter } from "@/components/piindung/public-footer"
+import { PublicNavbar } from "@/components/piindung/public-navbar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { addInboxMessage } from "@/lib/admin-inbox"
-import { useContactSocialSettings, whatsappHref, normalizeWhatsApp } from "@/lib/contact-social"
+import { normalizeWhatsApp } from "@/lib/contact-social"
+import type { SiteContactContent } from "@/lib/site-contact"
+
+function whatsappHref(number: string, message: string) {
+  return `https://wa.me/${number.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`
+}
 
 export default function KontakPage() {
-  const settings = useContactSocialSettings()
-  const [copied, setCopied] = useState<string | null>(null)
+  const [content, setContent] = useState<SiteContactContent | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState("")
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" })
   const [formError, setFormError] = useState<string | null>(null)
   const [submitState, setSubmitState] = useState<"idle" | "success">("idle")
-  const contacts = [
-    { icon: MapPin, label: "Alamat Kantor", value: settings.address, href: settings.googleMapsLink },
-    { icon: MessageCircle, label: "WhatsApp", value: settings.whatsapp, href: whatsappHref(settings.whatsapp) },
-    { icon: Mail, label: "Email", value: settings.email, href: `mailto:${settings.email}` },
-    { icon: Instagram, label: "Instagram", value: settings.instagram, href: settings.instagram },
-    { icon: Music2, label: "TikTok", value: settings.tiktok, href: settings.tiktok },
-    { icon: Facebook, label: "Facebook", value: settings.facebook, href: settings.facebook },
-  ]
 
-  const copyContact = async (value: string, label: string) => {
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(value)
-    } else {
-      const textArea = document.createElement("textarea")
-      textArea.value = value
-      textArea.style.position = "fixed"
-      textArea.style.opacity = "0"
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand("copy")
-      document.body.removeChild(textArea)
-    }
-
-    setCopied(label)
-    window.setTimeout(() => setCopied(null), 1800)
+  const load = async () => {
+    setLoading(true); setLoadError("")
+    try {
+      const response = await fetch("/api/site-contact", { cache: "no-store" })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || "Gagal memuat data kontak.")
+      setContent(data.contact)
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "Gagal memuat data kontak.")
+    } finally { setLoading(false) }
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => { void load() }, [])
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (!form.email.trim() && !form.phone.trim()) {
-      setFormError("Isi email atau nomor WhatsApp agar admin dapat membalas.")
-      return
-    }
-
-    addInboxMessage({
-      source: "Kontak Kami",
-      title: `Pesan dari ${form.name.trim()}`,
-      senderName: form.name.trim(),
-      senderEmail: form.email.trim(),
-      senderPhone: form.phone.trim(),
-      message: form.message.trim(),
-    })
-
-    setForm({ name: "", email: "", phone: "", message: "" })
-    setFormError(null)
-    setSubmitState("success")
+    if (!form.email.trim() && !form.phone.trim()) { setFormError("Isi email atau nomor WhatsApp agar admin dapat membalas."); return }
+    addInboxMessage({ source: "Kontak Kami", title: `Pesan dari ${form.name.trim()}`, senderName: form.name.trim(), senderEmail: form.email.trim(), senderPhone: form.phone.trim(), message: form.message.trim() })
+    setForm({ name: "", email: "", phone: "", message: "" }); setFormError(null); setSubmitState("success")
   }
 
-  return (
-    <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,rgba(46,139,87,0.08),transparent_28%),hsl(var(--background))]">
-      <Navbar />
-      <main className="container mx-auto flex-1 px-4 py-6 lg:px-8 lg:py-8">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Beranda
-        </Link>
-
-        <div className="mb-6 rounded-[28px] border border-border/60 bg-card/70 p-5 shadow-[0_18px_48px_rgba(0,0,0,0.08)] backdrop-blur-sm lg:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#2e8b57]">Hubungi Kami</p>
-          <h1 className="mt-2 text-2xl font-semibold text-foreground lg:text-3xl">
-            Kontak Kami
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Hubungi NU Care-LAZISNU PCNU Kabupaten Garut
-          </p>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-5">
-          <div className="space-y-5">
-            <section className="overflow-hidden rounded-[28px] border border-border/70 bg-card/80 transition-all duration-300 hover:border-[#2e8b57]/30 hover:shadow-[0_22px_52px_rgba(0,0,0,0.1)]">
-              <div className="p-4 lg:p-5 border-b border-border bg-gradient-to-r from-[#2e8b57]/10 to-[#2e8b57]/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#2e8b57]/10 flex items-center justify-center">
-                    <MapPin className="h-5 w-5 text-[#2e8b57]" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-foreground">Lokasi Kantor</h2>
-                    <p className="text-xs text-muted-foreground">Sekretariat NU Care-LAZISNU Garut</p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 lg:p-5">
-                <div className="overflow-hidden rounded-2xl border border-border bg-background h-[300px] lg:h-[400px]">
-                  <iframe
-                    src={settings.googleMapsEmbed}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Lokasi NU Care-LAZISNU Garut"
-                    className="grayscale-[20%] transition-all duration-300 hover:grayscale-0"
-                  />
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-[28px] border border-border/70 bg-card/80 p-4 transition-all duration-300 hover:border-[#2e8b57]/30 hover:shadow-[0_22px_52px_rgba(0,0,0,0.1)] lg:p-6">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-[#2e8b57]/10 flex items-center justify-center shrink-0">
-                  <MessageCircle className="h-5 w-5 text-[#2e8b57]" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-foreground">Kirim Pesan</h2>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Pesan Anda akan langsung masuk ke inbox Admin Dashboard.
-                  </p>
-                </div>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Input
-                    value={form.name}
-                    onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    placeholder="Nama lengkap"
-                    required
-                    className="rounded-xl"
-                  />
-                  <Input
-                    value={form.email}
-                    onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                    placeholder="Email aktif"
-                    type="email"
-                    className="rounded-xl"
-                  />
-                </div>
-
-                <Input
-                  value={form.phone}
-                  onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                  placeholder="Nomor WhatsApp"
-                  className="rounded-xl"
-                />
-
-                <Textarea
-                  value={form.message}
-                  onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
-                  placeholder="Tulis pesan Anda di sini"
-                  required
-                  className="min-h-32 rounded-xl"
-                />
-
-                {formError ? <p className="text-xs text-destructive">{formError}</p> : null}
-                {submitState === "success" ? (
-                  <p className="text-xs text-[#2e8b57]">Pesan berhasil dikirim ke admin.</p>
-                ) : null}
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#2e8b57] px-4 py-3 text-sm font-medium text-white hover:bg-[#236b43] hover:shadow-lg hover:shadow-[#2e8b57]/20"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Kirim ke Admin
-                  </button>
-                </div>
-              </form>
-            </section>
-          </div>
-
-          <aside className="space-y-4 lg:sticky lg:top-24">
-            <div className="rounded-[24px] border border-border/70 bg-card/80 p-4 transition-all duration-300 hover:border-[#2e8b57]/30 hover:shadow-[0_18px_46px_rgba(0,0,0,0.08)] lg:p-4.5">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#2e8b57]/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-[#2e8b57]" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-foreground">Jam Layanan</h2>
-                  {settings.officeHours.split("\n").map((line) => (
-                    <p key={line} className="mt-1 text-xs leading-5 text-muted-foreground">{line}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {contacts.map((contact) => {
-              const isCopied = copied === contact.label
-
-              return (
-                <div
-                  key={contact.label}
-                  className="rounded-[24px] border border-border/70 bg-card/80 p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#2e8b57]/30 hover:shadow-[0_18px_46px_rgba(0,0,0,0.08)]"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#2e8b57]/10">
-                      <contact.icon className="h-5 w-5 text-[#2e8b57]" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">{contact.label}</p>
-                      <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">{contact.value}</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => copyContact(contact.value, contact.label)}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-border py-2 text-xs font-medium text-foreground hover:border-[#2e8b57]/30 hover:bg-[#2e8b57]/5"
-                    >
-                      {isCopied ? <Check className="h-3.5 w-3.5 text-[#2e8b57]" /> : <Copy className="h-3.5 w-3.5" />}
-                      {isCopied ? "Tersalin" : "Salin"}
-                    </button>
-                    <a
-                      href={contact.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2e8b57] py-2 text-xs font-medium text-white hover:bg-[#236b43] hover:shadow-lg hover:shadow-[#2e8b57]/20"
-                    >
-                      Buka
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
-                </div>
-              )
-            })}
-
-            <div className="rounded-[24px] border border-border/70 bg-card/80 p-4 transition-all duration-300 hover:border-[#2e8b57]/30 hover:shadow-[0_18px_46px_rgba(0,0,0,0.08)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2e8b57]">Aksi Cepat</p>
-              <div className="mt-3 space-y-2.5">
-                <a
-                  href={whatsappHref(settings.whatsapp)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2e8b57] px-4 py-3 text-sm font-medium text-white hover:bg-[#236b43] hover:shadow-lg hover:shadow-[#2e8b57]/20"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  WhatsApp Sekarang
-                </a>
-                <a
-                  href={`mailto:${settings.email}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:border-[#2e8b57]/30 hover:bg-[#2e8b57]/5"
-                >
-                  <Mail className="h-4 w-4 text-[#2e8b57]" />
-                  Kirim Email
-                </a>
-                <a
-                  href={`tel:+${normalizeWhatsApp(settings.whatsapp)}`}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground hover:border-[#2e8b57]/30 hover:bg-[#2e8b57]/5"
-                >
-                  <Phone className="h-4 w-4 text-[#2e8b57]" />
-                  Telepon
-                </a>
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-border/70 bg-[linear-gradient(180deg,rgba(46,139,87,0.08),rgba(255,255,255,0.02))] p-4 transition-all duration-300 hover:border-[#2e8b57]/30 hover:shadow-[0_18px_46px_rgba(0,0,0,0.08)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2e8b57]">Respon Admin</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">Balasan lebih cepat lewat WhatsApp</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Untuk kebutuhan mendesak, gunakan tombol WhatsApp agar tim admin dapat merespons lebih cepat pada jam layanan.
-              </p>
-            </div>
-          </aside>
-        </div>
-      </main>
-      <SimpleFooter />
-    </div>
-  )
+  return <div className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(46,139,87,0.08),transparent_28%),hsl(var(--background))]"><PublicNavbar /><main className="container mx-auto px-4 py-8 lg:px-8"><Link href="/" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Kembali ke Beranda</Link><header className="mb-8 rounded-[28px] border border-border/60 bg-card/70 p-6 shadow-sm lg:p-8"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#15945b]">Hubungi Kami</p><h1 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">{content?.organization.name ?? "Kontak Kami"}</h1><p className="mt-3 max-w-3xl text-muted-foreground">{content?.organization.description ?? "Hubungi tim kami untuk mendapatkan informasi dan bantuan."}</p></header>{loading ? <div className="grid gap-5 lg:grid-cols-2"><div className="h-96 animate-pulse rounded-[28px] bg-muted" /><div className="h-96 animate-pulse rounded-[28px] bg-muted" /></div> : loadError ? <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-6 text-amber-800 dark:text-amber-300"><p>{loadError}</p><button onClick={load} className="mt-4 h-11 rounded-xl bg-[#15945b] px-5 font-semibold text-white">Coba Lagi</button></div> : content ? <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]"><div className="space-y-5"><section className="overflow-hidden rounded-[28px] border border-border/70 bg-card"><div className="border-b border-border bg-[#15945b]/10 p-5"><div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-[#15945b]" /><div><h2 className="font-semibold">Lokasi Kantor</h2><p className="text-xs text-muted-foreground">{content.organization.address}, {content.organization.city} {content.organization.postalCode}</p></div></div></div><div className="p-5"><div className="h-64 overflow-hidden rounded-2xl border border-border bg-muted lg:h-80"><iframe src={content.organization.mapUrl} title="Lokasi kantor" className="h-full w-full border-0" loading="lazy" /></div><a href={content.organization.mapUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold hover:bg-accent">Buka Peta <ExternalLink className="h-4 w-4" /></a></div></section><section className="rounded-[28px] border border-border/70 bg-card p-5"><div className="flex items-center gap-3"><MessageCircle className="h-5 w-5 text-[#15945b]" /><div><h2 className="font-semibold">Kirim Pesan</h2><p className="text-xs text-muted-foreground">Pesan masuk ke inbox Admin Dashboard.</p></div></div><form onSubmit={submit} className="mt-5 space-y-3"><div className="grid gap-3 sm:grid-cols-2"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Nama lengkap" required /><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email aktif" type="email" /></div><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Nomor WhatsApp" /><Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Tulis pesan Anda" required className="min-h-32" />{formError && <p className="text-xs text-destructive">{formError}</p>}{submitState === "success" && <p className="text-xs text-[#15945b]">Pesan berhasil dikirim ke admin.</p>}<button className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#15945b] px-5 text-sm font-semibold text-white hover:bg-[#107947]"><MessageCircle className="h-4 w-4" /> Kirim ke Admin</button></form></section></div><aside className="space-y-4 lg:sticky lg:top-24"><div className="rounded-[24px] border border-border bg-card p-5"><h2 className="font-semibold">Informasi Kontak</h2><div className="mt-4 space-y-3 text-sm text-muted-foreground"><a href={whatsappHref(content.contact.whatsappNumber, content.contact.whatsappMessage)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-[#15945b]"><MessageCircle className="h-4 w-4 text-[#15945b]" /> {content.contact.phoneDisplay}</a><a href={`mailto:${content.contact.email}`} className="flex items-center gap-3 hover:text-[#15945b]"><Mail className="h-4 w-4 text-[#15945b]" /> {content.contact.email}</a><a href={`tel:+${normalizeWhatsApp(content.contact.phoneHref)}`} className="flex items-center gap-3 hover:text-[#15945b]"><Phone className="h-4 w-4 text-[#15945b]" /> Telepon</a></div></div>{content.officeHours.visible && <div className="rounded-[24px] border border-border bg-card p-5"><h2 className="flex items-center gap-2 font-semibold"><Clock className="h-4 w-4 text-[#15945b]" /> Jam Layanan</h2>{content.officeHours.items.map((item) => <p key={item.id} className="mt-2 text-sm text-muted-foreground">{item.dayLabel}: {item.timeLabel}</p>)}</div>}</aside></div> : null}</main><PublicFooter /></div>
 }

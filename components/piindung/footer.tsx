@@ -2,9 +2,10 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { Phone, Mail, MapPin } from "lucide-react"
-import { useContactSocialSettings, whatsappHref } from "@/lib/contact-social"
 import { getResolvedLogoUrl, useStoredSystemSettings } from "@/lib/system-settings"
+import { whatsappHref, type SiteContactContent } from "@/lib/site-contact"
 
 // Social media icon components
 function InstagramIcon({ className }: { className?: string }) {
@@ -50,16 +51,24 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 export function Footer() {
-  const settings = useContactSocialSettings()
   const { settings: systemSettings } = useStoredSystemSettings()
+  const [settings, setSettings] = useState<SiteContactContent | null>(null)
   const footerLogo = getResolvedLogoUrl(systemSettings.logoUrl, "dark")
+
+  useEffect(() => {
+    fetch("/api/site-contact")
+      .then((res) => res.json())
+      .then((data) => { if (data.contact) setSettings(data.contact) })
+      .catch(() => {})
+  }, [])
+
   const socialLinks = [
-    { href: settings.instagram, icon: InstagramIcon, label: "Instagram" },
-    { href: settings.facebook, icon: FacebookIcon, label: "Facebook" },
-    { href: "https://www.youtube.com/results?search_query=NU+Care+LAZISNU+Garut", icon: YoutubeIcon, label: "Youtube" },
-    { href: settings.tiktok, icon: TikTokIcon, label: "TikTok" },
-    { href: whatsappHref(settings.whatsapp), icon: WhatsAppIcon, label: "WhatsApp" },
-  ].filter((social) => social.href)
+    { href: settings?.socialLinks.find((s) => s.platform === "instagram")?.url, icon: InstagramIcon, label: "Instagram" },
+    { href: settings?.socialLinks.find((s) => s.platform === "facebook")?.url, icon: FacebookIcon, label: "Facebook" },
+    { href: settings?.socialLinks.find((s) => s.platform === "youtube")?.url, icon: YoutubeIcon, label: "Youtube" },
+    { href: settings?.socialLinks.find((s) => s.platform === "tiktok")?.url, icon: TikTokIcon, label: "TikTok" },
+    { href: settings ? whatsappHref(settings.contact.whatsappNumber, settings.contact.whatsappMessage) : undefined, icon: WhatsAppIcon, label: "WhatsApp" },
+  ].filter((social): social is { href: string; icon: ({ className }: { className?: string | undefined; }) => React.JSX.Element; label: string; } => Boolean(social.href))
 
   return (
     <footer className="bg-gradient-to-br from-[#0f3460] via-[#16213e] to-[#0a1628] text-white mt-8 pb-4">
@@ -112,15 +121,15 @@ export function Footer() {
             <div className="space-y-3">
               <ContactItem 
                 icon={<Phone className="h-4 w-4" />} 
-                text={settings.whatsapp} 
+                text={settings?.contact.phoneDisplay ?? "-"} 
               />
               <ContactItem 
                 icon={<Mail className="h-4 w-4" />} 
-                text={settings.email} 
+                text={settings?.contact.email ?? "-"} 
               />
               <ContactItem 
                 icon={<MapPin className="h-4 w-4" />} 
-                text={settings.address} 
+                text={settings?.organization.address ?? "-"} 
               />
             </div>
           </div>
@@ -129,8 +138,8 @@ export function Footer() {
           <div>
             <h3 className="text-sm font-semibold mb-4">Sekretariat</h3>
             <p className="text-sm text-white/80 leading-relaxed">
-              {settings.officeHours.split("\n").map((line) => (
-                <span key={line}>{line}<br /></span>
+              {settings?.officeHours.items.map((item) => (
+                <span key={item.id}>{item.dayLabel}, {item.timeLabel}<br /></span>
               ))}
             </p>
           </div>
@@ -138,14 +147,14 @@ export function Footer() {
           {/* Google Maps Embed */}
           <div>
             <Link 
-              href={settings.googleMapsLink}
+              href={settings?.organization.mapUrl ?? "#"}
               target="_blank"
               rel="noopener noreferrer"
               className="block group"
             >
               <div className="w-full h-28 lg:h-32 rounded-xl overflow-hidden relative border border-white/10 transition-all duration-300 ease-out group-hover:border-white/20 group-hover:shadow-lg group-hover:shadow-white/5">
                 <iframe
-                  src={settings.googleMapsEmbed}
+                  src={settings?.organization.mapUrl ?? "about:blank"}
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
