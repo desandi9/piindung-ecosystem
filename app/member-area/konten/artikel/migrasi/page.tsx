@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
 import { cn } from "@/lib/utils"
-import type { ArticleRetirementStatus } from "@/lib/article-retirement"
+import type { LegacyArticleMigrationPreview, LegacyArticlePreviewItem } from "@/lib/article-legacy-preview"
 
 type Filter = "semua" | "ready" | "invalid" | "conflict" | "migrated"
 
