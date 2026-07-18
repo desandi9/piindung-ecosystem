@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { getPrismaClient } from "@/lib/prisma"
 import { readManagedArticles } from "@/lib/article-content"
+import { listRecords } from "@/lib/record-store-server"
 import { requireArticleManager } from "@/lib/article-content-api"
 import { previewLegacyArticleMigration } from "@/lib/article-legacy-preview"
 
@@ -9,10 +9,16 @@ export async function GET() {
     const access = await requireArticleManager()
     if (access.response) return access.response
 
-    const [migration, existingArticles] = await Promise.all([
+    const [migration, existingArticles, maps] = await Promise.all([
       previewLegacyArticleMigration(),
       readManagedArticles(),
+      listRecords("article-migration-map"),
     ])
+
+    const mappedKeys = new Set(maps.map((record) => record.key))
+    for (const candidate of migration.candidates) {
+      if (mappedKeys.has(candidate.legacyReference)) candidate.issues.push("Kemungkinan sudah dimigrasi: migration map ditemukan.")
+    }
 
     const existingSlugs = new Set(existingArticles.map((article) => article.slug))
     const existingTitles = new Set(existingArticles.map((article) => article.title.toLowerCase()))
