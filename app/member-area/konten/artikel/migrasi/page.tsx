@@ -35,6 +35,11 @@ export default function ArticleMigrationPreviewPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [migrating, setMigrating] = useState(false)
   const [results, setResults] = useState<Array<{ legacyRecordKey: string; title?: string; status: string; articleSlug?: string; reason?: string }>>([])
+  const [archiveSelected, setArchiveSelected] = useState<string[]>([])
+  const [archivePhrase, setArchivePhrase] = useState("")
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+  const [archiveResults, setArchiveResults] = useState<Array<{ legacyRecordKey: string; status: string; articleSlug?: string; reason?: string }>>([])
   const ready = !isLoading && user?.role === "super_admin_pc"
 
   const load = async () => {
@@ -45,6 +50,7 @@ export default function ArticleMigrationPreviewPage() {
       if (!response.ok) throw new Error(data.error || "Gagal memuat pratinjau migrasi.")
       setPreview(data.migration)
       setSelected([])
+      setArchiveSelected([])
     } catch (err) { setError(err instanceof Error ? err.message : "Gagal memuat pratinjau migrasi.") }
     finally { setLoading(false) }
   }
@@ -109,6 +115,22 @@ export default function ArticleMigrationPreviewPage() {
     finally { setMigrating(false) }
   }
 
+  const archiveEligible = preview?.candidates.filter((item) => item.article !== null && item.issues.some((issue) => issue.includes("migration map ditemukan")) && !item.issues.some((issue) => issue.includes("tidak ditemukan") || issue.includes("sudah diarsipkan"))) ?? []
+  const toggleArchive = (key: string) => setArchiveSelected((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key])
+  const archiveSelectedRecords = async () => {
+    if (archiveSelected.length === 0 || archiving || archivePhrase !== "ARSIPKAN KONTEN LAMA") return
+    setArchiving(true); setError("")
+    try {
+      const response = await fetch("/api/articles/archive-legacy", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ legacyRecordKeys: archiveSelected, confirm: true, confirmationPhrase: archivePhrase }) })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || "Gagal mengarsipkan konten lama.")
+      setArchiveResults(Array.isArray(data.results) ? data.results : [])
+      setArchiveConfirmOpen(false); setArchivePhrase("")
+      await load()
+    } catch (err) { setError(err instanceof Error ? err.message : "Gagal mengarsipkan konten lama.") }
+    finally { setArchiving(false) }
+  }
+
   if (!ready) return <div className="min-h-screen bg-background" />
 
   return <MemberLayout title="Migrasi Artikel" breadcrumb="Member Area / Konten Publik / Artikel / Migrasi">
@@ -159,13 +181,15 @@ export default function ArticleMigrationPreviewPage() {
         </div>
       </motion.section>
 
+      <motion.section variants={reveal} initial="hidden" animate="visible" className="rounded-[24px] border border-amber-500/20 bg-card p-5 shadow-sm"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">ARSIP KONTEN LAMA</p><h2 className="mt-2 text-xl font-bold">Arsipkan Legacy yang Sudah Dimigrasikan</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Artikel terkelola dan migration map tetap aktif. Record lama disalin ke arsip privat, lalu dihapus dari homepage-content aktif.</p></div><div className="flex flex-col gap-2 sm:flex-row"><button onClick={() => setArchiveSelected(archiveEligible.map((item) => item.legacyReference))} disabled={archiveEligible.length === 0 || archiving} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold disabled:opacity-50">Pilih Semua yang Sudah Dimigrasikan</button><button onClick={() => setArchiveConfirmOpen(true)} disabled={archiveSelected.length === 0 || archiving} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white disabled:opacity-50">Arsipkan Konten Lama Terpilih ({archiveSelected.length})</button></div></div>{archiveEligible.length > 0 && <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{archiveEligible.map((item) => <label key={item.legacyReference} className="flex min-h-11 items-center gap-3 rounded-xl border border-border p-3 text-sm"><input type="checkbox" checked={archiveSelected.includes(item.legacyReference)} onChange={() => toggleArchive(item.legacyReference)} className="h-4 w-4 accent-amber-600" /><span className="min-w-0 truncate font-medium">{item.article?.title}</span></label>)}</div>}{archiveResults.length > 0 && <div className="mt-5 space-y-2 border-t border-border pt-4">{archiveResults.map((result) => <div key={result.legacyRecordKey} className="rounded-xl border border-border p-3 text-sm"><span className="font-mono text-xs">{result.legacyRecordKey}</span> — <span className="font-semibold">{result.status}</span>{result.articleSlug && <span> → /{result.articleSlug}</span>}{result.reason && <span className="text-muted-foreground">: {result.reason}</span>}</div>)}</div>}</motion.section>
+
       <motion.section variants={reveal} initial="hidden" animate="visible" className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
         <div className="border-b border-border p-5"><h2 className="text-lg font-bold">Pratinjau Migrasi</h2><p className="text-sm text-muted-foreground">{filtered.length} kandidat ditampilkan</p></div>
         {results.length > 0 && <div className="border-b border-border p-5"><h3 className="font-semibold">Hasil Migrasi</h3><div className="mt-3 space-y-2">{results.map((result) => <div key={result.legacyRecordKey} className="rounded-xl border border-border p-3 text-sm"><span className="font-mono text-xs">{result.legacyRecordKey}</span> — <span className="font-semibold">{result.status}</span>{result.articleSlug && <span> → /{result.articleSlug}</span>}{result.reason && <span className="text-muted-foreground">: {result.reason}</span>}</div>)}</div></div>}
         {loading ? <div className="space-y-3 p-5">{Array.from({ length: 5 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-2xl bg-muted" />)}</div> : !preview ? <EmptyState title="Pratinjau Tidak Tersedia" description="Gagal memuat pratinjau migrasi." /> : filtered.length === 0 ? <EmptyState title="Tidak ada hasil" description="Ubah kata kunci atau reset filter untuk melihat kandidat lain." /> : <><DesktopTable items={filtered} selected={selected} onToggle={toggleSelected} onView={setDetail} /><MobileCards items={filtered} selected={selected} onToggle={toggleSelected} onView={setDetail} /></>}
       </motion.section>
 
-      <AnimatePresence>{detail && <DetailDialog item={detail} reduced={Boolean(prefersReducedMotion)} onClose={() => setDetail(null)} />}{confirmOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"><div className="w-full rounded-t-[24px] bg-card p-6 sm:max-w-lg sm:rounded-[24px]"><h2 className="text-2xl font-bold">Konfirmasi Migrasi</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Migrasikan {selected.length} konten terpilih? Record legacy tetap tersimpan dan tidak akan diubah atau dihapus.</p><div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end"><button onClick={() => setConfirmOpen(false)} disabled={migrating} className="min-h-11 rounded-xl border border-border px-5 font-semibold">Batal</button><button onClick={migrateSelected} disabled={migrating} className="min-h-11 rounded-xl bg-[#15945b] px-5 font-semibold text-white disabled:opacity-50">{migrating ? "Memigrasikan..." : "Ya, Migrasikan"}</button></div></div></motion.div>}</AnimatePresence>
+      <AnimatePresence>{detail && <DetailDialog item={detail} reduced={Boolean(prefersReducedMotion)} onClose={() => setDetail(null)} />}{confirmOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"><div className="w-full rounded-t-[24px] bg-card p-6 sm:max-w-lg sm:rounded-[24px]"><h2 className="text-2xl font-bold">Konfirmasi Migrasi</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Migrasikan {selected.length} konten terpilih? Record legacy tetap tersimpan dan tidak akan diubah atau dihapus.</p><div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end"><button onClick={() => setConfirmOpen(false)} disabled={migrating} className="min-h-11 rounded-xl border border-border px-5 font-semibold">Batal</button><button onClick={migrateSelected} disabled={migrating} className="min-h-11 rounded-xl bg-[#15945b] px-5 font-semibold text-white disabled:opacity-50">{migrating ? "Memigrasikan..." : "Ya, Migrasikan"}</button></div></div></motion.div>}{archiveConfirmOpen && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"><div className="w-full rounded-t-[24px] bg-card p-6 sm:max-w-lg sm:rounded-[24px]"><h2 className="text-2xl font-bold">Konfirmasi Arsip</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Artikel publik tetap aktif, migration map tetap tersimpan, record lama akan disalin ke arsip privat lalu dihapus dari homepage-content aktif.</p><label className="mt-4 block space-y-2"><span className="text-sm font-semibold">Ketik tepat: ARSIPKAN KONTEN LAMA</span><input value={archivePhrase} onChange={(event) => setArchivePhrase(event.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-amber-600" /></label><div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end"><button onClick={() => setArchiveConfirmOpen(false)} disabled={archiving} className="min-h-11 rounded-xl border border-border px-5 font-semibold">Batal</button><button onClick={archiveSelectedRecords} disabled={archiving || archivePhrase !== "ARSIPKAN KONTEN LAMA"} className="min-h-11 rounded-xl bg-amber-600 px-5 font-semibold text-white disabled:opacity-50">{archiving ? "Mengarsipkan..." : "Ya, Arsipkan"}</button></div></div></motion.div>}</AnimatePresence>
     </div>
   </MemberLayout>
 }

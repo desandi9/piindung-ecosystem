@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server"
 import { deleteRecord, getRecord, updateRecord } from "@/lib/record-store-server"
 import { requireHomepageContentManager } from "@/lib/homepage-content-api"
+import { requireArticleManager } from "@/lib/article-content-api"
 
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
     if (scope === "homepage-content") {
       const access = await requireHomepageContentManager()
+      if (access.response) return access.response
+    }
+    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+      const access = await requireArticleManager()
       if (access.response) return access.response
     }
     const record = await getRecord(scope, key)
@@ -25,6 +30,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
+    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+      const access = await requireArticleManager()
+      if (access.response) return access.response
+    }
     const body = (await request.json()) as Record<string, unknown>
     const record = await updateRecord(scope, key, body)
     return NextResponse.json({ record })
@@ -39,6 +48,10 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
     const { scope, key } = await Promise.resolve(params)
     if (scope === "homepage-content") {
       const access = await requireHomepageContentManager()
+      if (access.response) return access.response
+    }
+    if (scope === "article-migration-map" || scope === "article-legacy-archive") {
+      const access = await requireArticleManager()
       if (access.response) return access.response
     }
     await deleteRecord(scope, key)
