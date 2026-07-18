@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createRecord, listRecords } from "@/lib/record-store-server"
-import { requireHomepageContentManager } from "@/lib/homepage-content-api"
+import { protectHomepageContentMutation, requireHomepageContentManager } from "@/lib/homepage-content-api"
 import { requireArticleManager } from "@/lib/article-content-api"
 
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string }> | { scope: string } }) {
@@ -36,6 +36,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ sco
     const body = (await request.json()) as { key?: string; data?: Record<string, unknown> }
     if (!body.key || !body.data) {
       return NextResponse.json({ error: "Key dan data wajib diisi." }, { status: 400 })
+    }
+    if (scope === "homepage-content") {
+      const protection = await protectHomepageContentMutation("create", body.key, body.data.type)
+      if (protection.response) return protection.response
     }
 
     const record = await createRecord(scope, body.key, body.data)
