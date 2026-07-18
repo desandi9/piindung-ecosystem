@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createRecord, listRecords } from "@/lib/record-store-server"
 import { protectHomepageContentMutation, requireHomepageContentManager } from "@/lib/homepage-content-api"
 import { requireArticleManager } from "@/lib/article-content-api"
+import { requireSiteContactManager } from "@/lib/site-contact-server"
 
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string }> | { scope: string } }) {
   try {
@@ -12,6 +13,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
     }
     if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
+      if (access.response) return access.response
+    }
+    if (scope === "contact-social") {
+      const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
     const records = await listRecords(scope)
@@ -31,6 +36,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ sco
     }
     if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
+      if (access.response) return access.response
+    }
+    if (scope === "contact-social") {
+      const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
     const body = (await request.json()) as { key?: string; data?: Record<string, unknown> }

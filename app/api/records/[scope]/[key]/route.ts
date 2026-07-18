@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { deleteRecord, getRecord, updateRecord } from "@/lib/record-store-server"
 import { protectHomepageContentMutation, requireHomepageContentManager } from "@/lib/homepage-content-api"
 import { requireArticleManager } from "@/lib/article-content-api"
+import { requireSiteContactManager } from "@/lib/site-contact-server"
 
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
@@ -12,6 +13,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
     }
     if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
+      if (access.response) return access.response
+    }
+    if (scope === "contact-social") {
+      const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
     const record = await getRecord(scope, key)
@@ -32,6 +37,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
     }
     if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
+      if (access.response) return access.response
+    }
+    if (scope === "contact-social") {
+      const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
     const body = (await request.json()) as Record<string, unknown>
@@ -58,6 +67,10 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
     }
     if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
       const access = await requireArticleManager()
+      if (access.response) return access.response
+    }
+    if (scope === "contact-social") {
+      const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
     await deleteRecord(scope, key)

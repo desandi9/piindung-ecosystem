@@ -9,7 +9,6 @@ const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-s
 const publicReadableRecordScopes = new Set([
   "maintenance-mode",
   "system-settings",
-  "contact-social",
   "notifications",
   "gallery-content",
   "download-center",
@@ -156,7 +155,7 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/")) {
     if (isAuthApiPath(pathname)) return NextResponse.next()
 
-    if (request.method === "GET" && (pathname === "/api/homepage-content/public" || pathname === "/api/help-content")) return NextResponse.next()
+    if (request.method === "GET" && (pathname === "/api/homepage-content/public" || pathname === "/api/help-content" || pathname === "/api/site-contact")) return NextResponse.next()
 
     const recordScope = extractRecordScope(pathname)
     if (request.method === "GET" && recordScope && publicReadableRecordScopes.has(recordScope)) {
