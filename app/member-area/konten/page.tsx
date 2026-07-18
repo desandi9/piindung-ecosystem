@@ -100,7 +100,7 @@ export default function KontenPublikPage() {
       statusLabel: "Tersedia",
       statusType: "ready",
       actionLabel: "Kelola Konten",
-      href: "/admin/faq",
+      href: "/member-area/konten/bantuan",
     },
     {
       title: "Media & Branding",
