@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
-import { ArrowLeft, Eye, FileText, ImageIcon, Pencil, Plus, RefreshCcw, RotateCcw, Search, Star, X } from "lucide-react"
+import { ArrowLeft, Eye, FileText, ImageIcon, Pencil, Plus, RefreshCcw, RotateCcw, Search, Star, Trash2, X } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
@@ -54,6 +54,14 @@ function statusClassName(status: ArticleStatus) {
   return "bg-muted text-muted-foreground"
 }
 
+function deleteErrorMessage(status: number, message: string) {
+  if (status === 401) return "Sesi berakhir. Silakan login kembali."
+  if (status === 403) return "Anda tidak memiliki akses untuk menghapus artikel."
+  if (status === 404) return "Artikel sudah tidak tersedia. Daftar artikel diperbarui."
+  if (status === 409) return message || "Artikel belum aman untuk dihapus."
+  return status >= 500 ? "Artikel gagal dihapus. Coba lagi nanti." : message || "Artikel gagal dihapus."
+}
+
 function Thumbnail({ article, large = false }: { article: Article; large?: boolean }) {
   return <div className={cn("relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted", large ? "aspect-video w-full" : "h-16 w-20")}>
     {article.coverImage ? <Image src={article.coverImage} alt={article.title} fill sizes={large ? "(max-width: 768px) 100vw, 720px" : "80px"} className="object-cover" /> : <ImageIcon className="h-6 w-6 text-muted-foreground" />}
@@ -68,11 +76,15 @@ export default function MemberArticleDirectoryPage() {
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [message, setMessage] = useState("")
   const [query, setQuery] = useState("")
   const [contentType, setContentType] = useState<ContentTypeFilter>("semua")
   const [status, setStatus] = useState<StatusFilter>("semua")
   const [featured, setFeatured] = useState<FeaturedFilter>("semua")
   const [preview, setPreview] = useState<Article | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Article | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState("")
+  const [deleting, setDeleting] = useState(false)
   const ready = !isLoading && user?.role === "super_admin_pc"
   const reveal = prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : fadeUp
   const itemReveal = prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : staggerItem
@@ -111,26 +123,67 @@ export default function MemberArticleDirectoryPage() {
   }, [articles, contentType, featured, query, status])
 
   const resetFilters = () => { setQuery(""); setContentType("semua"); setStatus("semua"); setFeatured("semua") }
+  const openDelete = (article: Article) => { setDeleteTarget(article); setDeleteConfirm(""); setError(""); setMessage("") }
+  const closeDelete = () => { if (!deleting) { setDeleteTarget(null); setDeleteConfirm("") } }
+
+  const deleteArticle = async () => {
+    if (!deleteTarget || deleting) return
+    const current = articles.find((article) => article.id === deleteTarget.id)
+    if (!current || current.id !== deleteTarget.id) {
+      setDeleteTarget(null)
+      setMessage("Artikel sudah tidak tersedia. Daftar artikel diperbarui.")
+      await loadArticles()
+      return
+    }
+    if (current.status === "published" && deleteConfirm !== current.title && deleteConfirm !== current.slug) {
+      setError("Ketik judul atau slug artikel Published dengan tepat sebelum menghapus.")
+      return
+    }
+
+    setDeleting(true); setError(""); setMessage("")
+    try {
+      const response = await fetch(`/api/articles/${current.id}`, { method: "DELETE", credentials: "include" })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        const mapped = deleteErrorMessage(response.status, data.error)
+        if (response.status === 404) {
+          setDeleteTarget(null)
+          setMessage(mapped)
+          await loadArticles()
+          return
+        }
+        setError(mapped)
+        return
+      }
+      setDeleteTarget(null)
+      setDeleteConfirm("")
+      setMessage(`Artikel "${current.title}" berhasil dihapus.`)
+      await loadArticles()
+    } catch {
+      setError("Artikel gagal dihapus. Coba lagi nanti.")
+    } finally { setDeleting(false) }
+  }
 
   if (!ready) return <div className="min-h-screen bg-background" />
 
   return <MemberLayout title="Artikel Publik" breadcrumb="Member Area / Konten Publik / Artikel">
     <div className="space-y-7 overflow-x-hidden">
       <motion.section variants={reveal} initial="hidden" animate="visible" className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
-        <button onClick={() => router.push("/member-area/konten")} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Kembali</button>
+        <button onClick={() => router.push("/member-area/konten")} disabled={deleting} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground disabled:opacity-60"><ArrowLeft className="h-4 w-4" /> Kembali</button>
         <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15945b]">ARTIKEL & BERITA</p>
             <h1 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">Kelola Artikel Publik</h1>
             <p className="mt-3 max-w-3xl text-muted-foreground">Lihat artikel, status publikasi, kategori, dan konten unggulan PIINDUNG melalui satu pusat pengelolaan.</p>
           </div>
-          <button onClick={() => router.push("/member-area/konten/artikel/baru")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] px-5 text-sm font-semibold text-white transition hover:bg-[#107947]"><Plus className="h-4 w-4" /> Tambah Artikel</button>
+          <button onClick={() => router.push("/member-area/konten/artikel/baru")} disabled={deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] px-5 text-sm font-semibold text-white transition hover:bg-[#107947] disabled:opacity-60"><Plus className="h-4 w-4" /> Tambah Artikel</button>
         </div>
       </motion.section>
 
-      {searchParams.get("saved") === "created" && <div role="status" className="rounded-xl border border-[#15945b]/20 bg-[#e6f7ee] px-4 py-3 text-sm font-medium text-[#15945b] dark:bg-emerald-500/10 dark:text-emerald-400">Artikel berhasil dibuat dan disimpan ke direktori.</div>}
-      {searchParams.get("saved") === "updated" && <div role="status" className="rounded-xl border border-[#15945b]/20 bg-[#e6f7ee] px-4 py-3 text-sm font-medium text-[#15945b] dark:bg-emerald-500/10 dark:text-emerald-400">Perubahan artikel berhasil disimpan ke direktori.</div>}
-      {error && <div role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><span>{error}</span><button onClick={loadArticles} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-destructive/20 px-3 font-semibold"><RefreshCcw className="h-4 w-4" /> Coba Lagi</button></div></div>}
+      {searchParams.get("saved") === "created" && <SuccessMessage>Artikel berhasil dibuat dan disimpan ke direktori.</SuccessMessage>}
+      {searchParams.get("saved") === "updated" && <SuccessMessage>Perubahan artikel berhasil disimpan ke direktori.</SuccessMessage>}
+      {message && <SuccessMessage>{message}</SuccessMessage>}
+      {error && <div role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><span>{error}</span><button onClick={loadArticles} disabled={deleting} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-destructive/20 px-3 font-semibold disabled:opacity-60"><RefreshCcw className="h-4 w-4" /> Coba Lagi</button></div></div>}
 
       <motion.section variants={prefersReducedMotion ? { hidden: {}, visible: {} } : staggerContainer} initial="hidden" animate="visible" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[["Total Artikel", summary.total, FileText], ["Draft", summary.draft, FileText], ["Dipublikasikan", summary.published, Star], ["Tidak Dipublikasikan", summary.unpublished, FileText]].map(([label, value, Icon]) => <motion.div key={label as string} variants={itemReveal} className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{label as string}</p><Icon className="h-5 w-5 text-[#15945b]" /></div><p className="mt-2 text-3xl font-bold text-foreground">{value as number}</p></motion.div>)}
@@ -138,24 +191,50 @@ export default function MemberArticleDirectoryPage() {
 
       <motion.section variants={reveal} initial="hidden" animate="visible" className="rounded-[24px] border border-border bg-card p-4 shadow-sm sm:p-5">
         <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_150px_170px_170px_auto]">
-          <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari judul, excerpt, slug, author..." className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-sm outline-none focus:border-[#15945b]" /></div>
-          <select value={contentType} onChange={(event) => setContentType(event.target.value as ContentTypeFilter)} className="h-11 rounded-xl border border-input bg-background px-3 text-sm">{contentTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
-          <select value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} className="h-11 rounded-xl border border-input bg-background px-3 text-sm">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
-          <select value={featured} onChange={(event) => setFeatured(event.target.value as FeaturedFilter)} className="h-11 rounded-xl border border-input bg-background px-3 text-sm">{featuredOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
-          <button onClick={resetFilters} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold"><RotateCcw className="h-4 w-4" /> Reset</button>
+          <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari judul, excerpt, slug, author..." disabled={deleting} className="h-11 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-sm outline-none focus:border-[#15945b] disabled:opacity-60" /></div>
+          <select value={contentType} onChange={(event) => setContentType(event.target.value as ContentTypeFilter)} disabled={deleting} className="h-11 rounded-xl border border-input bg-background px-3 text-sm disabled:opacity-60">{contentTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+          <select value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} disabled={deleting} className="h-11 rounded-xl border border-input bg-background px-3 text-sm disabled:opacity-60">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+          <select value={featured} onChange={(event) => setFeatured(event.target.value as FeaturedFilter)} disabled={deleting} className="h-11 rounded-xl border border-input bg-background px-3 text-sm disabled:opacity-60">{featuredOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+          <button onClick={resetFilters} disabled={deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-4 text-sm font-semibold disabled:opacity-60"><RotateCcw className="h-4 w-4" /> Reset</button>
         </div>
       </motion.section>
 
       <motion.section variants={reveal} initial="hidden" animate="visible" className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
         <div className="border-b border-border p-5"><h2 className="text-lg font-bold">Direktori Artikel</h2><p className="text-sm text-muted-foreground">{filtered.length} artikel ditampilkan</p></div>
-        {loading ? <div className="space-y-3 p-5">{Array.from({ length: 5 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-2xl bg-muted" />)}</div> : articles.length === 0 ? <EmptyState title="Belum ada artikel terkelola" description="Data artikel dari scope articles belum tersedia." /> : filtered.length === 0 ? <EmptyState title="Tidak ada hasil" description="Ubah kata kunci atau reset filter untuk melihat artikel lain." /> : <><div className="hidden overflow-x-auto xl:block"><table className="w-full text-sm"><thead className="border-b border-border bg-muted/40 text-muted-foreground"><tr><th className="px-5 py-3 text-left font-medium">Artikel</th><th className="px-5 py-3 text-left font-medium">Jenis</th><th className="px-5 py-3 text-left font-medium">Status</th><th className="px-5 py-3 text-left font-medium">Featured</th><th className="px-5 py-3 text-left font-medium">Tanggal Publikasi</th><th className="px-5 py-3 text-left font-medium">Diperbarui</th><th className="px-5 py-3 text-right font-medium">Preview</th></tr></thead><tbody className="divide-y divide-border">{filtered.map((article) => <tr key={article.id} className="align-top"><td className="px-5 py-4"><div className="flex gap-3"><Thumbnail article={article} /><div className="min-w-0"><p className="font-semibold text-foreground">{article.title}</p><p className="text-xs text-muted-foreground">/{article.slug}</p><p className="mt-1 max-w-md text-xs leading-5 text-muted-foreground">{safeText(article.excerpt)}</p></div></div></td><td className="px-5 py-4 capitalize">{article.contentType}</td><td className="px-5 py-4"><Badge status={article.status} /></td><td className="px-5 py-4">{article.featured ? "Ya" : "Tidak"}</td><td className="px-5 py-4 text-muted-foreground">{formatDate(article.publishedAt)}</td><td className="px-5 py-4 text-muted-foreground">{formatDate(article.updatedAt)}</td><td className="px-5 py-4 text-right"><div className="flex items-center justify-end gap-2"><button onClick={() => setPreview(article)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 font-semibold hover:bg-accent"><Eye className="h-4 w-4" /> <span className="sr-only xl:not-sr-only">Lihat</span></button><button onClick={() => router.push(`/member-area/konten/artikel/${article.id}/edit`)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#15945b] px-3 font-semibold text-white hover:bg-[#107947]"><Pencil className="h-4 w-4" /> <span className="sr-only xl:not-sr-only">Edit</span></button></div></td>
-</tr>)}</tbody></table></div><div className="grid gap-4 p-4 xl:hidden">{filtered.map((article) => <article key={article.id} className="rounded-2xl border border-border p-4"><Thumbnail article={article} large /><h3 className="mt-4 text-lg font-bold">{article.title}</h3><div className="mt-3 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-muted px-3 py-1 capitalize">{article.contentType}</span><Badge status={article.status} />{article.featured && <span className="rounded-full bg-[#e6f7ee] px-3 py-1 font-semibold text-[#15945b] dark:bg-emerald-500/10">Featured</span>}</div><p className="mt-3 text-sm text-muted-foreground">Tanggal Publikasi: {formatDate(article.publishedAt)}</p><div className="mt-4 grid grid-cols-2 gap-2"><button onClick={() => setPreview(article)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border font-semibold hover:bg-accent"><Eye className="h-4 w-4" /> Preview</button><button onClick={() => router.push(`/member-area/konten/artikel/${article.id}/edit`)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] font-semibold text-white hover:bg-[#107947]"><Pencil className="h-4 w-4" /> Edit</button></div>
-</article>)}</div></>}
+        {loading ? <div className="space-y-3 p-5">{Array.from({ length: 5 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-2xl bg-muted" />)}</div> : articles.length === 0 ? <EmptyState title="Belum ada artikel terkelola" description="Data artikel dari scope articles belum tersedia." /> : filtered.length === 0 ? <EmptyState title="Tidak ada hasil" description="Ubah kata kunci atau reset filter untuk melihat artikel lain." /> : <><DesktopTable articles={filtered} disabled={deleting} onPreview={setPreview} onEdit={(article) => router.push(`/member-area/konten/artikel/${article.id}/edit`)} onDelete={openDelete} /><MobileCards articles={filtered} disabled={deleting} onPreview={setPreview} onEdit={(article) => router.push(`/member-area/konten/artikel/${article.id}/edit`)} onDelete={openDelete} /></>}
       </motion.section>
 
-      <AnimatePresence>{preview && <motion.div initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"><motion.div initial={prefersReducedMotion ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={prefersReducedMotion ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }} className="max-h-[92vh] w-full overflow-y-auto rounded-t-[24px] bg-card p-6 shadow-xl sm:max-w-3xl sm:rounded-[24px]"><div className="flex justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15945b]">Preview Read-only</p><h2 className="mt-2 text-2xl font-bold">{preview.title}</h2><p className="mt-1 text-sm text-muted-foreground">/{preview.slug}</p></div><button onClick={() => setPreview(null)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border"><X className="h-5 w-5" /></button></div><div className="mt-6"><Thumbnail article={preview} large /></div><div className="mt-6 grid gap-4 sm:grid-cols-2"><PreviewField label="Excerpt" value={safeText(preview.excerpt, 400)} wide /><PreviewField label="Body" value={safeText(preview.body, 1800)} wide /><PreviewField label="Author" value={preview.authorName || "-"} /><PreviewField label="Jenis" value={preview.contentType} /><PreviewField label="Status" value={statusLabel(preview.status)} /><PreviewField label="Featured" value={preview.featured ? "Ya" : "Tidak"} /><PreviewField label="Published At" value={formatDate(preview.publishedAt)} /><PreviewField label="Created At" value={formatDate(preview.createdAt)} /><PreviewField label="Updated At" value={formatDate(preview.updatedAt)} /></div></motion.div></motion.div>}</AnimatePresence>
+      <AnimatePresence>{preview && <PreviewDialog article={preview} reduced={Boolean(prefersReducedMotion)} onClose={() => setPreview(null)} />}</AnimatePresence>
+      <AnimatePresence>{deleteTarget && <DeleteDialog article={deleteTarget} confirm={deleteConfirm} deleting={deleting} reduced={Boolean(prefersReducedMotion)} onConfirmText={setDeleteConfirm} onClose={closeDelete} onDelete={deleteArticle} />}</AnimatePresence>
     </div>
   </MemberLayout>
+}
+
+function DesktopTable({ articles, disabled, onPreview, onEdit, onDelete }: { articles: Article[]; disabled: boolean; onPreview: (article: Article) => void; onEdit: (article: Article) => void; onDelete: (article: Article) => void }) {
+  return <div className="hidden overflow-x-auto xl:block"><table className="w-full text-sm"><thead className="border-b border-border bg-muted/40 text-muted-foreground"><tr><th className="px-5 py-3 text-left font-medium">Artikel</th><th className="px-5 py-3 text-left font-medium">Jenis</th><th className="px-5 py-3 text-left font-medium">Status</th><th className="px-5 py-3 text-left font-medium">Featured</th><th className="px-5 py-3 text-left font-medium">Tanggal Publikasi</th><th className="px-5 py-3 text-left font-medium">Diperbarui</th><th className="px-5 py-3 text-right font-medium">Aksi</th></tr></thead><tbody className="divide-y divide-border">{articles.map((article) => <tr key={article.id} className="align-top"><td className="px-5 py-4"><div className="flex gap-3"><Thumbnail article={article} /><div className="min-w-0"><p className="font-semibold text-foreground">{article.title}</p><p className="text-xs text-muted-foreground">/{article.slug}</p><p className="mt-1 max-w-md text-xs leading-5 text-muted-foreground">{safeText(article.excerpt)}</p></div></div></td><td className="px-5 py-4 capitalize">{article.contentType}</td><td className="px-5 py-4"><Badge status={article.status} /></td><td className="px-5 py-4">{article.featured ? "Ya" : "Tidak"}</td><td className="px-5 py-4 text-muted-foreground">{formatDate(article.publishedAt)}</td><td className="px-5 py-4 text-muted-foreground">{formatDate(article.updatedAt)}</td><td className="px-5 py-4 text-right"><ActionGroup article={article} disabled={disabled} onPreview={onPreview} onEdit={onEdit} onDelete={onDelete} /></td></tr>)}</tbody></table></div>
+}
+
+function MobileCards({ articles, disabled, onPreview, onEdit, onDelete }: { articles: Article[]; disabled: boolean; onPreview: (article: Article) => void; onEdit: (article: Article) => void; onDelete: (article: Article) => void }) {
+  return <div className="grid gap-4 p-4 xl:hidden">{articles.map((article) => <article key={article.id} className="rounded-2xl border border-border p-4"><Thumbnail article={article} large /><h3 className="mt-4 text-lg font-bold">{article.title}</h3><div className="mt-3 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-muted px-3 py-1 capitalize">{article.contentType}</span><Badge status={article.status} />{article.featured && <span className="rounded-full bg-[#e6f7ee] px-3 py-1 font-semibold text-[#15945b] dark:bg-emerald-500/10">Featured</span>}</div><p className="mt-3 text-sm text-muted-foreground">Tanggal Publikasi: {formatDate(article.publishedAt)}</p><div className="mt-4 grid gap-2 sm:grid-cols-3"><ActionGroup article={article} disabled={disabled} onPreview={onPreview} onEdit={onEdit} onDelete={onDelete} mobile /></div></article>)}</div>
+}
+
+function ActionGroup({ article, disabled, mobile, onPreview, onEdit, onDelete }: { article: Article; disabled: boolean; mobile?: boolean; onPreview: (article: Article) => void; onEdit: (article: Article) => void; onDelete: (article: Article) => void }) {
+  const className = mobile ? "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl font-semibold" : "inline-flex min-h-10 items-center gap-2 rounded-xl px-3 font-semibold"
+  return <div className={cn("gap-2", mobile ? "contents" : "flex items-center justify-end")}><button disabled={disabled} onClick={() => onPreview(article)} className={cn(className, "border border-border hover:bg-accent disabled:opacity-60")}><Eye className="h-4 w-4" /> Preview</button><button disabled={disabled} onClick={() => onEdit(article)} className={cn(className, "bg-[#15945b] text-white hover:bg-[#107947] disabled:opacity-60")}><Pencil className="h-4 w-4" /> Edit</button><button disabled={disabled} onClick={() => onDelete(article)} className={cn(className, "border border-destructive/20 text-destructive hover:bg-destructive/10 disabled:opacity-60")}><Trash2 className="h-4 w-4" /> Hapus</button></div>
+}
+
+function DeleteDialog({ article, confirm, deleting, reduced, onConfirmText, onClose, onDelete }: { article: Article; confirm: string; deleting: boolean; reduced: boolean; onConfirmText: (value: string) => void; onClose: () => void; onDelete: () => void }) {
+  const published = article.status === "published"
+  const canDelete = !deleting && (!published || confirm === article.title || confirm === article.slug)
+  return <motion.div initial={reduced ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduced ? { opacity: 1 } : { opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"><motion.div initial={reduced ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={reduced ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }} className="max-h-[92vh] w-full overflow-y-auto rounded-t-[24px] bg-card p-6 shadow-xl sm:max-w-xl sm:rounded-[24px]"><div className="flex justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-destructive">Hapus permanen</p><h2 className="mt-2 text-2xl font-bold">Hapus artikel?</h2></div><button onClick={onClose} disabled={deleting} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border disabled:opacity-60"><X className="h-5 w-5" /></button></div><div className="mt-5 space-y-3 rounded-2xl border border-border bg-background p-4 text-sm"><p><span className="font-semibold">Judul:</span> {article.title}</p><p><span className="font-semibold">Slug:</span> /{article.slug}</p><p><span className="font-semibold">Status:</span> {statusLabel(article.status)}</p><p><span className="font-semibold">Tanggal publikasi:</span> {formatDate(article.publishedAt)}</p></div><p className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm leading-6 text-destructive">Penghapusan bersifat permanen. Gambar cover tidak ikut dihapus pada batch ini.</p>{published && <label className="mt-4 block space-y-2"><span className="text-sm font-semibold">Ketik tepat judul atau slug untuk menghapus artikel Published.</span><input value={confirm} onChange={(event) => onConfirmText(event.target.value)} disabled={deleting} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-destructive disabled:opacity-60" /></label>}<div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end"><button onClick={onClose} disabled={deleting} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-5 text-sm font-semibold hover:bg-accent disabled:opacity-60">Batal</button><button onClick={onDelete} disabled={!canDelete} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-destructive px-5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"><Trash2 className="h-4 w-4" />{deleting ? "Menghapus..." : "Hapus Permanen"}</button></div></motion.div></motion.div>
+}
+
+function PreviewDialog({ article, reduced, onClose }: { article: Article; reduced: boolean; onClose: () => void }) {
+  return <motion.div initial={reduced ? { opacity: 1 } : { opacity: 0 }} animate={{ opacity: 1 }} exit={reduced ? { opacity: 1 } : { opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4"><motion.div initial={reduced ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={reduced ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }} className="max-h-[92vh] w-full overflow-y-auto rounded-t-[24px] bg-card p-6 shadow-xl sm:max-w-3xl sm:rounded-[24px]"><div className="flex justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15945b]">Preview Read-only</p><h2 className="mt-2 text-2xl font-bold">{article.title}</h2><p className="mt-1 text-sm text-muted-foreground">/{article.slug}</p></div><button onClick={onClose} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border"><X className="h-5 w-5" /></button></div><div className="mt-6"><Thumbnail article={article} large /></div><div className="mt-6 grid gap-4 sm:grid-cols-2"><PreviewField label="Excerpt" value={safeText(article.excerpt, 400)} wide /><PreviewField label="Body" value={safeText(article.body, 1800)} wide /><PreviewField label="Author" value={article.authorName || "-"} /><PreviewField label="Jenis" value={article.contentType} /><PreviewField label="Status" value={statusLabel(article.status)} /><PreviewField label="Featured" value={article.featured ? "Ya" : "Tidak"} /><PreviewField label="Published At" value={formatDate(article.publishedAt)} /><PreviewField label="Created At" value={formatDate(article.createdAt)} /><PreviewField label="Updated At" value={formatDate(article.updatedAt)} /></div></motion.div></motion.div>
+}
+
+function SuccessMessage({ children }: { children: ReactNode }) {
+  return <div role="status" className="rounded-xl border border-[#15945b]/20 bg-[#e6f7ee] px-4 py-3 text-sm font-medium text-[#15945b] dark:bg-emerald-500/10 dark:text-emerald-400">{children}</div>
 }
 
 function Badge({ status }: { status: ArticleStatus }) {
