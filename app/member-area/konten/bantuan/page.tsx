@@ -3,7 +3,7 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
-import { ArrowLeft, CircleHelp, CreditCard, Eye, FileText, FolderClosed, Layers, Megaphone, Pencil, Plus, RefreshCcw, Save, Shield, Settings, Trash2, Users, X } from "lucide-react"
+import { ArrowLeft, CircleHelp, CreditCard, Eye, FileText, FolderClosed, Layers, Megaphone, Pencil, Plus, RefreshCcw, Save, Search, Shield, Settings, Trash2, Users, X } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { Card, CardContent } from "@/components/ui/card"
