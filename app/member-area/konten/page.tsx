@@ -118,7 +118,7 @@ export default function KontenPublikPage() {
       statusLabel: "Tersedia",
       statusType: "ready",
       actionLabel: "Kelola Konten",
-      href: "/admin/kontak-sosial",
+      href: "/member-area/konten/kontak",
     },
     {
       title: "SEO",
