@@ -1,15 +1,16 @@
 "use client"
 
-import { type ReactNode, useEffect, useMemo, useState } from "react"
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
-import { ArrowLeft, Eye, FileText, ImageIcon, Pencil, Plus, RefreshCcw, RotateCcw, Search, Star, Trash2, X } from "lucide-react"
+import { ArrowLeft, Eye, FileText, ImageIcon, Pencil, Plus, RefreshCcw, RotateCcw, Search, Star, Trash2, X, AlertTriangle } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import type { Article, ArticleContentType, ArticleStatus } from "@/lib/article-content"
+import type { ArticleRetirementStatus } from "@/lib/article-retirement"
 
 type ContentTypeFilter = "semua" | ArticleContentType
 type StatusFilter = "semua" | ArticleStatus
@@ -85,9 +86,31 @@ export default function MemberArticleDirectoryPage() {
   const [deleteTarget, setDeleteTarget] = useState<Article | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState("")
   const [deleting, setDeleting] = useState(false)
+  const [retirement, setRetirement] = useState<ArticleRetirementStatus | null>(null)
+  const [retirementLoading, setRetirementLoading] = useState(false)
+  const [retirementError, setRetirementError] = useState("")
   const ready = !isLoading && user?.role === "super_admin_pc"
   const reveal = prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : fadeUp
   const itemReveal = prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : staggerItem
+
+  const loadRetirementStatus = useCallback(async () => {
+    setRetirementLoading(true)
+    setRetirementError("")
+    try {
+      const response = await fetch("/api/articles/retirement-status", { cache: "no-store" })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || data.error) throw new Error(typeof data.error === "string" ? data.error : "Gagal memuat status retirement konten lama.")
+      setRetirement(data as ArticleRetirementStatus)
+    } catch (cause) {
+      setRetirementError(cause instanceof Error ? cause.message : "Gagal memuat status retirement konten lama.")
+    } finally {
+      setRetirementLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (ready) void loadRetirementStatus()
+  }, [loadRetirementStatus, ready])
 
   const loadArticles = async () => {
     setLoading(true); setError("")
@@ -177,11 +200,33 @@ export default function MemberArticleDirectoryPage() {
             <p className="mt-3 max-w-3xl text-muted-foreground">Lihat artikel, status publikasi, kategori, dan konten unggulan PIINDUNG melalui satu pusat pengelolaan.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button onClick={() => router.push("/member-area/konten/artikel/migrasi")} disabled={deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-5 text-sm font-semibold hover:bg-accent disabled:opacity-60"><RotateCcw className="h-4 w-4" /> Tinjau Konten Lama</button>
             <button onClick={() => router.push("/member-area/konten/artikel/baru")} disabled={deleting} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] px-5 text-sm font-semibold text-white transition hover:bg-[#107947] disabled:opacity-60"><Plus className="h-4 w-4" /> Tambah Artikel</button>
           </div>
         </div>
       </motion.section>
+
+      {retirementLoading && <div className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">Memuat status retirement konten lama...</div>}
+      {retirementError && <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300 sm:flex-row sm:items-center sm:justify-between"><span>Status konten lama tidak tersedia: {retirementError}</span><button onClick={() => void loadRetirementStatus()} disabled={retirementLoading} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-amber-700/20 px-4 font-semibold disabled:opacity-60">Coba Lagi</button></div>}
+      {retirement && !retirement.fullyRetired && (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Konten lama masih memerlukan penyelesaian</p>
+                <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2 text-xs sm:grid-cols-4">
+                  <span>Aktif: <strong>{retirement.activeLegacyCount}</strong></span>
+                  <span>Belum migrasi: <strong>{retirement.unmigratedCount}</strong></span>
+                  <span>Belum diarsipkan: <strong>{retirement.migratedNotArchivedCount}</strong></span>
+                  <span>Invalid/konflik: <strong>{retirement.invalidCount}</strong></span>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => router.push("/member-area/konten/artikel/migrasi")} disabled={deleting} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-amber-700/20 px-4 font-semibold hover:bg-amber-500/10 disabled:opacity-60">Tinjau Konten Lama</button>
+          </div>
+        </div>
+      )}
+      {retirement && retirement.fullyRetired && <div className="rounded-2xl border border-[#15945b]/20 bg-[#e6f7ee] px-4 py-3 text-sm font-semibold text-[#15945b] dark:bg-emerald-500/10 dark:text-emerald-300">Migrasi Konten Lama Selesai</div>}
 
       {searchParams.get("saved") === "created" && <SuccessMessage>Artikel berhasil dibuat dan disimpan ke direktori.</SuccessMessage>}
       {searchParams.get("saved") === "updated" && <SuccessMessage>Perubahan artikel berhasil disimpan ke direktori.</SuccessMessage>}
