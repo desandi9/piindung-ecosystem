@@ -65,7 +65,7 @@ export default function KontenPublikPage() {
       statusLabel: "Tersedia",
       statusType: "ready",
       actionLabel: "Kelola Konten",
-      href: "/admin/banner",
+      href: "/member-area/konten/beranda",
     },
     {
       title: "Produk",

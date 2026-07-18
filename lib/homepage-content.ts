@@ -136,6 +136,15 @@ export function updateHomepageContent(id: string, updates: Partial<Omit<Homepage
   return updatedItem
 }
 
+export async function updateHomepageContentAsync(id: string, updates: Partial<Omit<HomepageContentItem, "id">>) {
+  const nextItem = readHomepageContent().find((item) => item.id === id)
+  if (!nextItem) return undefined
+
+  const updatedItem = { ...nextItem, ...updates, updatedAt: formatContentDate() }
+  await homepageContentClient.updateItem(id, updatedItem)
+  return updatedItem
+}
+
 export function deleteHomepageContent(id: string) {
   const remainingItems = readHomepageContent().filter((item) => item.id !== id)
   writeHomepageContent(remainingItems)
@@ -157,4 +166,9 @@ export function moveHomepageContent(id: string, direction: "up" | "down") {
 
 export function useHomepageContent() {
   return homepageContentClient.useItems()
+}
+
+export function getHomepageHeroContent(items: HomepageContentItem[]) {
+  const sortedItems = sortHomepageContent(items)
+  return sortedItems.find((item) => item.type === "Banner" && item.status === "Published") ?? sortedItems.find((item) => item.type === "Banner") ?? null
 }
