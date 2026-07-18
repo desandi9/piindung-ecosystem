@@ -4,7 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Search } from "lucide-react"
 import { useMemo, useState } from "react"
-import { DEFAULT_INTEGRATED_APPS } from "@/lib/integrated-apps"
+import { usePublicProducts } from "@/lib/public-products"
 import { cn } from "@/lib/utils"
 
 const displayCategories = ["Tata Kelola", "Penghimpunan", "Penyaluran & Pelayanan", "Informasi & Media"] as const
@@ -23,53 +23,6 @@ type Product = {
 }
 
 const categories: Category[] = ["Semua", ...displayCategories]
-const appLogos = Object.fromEntries(DEFAULT_INTEGRATED_APPS.map((app) => [app.id, app.iconUrl]))
-
-const products: Product[] = [
-  {
-    id: "gorut",
-    name: "GORUT",
-    category: "Tata Kelola",
-    description: "Sistem operasional koin infak untuk pencatatan, pemeriksaan, pengelolaan, dan pelaporan yang lebih tertib.",
-    status: "Aktif",
-    logo: appLogos.gorut,
-    href: "/gorut",
-    featured: true,
-  },
-  {
-    id: "etasyaruf",
-    name: "E-Tasyaruf",
-    category: "Penyaluran & Pelayanan",
-    description: "Sistem pengelolaan program dan penyaluran bantuan agar proses lebih terarah dan mudah dipantau.",
-    status: "Segera Hadir",
-    logo: appLogos.etasyaruf,
-  },
-  {
-    id: "mobisnu",
-    name: "Mobisnu",
-    category: "Informasi & Media",
-    description: "Layanan berbasis mobile untuk mendukung informasi, komunikasi, dan akses layanan organisasi.",
-    status: "Segera Hadir",
-    logo: appLogos.mobisnu,
-  },
-  {
-    id: "arsip",
-    name: "Arsip Digital",
-    shortName: "Arsip",
-    category: "Tata Kelola",
-    description: "Pusat penyimpanan dokumen organisasi agar arsip lebih tertata, mudah dicari, dan aman.",
-    status: "Segera Hadir",
-    logo: appLogos.arsip,
-  },
-  {
-    id: "lazisnu-pos",
-    name: "LAZISNU POS",
-    category: "Penghimpunan",
-    description: "Sistem point of sale untuk membantu transaksi, pencatatan pembayaran, dan pelaporan layanan usaha atau unit operasional LAZISNU.",
-    status: "Segera Hadir",
-  },
-]
-
 function ProductCard({ product, index }: { product: Product; index: number }) {
   const card = (
     <article className="group relative flex h-full min-h-[286px] flex-col rounded-[24px] border border-[#dde7e2] bg-white p-7 shadow-sm transition duration-300 fill-mode-both animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 hover:border-[#15945b]/35 hover:shadow-xl hover:shadow-slate-900/5 motion-reduce:animate-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-white/10 dark:bg-slate-900" style={{ animationDelay: `${index * 80}ms` }}>
@@ -93,6 +46,18 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 export function ProductsExplorer() {
   const [query, setQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState<Category>("Semua")
+  const publicProducts = usePublicProducts()
+  const products: Product[] = publicProducts.filter((product) => product.visible).map((product) => ({
+    id: product.id,
+    name: product.name,
+    shortName: product.shortName || undefined,
+    category: product.category as Exclude<Category, "Semua">,
+    description: product.description,
+    status: product.status,
+    logo: product.iconUrl || undefined,
+    href: product.publicHref || undefined,
+    featured: product.featured,
+  }))
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()

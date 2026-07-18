@@ -8,19 +8,10 @@ import { useMemo, useState } from "react"
 import { PublicFooter } from "@/components/piindung/public-footer"
 import { PublicNavbar } from "@/components/piindung/public-navbar"
 import { PublicThemeDefault } from "@/components/piindung/public-theme-default"
-import { DEFAULT_INTEGRATED_APPS } from "@/lib/integrated-apps"
+import { usePublicProducts } from "@/lib/public-products"
 import { cn } from "@/lib/utils"
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
-const appLogos = Object.fromEntries(DEFAULT_INTEGRATED_APPS.map((app) => [app.id, app.iconUrl]))
-
-const products = [
-  { name: "GORUT", logo: appLogos.gorut, label: "Bantuan Tersedia", status: "Aktif" },
-  { name: "E-Tasyaruf", logo: appLogos.etasyaruf, label: "Panduan Segera Hadir", status: "Segera Hadir" },
-  { name: "Mobisnu", logo: appLogos.mobisnu, label: "Panduan Segera Hadir", status: "Segera Hadir" },
-  { name: "Arsip Digital", logo: appLogos.arsip, label: "Panduan Segera Hadir", status: "Segera Hadir" },
-  { name: "LAZISNU POS", label: "Panduan Segera Hadir", status: "Segera Hadir" },
-]
 
 const topics = [
   { title: "Memulai PIINDUNG", description: "Informasi dasar mengenai ekosistem dan cara mengakses layanan.", icon: HelpCircle },
@@ -41,6 +32,7 @@ const faqs = [
 export default function HelpPage() {
   const [query, setQuery] = useState("")
   const [openFaq, setOpenFaq] = useState<string | null>(faqs[0].q)
+  const products = usePublicProducts().filter((product) => product.visible).map((product) => ({ name: product.name, logo: product.iconUrl || undefined, label: product.status === "Aktif" ? "Bantuan Tersedia" : "Panduan Segera Hadir", status: product.status }))
 
   const normalizedQuery = query.trim().toLowerCase()
   const filteredProducts = useMemo(() => products.filter((product) => `${product.name} ${product.label} ${product.status}`.toLowerCase().includes(normalizedQuery)), [normalizedQuery])

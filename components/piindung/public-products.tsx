@@ -5,20 +5,12 @@ import Link from "next/link"
 import { motion, useReducedMotion } from "motion/react"
 import { ArrowRight, CircleDashed } from "lucide-react"
 import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
-import { DEFAULT_INTEGRATED_APPS, type IntegratedApp } from "@/lib/integrated-apps"
+import { usePublicProducts } from "@/lib/public-products"
 import { cn } from "@/lib/utils"
-
-const productDetails: Record<IntegratedApp["id"], { name: string; description: string; status: string; featured?: boolean }> = {
-  gorut: { name: "GORUT", description: "Sistem pengelolaan Gerakan Koin NU yang terintegrasi dengan PIINDUNG.", status: "Aktif", featured: true },
-  etasyaruf: { name: "E-Tasyaruf", description: "Sistem pencatatan dan pemantauan penyaluran program agar lebih tertib dan terarah.", status: "Segera Hadir" },
-  mobisnu: { name: "Mobisnu", description: "Layanan berbasis mobile untuk mendukung kegiatan kemanusiaan dan pelayanan masyarakat.", status: "Segera Hadir" },
-  arsip: { name: "Arsip Digital", description: "Pusat penyimpanan dokumen organisasi yang terstruktur, aman, dan mudah ditemukan.", status: "Segera Hadir" },
-}
-
-const products = DEFAULT_INTEGRATED_APPS.map((app) => ({ ...app, ...productDetails[app.id] }))
 
 export function PublicProducts() {
   const prefersReducedMotion = useReducedMotion()
+  const products = usePublicProducts().filter((product) => product.visible)
   const reveal = prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : fadeUp
 
   return (
@@ -33,7 +25,7 @@ export function PublicProducts() {
           {products.map((product) => (
             <motion.article key={product.id} variants={prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : staggerItem} className={cn("group flex min-h-[300px] flex-col rounded-[22px] border bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-900/5 dark:bg-slate-950", product.featured ? "border-[#15945b]/40 ring-1 ring-[#15945b]/10" : "border-[#dde7e2] dark:border-white/10")}>
               <div className="flex h-20 items-center justify-center">
-                <Image src={product.iconUrl} alt={`Logo ${product.name}`} width={86} height={86} className="max-h-16 w-auto object-contain transition-transform duration-500 group-hover:scale-105" />
+                {product.iconUrl ? <Image src={product.iconUrl} alt={`Logo ${product.name}`} width={86} height={86} className="max-h-16 w-auto object-contain transition-transform duration-500 group-hover:scale-105" /> : <span className="rounded-xl border border-dashed border-[#dde7e2] px-3 py-2 text-center text-xs text-[#7b8792] dark:border-white/10 dark:text-slate-400">Logo belum tersedia</span>}
               </div>
               <div className="mt-6 border-t border-[#dde7e2] pt-5 dark:border-white/10">
                 <div className="flex items-start justify-between gap-3">
@@ -42,7 +34,7 @@ export function PublicProducts() {
                 </div>
                 <p className="mt-3 text-sm leading-7 text-[#566473] dark:text-slate-300">{product.description}</p>
               </div>
-              {product.featured ? <Link href={product.link} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-[#15945b] transition hover:text-[#0b1f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]">Lihat GORUT <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link> : <span className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-[#7b8792] dark:text-slate-400"><CircleDashed className="h-4 w-4" aria-hidden="true" /> Segera Hadir</span>}
+              {product.publicHref ? <Link href={product.publicHref} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-[#15945b] transition hover:text-[#0b1f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]">Buka Produk <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link> : <span className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-[#7b8792] dark:text-slate-400"><CircleDashed className="h-4 w-4" aria-hidden="true" /> Segera Hadir</span>}
             </motion.article>
           ))}
         </motion.div>

@@ -74,7 +74,7 @@ export default function KontenPublikPage() {
       statusLabel: "Tersedia",
       statusType: "ready",
       actionLabel: "Kelola Konten",
-      href: "/admin/aplikasi",
+      href: "/member-area/konten/produk",
     },
     {
       title: "Dampak",
