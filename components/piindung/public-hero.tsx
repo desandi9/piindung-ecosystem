@@ -6,14 +6,22 @@ import { useEffect, useState } from "react"
 import { motion, useReducedMotion } from "motion/react"
 import { ArrowRight } from "lucide-react"
 import { motionEase } from "@/lib/motion"
-import { getHomepageHeroContent, useHomepageContent } from "@/lib/homepage-content"
 
 const heroVisual = "/background-hero.png"
+
+interface PublicHeroData {
+  title: string
+  subtitle: string
+  description: string
+  image: string
+  link: string
+  buttonText: string
+}
 
 export function HeroSection() {
   const prefersReducedMotion = useReducedMotion()
   const [isDesktop, setIsDesktop] = useState(false)
-  const heroContent = getHomepageHeroContent(useHomepageContent())
+  const [heroContent, setHeroContent] = useState<PublicHeroData | null>(null)
   const textTransition = { duration: prefersReducedMotion ? 0 : 0.75, ease: motionEase }
 
   useEffect(() => {
@@ -22,6 +30,17 @@ export function HeroSection() {
     update()
     media.addEventListener("change", update)
     return () => media.removeEventListener("change", update)
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    fetch("/api/homepage-content/public")
+      .then((res) => res.json())
+      .then((data) => {
+        if (mounted && data.hero) setHeroContent(data.hero)
+      })
+      .catch(() => {})
+    return () => { mounted = false }
   }, [])
 
   return (
@@ -60,7 +79,7 @@ export function HeroSection() {
             </motion.p>
             <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.1, delayChildren: prefersReducedMotion ? 0 : 0.82 } }, hidden: {} }} className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
               <motion.div variants={{ hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 20 }, visible: { opacity: 1, y: 0, transition: { duration: prefersReducedMotion ? 0 : 0.65, ease: motionEase } } }} whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }} className="w-full sm:w-auto">
-<Link href={heroContent?.link || "/produk"} className="group inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-[#15945b] px-7 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(21,148,91,0.22)] transition hover:bg-[#107947] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b] focus-visible:ring-offset-4 sm:w-auto">
+                <Link href={heroContent?.link || "/produk"} className="group inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-[#15945b] px-7 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(21,148,91,0.22)] transition hover:bg-[#107947] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b] focus-visible:ring-offset-4 sm:w-auto">
                    {heroContent?.buttonText || "Jelajahi Produk"}
 
                   <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-[3px]" aria-hidden="true" />

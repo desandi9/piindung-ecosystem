@@ -5,18 +5,18 @@ import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
 const protectedUiPrefixes = ["/dashboard", "/admin", "/profil", "/pengaturan-profil", "/gorut", "/member-area"]
-const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-scopes"]
+const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-scopes", "/api/public-products"]
 const publicReadableRecordScopes = new Set([
   "maintenance-mode",
   "system-settings",
   "contact-social",
-  "homepage-content",
   "notifications",
   "gallery-content",
   "download-center",
   "popup-announcements",
   "integrated-apps",
   "faq-manager",
+  "public-products",
 ])
 const publicAssetPattern = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|webmanifest)$/i
 
@@ -157,10 +157,15 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/")) {
     if (isAuthApiPath(pathname)) return NextResponse.next()
 
+    if (request.method === "GET" && pathname === "/api/homepage-content/public") return NextResponse.next()
+
     const recordScope = extractRecordScope(pathname)
     if (request.method === "GET" && recordScope && publicReadableRecordScopes.has(recordScope)) {
       return NextResponse.next()
     }
+
+    const isPublicArticleRead = request.method === "GET" && (pathname.startsWith("/api/articles/") || (pathname === "/api/articles" && request.nextUrl.searchParams.get("managed") !== "1"))
+    if (isPublicArticleRead) return NextResponse.next()
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -170,7 +175,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    if (pathname.startsWith("/api/records") || pathname.startsWith("/api/users") || pathname.startsWith("/api/user-operational-scopes")) {
+    if (pathname.startsWith("/api/records") || pathname.startsWith("/api/users") || pathname.startsWith("/api/user-operational-scopes") || pathname.startsWith("/api/public-products")) {
       if (!canAccessAdminDashboard(session.role)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }

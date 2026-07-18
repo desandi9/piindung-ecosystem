@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server"
 import { createRecord, listRecords } from "@/lib/record-store-server"
+import { requireHomepageContentManager } from "@/lib/homepage-content-api"
 
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string }> | { scope: string } }) {
   try {
     const { scope } = await Promise.resolve(params)
+    if (scope === "homepage-content") {
+      const access = await requireHomepageContentManager()
+      if (access.response) return access.response
+    }
     const records = await listRecords(scope)
     return NextResponse.json({ records })
   } catch (error) {
@@ -15,6 +20,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
 export async function POST(request: Request, { params }: { params: Promise<{ scope: string }> | { scope: string } }) {
   try {
     const { scope } = await Promise.resolve(params)
+    if (scope === "homepage-content") {
+      const access = await requireHomepageContentManager()
+      if (access.response) return access.response
+    }
     const body = (await request.json()) as { key?: string; data?: Record<string, unknown> }
     if (!body.key || !body.data) {
       return NextResponse.json({ error: "Key dan data wajib diisi." }, { status: 400 })

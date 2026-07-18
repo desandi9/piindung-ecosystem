@@ -1,9 +1,30 @@
 import { NextResponse } from "next/server"
-import { deleteRecord, updateRecord } from "@/lib/record-store-server"
+import { deleteRecord, getRecord, updateRecord } from "@/lib/record-store-server"
+import { requireHomepageContentManager } from "@/lib/homepage-content-api"
+
+export async function GET(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
+  try {
+    const { scope, key } = await Promise.resolve(params)
+    if (scope === "homepage-content") {
+      const access = await requireHomepageContentManager()
+      if (access.response) return access.response
+    }
+    const record = await getRecord(scope, key)
+    if (!record) return NextResponse.json({ error: "Data tidak ditemukan." }, { status: 404 })
+    return NextResponse.json({ record })
+  } catch (error) {
+    console.error(`Failed to fetch record`, error)
+    return NextResponse.json({ error: "Gagal mengambil data." }, { status: 500 })
+  }
+}
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
+    if (scope === "homepage-content") {
+      const access = await requireHomepageContentManager()
+      if (access.response) return access.response
+    }
     const body = (await request.json()) as Record<string, unknown>
     const record = await updateRecord(scope, key, body)
     return NextResponse.json({ record })
@@ -16,6 +37,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
 export async function DELETE(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
+    if (scope === "homepage-content") {
+      const access = await requireHomepageContentManager()
+      if (access.response) return access.response
+    }
     await deleteRecord(scope, key)
     return NextResponse.json({ ok: true })
   } catch (error) {

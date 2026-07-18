@@ -3,7 +3,7 @@ import { getPrismaClient } from "@/lib/prisma"
 
 export type RecordData = Record<string, unknown>
 
-async function fetchRecord(scope: string, key: string) {
+export async function getRecord(scope: string, key: string) {
   const prisma = getPrismaClient()
   const records = await prisma.$queryRaw<Array<{ id: string; scope: string; key: string; data: RecordData; createdAt: Date; updatedAt: Date }>>`
     SELECT id, scope, key, data, "createdAt", "updatedAt"
@@ -33,7 +33,7 @@ export async function createRecord(scope: string, key: string, data: RecordData)
     ON CONFLICT ("scope", "key") DO UPDATE SET "data" = EXCLUDED."data", "updatedAt" = NOW()
   `
 
-  return fetchRecord(scope, key)
+  return getRecord(scope, key)
 }
 
 export async function updateRecord(scope: string, key: string, data: RecordData) {
@@ -44,7 +44,7 @@ export async function updateRecord(scope: string, key: string, data: RecordData)
     ON CONFLICT ("scope", "key") DO UPDATE SET "data" = EXCLUDED."data", "updatedAt" = NOW()
   `
 
-  return fetchRecord(scope, key)
+  return getRecord(scope, key)
 }
 
 export async function deleteRecord(scope: string, key: string) {
