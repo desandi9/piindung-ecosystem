@@ -91,7 +91,7 @@ export default function KontenPublikPage() {
       statusLabel: "Tersedia",
       statusType: "ready",
       actionLabel: "Kelola Konten",
-      href: "/admin/artikel",
+      href: "/member-area/konten/artikel",
     },
     {
       title: "Pusat Bantuan",
