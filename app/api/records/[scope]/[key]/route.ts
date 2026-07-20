@@ -7,6 +7,9 @@ import { requireSiteContactManager } from "@/lib/site-contact-server"
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
+    if (scope === "portal-module-grants" || scope === "portal-access-audit") {
+      return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
+    }
     if (scope === "gallery-content") {
       return NextResponse.json({ error: "Gunakan endpoint galeri khusus." }, { status: 403 })
     }
@@ -42,6 +45,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
 export async function PATCH(request: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
+    if (scope === "portal-module-grants" || scope === "portal-access-audit") {
+      return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
+    }
     if (scope === "gallery-content") {
       return NextResponse.json({ error: "Gunakan endpoint galeri khusus." }, { status: 403 })
     }
@@ -77,6 +83,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
 export async function DELETE(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { key: string; scope: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
+    if (scope === "portal-module-grants" || scope === "portal-access-audit") {
+      return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
+    }
     if (scope === "gallery-content") {
       return NextResponse.json({ error: "Gunakan endpoint galeri khusus." }, { status: 403 })
     }

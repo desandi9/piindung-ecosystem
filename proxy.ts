@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { canAccessAdminDashboard, isSuperAdminOnlyRoute } from "@/features/auth"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
+import { canAccessMemberAreaRoute } from "@/lib/portal-access"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
@@ -151,6 +152,10 @@ export async function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
   const session = token ? await verifySessionToken(token, AUTH_SECRET) : null
 
+  if (pathname.startsWith("/api/portal-access") && !session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   if (pathname.startsWith("/api/")) {
     if (isAuthApiPath(pathname)) return NextResponse.next()
 
@@ -166,6 +171,10 @@ export async function proxy(request: NextRequest) {
 
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    if (pathname.startsWith("/api/portal-access") && session.role !== "super_admin_pc") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     if (adminApiPrefixes.some((prefix) => pathname.startsWith(prefix)) && !canAccessAdminDashboard(session.role)) {
@@ -188,8 +197,8 @@ export async function proxy(request: NextRequest) {
   }
 
 
-  if (pathname.startsWith("/member-area/") && session.role !== "super_admin_pc") {
-    return NextResponse.redirect(new URL("/member-area", request.url))
+  if (pathname.startsWith("/member-area") && !canAccessMemberAreaRoute(session.role, pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
   if (pathname.startsWith("/gorut")) {

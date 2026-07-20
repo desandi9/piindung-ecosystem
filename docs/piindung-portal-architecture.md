@@ -62,3 +62,43 @@ Validasi portal tidak menggantikan validasi server-side dan pembatasan data mili
 ## Member Area
 
 Member Area memisahkan launcher modul dari alat pengelolaan PIINDUNG. Semua pengguna aktif dapat membuka landing Member Area, tetapi subrute dan kartu pengelolaan tetap dibatasi untuk Super Admin pada Batch 4A. Detail Hak Akses, termasuk akses artikel untuk Admin PC, ditunda ke Batch 4B.
+
+## PIINDUNG Portal Permission Matrix
+
+Berikut adalah matriks hak akses/izin untuk setiap peran pengguna di portal PIINDUNG:
+
+| Izin / Fitur | Super Admin PC (`super_admin_pc`) | Admin PC (`admin_pc`) | Admin UPZIS (`admin_upzis`) | Admin Kordes (`admin_kordes`) |
+| :--- | :---: | :---: | :---: | :---: |
+| `dashboard.view` | Ya | Ya | Ya | Ya |
+| `member_area.view` | Ya | Ya | Ya | Ya |
+| `profile.view` | Ya | Ya | Ya | Ya |
+| `help.view` | Ya | Ya | Ya | Ya |
+| `notifications.view` | Ya | Ya | Ya | Ya |
+| `articles.manage` | Ya | Ya | Tidak | Tidak |
+| `users.manage` | Ya | Tidak | Tidak | Tidak |
+| `access.manage` | Ya | Tidak | Tidak | Tidak |
+| `settings.manage` | Ya | Tidak | Tidak | Tidak |
+| `audit.view` | Ya | Tidak | Tidak | Tidak |
+| *PIINDUNG Management Permissions (homepage, products, impact, gallery, downloads, help_content, contact, branding)* | Ya | Tidak | Tidak | Tidak |
+
+### Admin PC Article-Management Boundary
+
+Admin PC (`admin_pc`) memiliki akses khusus ke `articles.manage` untuk mengelola artikel publik. Namun, Admin PC dibatasi dan **tidak** menerima izin pengelolaan portal sistem lainnya seperti `users.manage`, `access.manage`, `settings.manage`, atau `audit.view`.
+
+### Per-User Module-Entry Grants
+
+Akses masuk ke modul operasional (seperti GORUT) dikonfigurasi per pengguna:
+- **Super Admin PC** secara default selalu memiliki akses masuk (`modules.gorut.enter`).
+- **Peran Lain (Admin PC, UPZIS, Kordes)** memerlukan persetujuan eksplisit berupa *module entry grant* yang diaktifkan secara per-user oleh administrator melalui pengelolaan hak akses.
+- Jika pengguna dinonaktifkan (`status !== "Aktif"`), seluruh akses portal maupun modul diblokir secara mutlak.
+- PIINDUNG grant hanya mengatur pintu masuk modul (module entry). GORUT dan modul operasional lain mempertahankan peran operasional, cakupan data (scope), dan otorisasi tindakan secara internal dan independen.
+
+### Proteksi Generic Record Scopes & Deny-by-Default
+
+- Semua *scopes* data sensitif portal seperti `portal-module-grants` dan `portal-access-audit` ditolak secara eksplisit dari API generik `app/api/records/[scope]/route.ts` dan `app/api/records/[scope]/[key]/route.ts`. Segala bentuk akses mutasi atau pembacaan harus melalui endpoint aman terdedikasi yaitu `/api/portal-access/me` dan `/api/portal-access/grants`.
+- Sistem menerapkan kebijakan *deny-by-default* untuk rute portal:
+  - Rute `/member-area` hanya mengizinkan peran terdaftar yang aktif.
+  - Rute `/member-area/konten/artikel` dan subrutenya hanya mengizinkan peran dengan izin `articles.manage` atau peran Super Admin.
+  - Rute `/member-area/hak-akses` memerlukan `access.manage`.
+  - Rute `/member-area/pengguna` memerlukan `users.manage`.
+  - Rute `/member-area/**` lain yang tidak dikenali atau tidak memiliki pemetaan kebijakan otorisasi akan otomatis ditolak.
