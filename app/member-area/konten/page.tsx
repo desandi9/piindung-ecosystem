@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { useHomepageContent } from "@/lib/homepage-content"
 import { useIntegratedApps } from "@/lib/integrated-apps"
 import { useHelpFaqCategories } from "@/lib/faq-manager"
-import { useGalleryItems } from "@/lib/gallery-content"
+import { useGalleryItems } from "@/lib/gallery-content-client"
 
 type CardMapping = {
   title: string
@@ -102,6 +102,15 @@ export default function KontenPublikPage() {
       statusType: "ready",
       actionLabel: "Kelola Konten",
       href: "/member-area/konten/bantuan",
+    },
+    {
+      title: "Galeri & Dokumentasi",
+      description: "Hero galeri, kategori, item dokumentasi, dan pengaturan visibilitas.",
+      icon: ImageIcon,
+      statusLabel: "Tersedia",
+      statusType: "ready",
+      actionLabel: "Kelola Konten",
+      href: "/member-area/konten/galeri",
     },
     {
       title: "Media & Branding",
