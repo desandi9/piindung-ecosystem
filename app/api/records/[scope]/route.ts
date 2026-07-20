@@ -19,7 +19,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
-    if (scope !== "system-settings" && scope !== "homepage-content" && scope !== "article-migration-map" && scope !== "article-legacy-archive" && scope !== "faq-manager" && scope !== "media-library" && scope !== "contact-social") {
+    const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
     const records = await listRecords(scope)
@@ -45,7 +46,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ sco
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
-    if (scope !== "system-settings") {
+    const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
 

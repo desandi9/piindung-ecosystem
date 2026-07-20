@@ -19,7 +19,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
-    if (scope !== "system-settings") {
+    const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
 
@@ -47,7 +48,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
-    if (scope !== "system-settings") {
+    const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
 
@@ -77,7 +79,8 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
-    if (scope !== "system-settings") {
+    const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
 
