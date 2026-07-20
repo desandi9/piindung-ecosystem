@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ asset })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Gagal mengupload branding asset." }, { status: 500 })
+    console.error("Branding asset upload failed:", error)
+    return NextResponse.json(
+      { error: "Gagal mengupload aset branding. Silakan coba kembali." },
+      { status: 500 }
+    )
   }
 }
