@@ -187,8 +187,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  if (pathname.startsWith("/member-area") && session.role !== "super_admin_pc") {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+
+  if (pathname.startsWith("/member-area/") && session.role !== "super_admin_pc") {
+    return NextResponse.redirect(new URL("/member-area", request.url))
   }
 
   if (pathname.startsWith("/gorut")) {

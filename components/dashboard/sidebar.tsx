@@ -4,33 +4,18 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef } from "react"
-import { getUnreadInboxCount, useInboxMessages } from "@/lib/admin-inbox"
 import { cn } from "@/lib/utils"
-import { useAuth, roleDisplayNames, type UserRole } from "@/lib/auth-context"
-import { canAccessMenu, useRolePermissions } from "@/lib/access-permissions"
+import { useAuth, roleDisplayNames } from "@/lib/auth-context"
+import { primaryNavigation, type PortalNavigationIcon } from "@/lib/portal-navigation"
 import { getResolvedLogoUrl, useStoredSystemSettings } from "@/lib/system-settings"
 import {
-  LayoutDashboard,
-  Bell,
-  Users,
-  Download,
-  FileText,
-  Archive,
   CircleHelp,
-  Contact,
-  Megaphone,
-  Settings,
-  Shield,
-  Image as ImageIcon,
-  FolderOpen,
-  LogIn,
-  Activity,
-  Database,
-  MonitorCog,
-  ShieldCheck,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
   LogOut,
+  User,
+  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -40,79 +25,19 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-interface SidebarItem {
-  id: string
-  label: string
-  icon: React.ElementType
-  href: string
-  roles: UserRole[]
-}
-
-interface SidebarSection {
-  title: string
-  items: SidebarItem[]
-}
-
-export const sidebarSections: SidebarSection[] = [
-  {
-    title: "Dashboard",
-    items: [
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/admin", roles: ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"] },
-    ],
-  },
-  {
-    title: "Portal Publik",
-    items: [
-      { id: "artikel-berita", label: "Artikel & Berita", icon: FileText, href: "/admin/artikel", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "banner-homepage", label: "Banner Homepage", icon: ImageIcon, href: "/admin/banner", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "galeri-kegiatan", label: "Galeri Kegiatan", icon: ImageIcon, href: "/admin/galeri", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "download-center", label: "Download Center", icon: Download, href: "/admin/download", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "popup-pengumuman", label: "Popup & Pengumuman", icon: Megaphone, href: "/admin/popup", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "faq-manager", label: "FAQ Manager", icon: CircleHelp, href: "/admin/faq", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "kontak-sosial", label: "Kontak & Sosial Media", icon: Contact, href: "/admin/kontak-sosial", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "media-manager", label: "Media Manager", icon: FolderOpen, href: "/admin/media", roles: ["super_admin_pc"] },
-    ],
-  },
-  {
-    title: "Inbox & Broadcast",
-    items: [
-      { id: "pesan-masuk", label: "Pesan Masuk", icon: Archive, href: "/admin/pesan-masuk", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "notifikasi", label: "Notifikasi", icon: Bell, href: "/admin/notifikasi", roles: ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"] },
-    ],
-  },
-  {
-    title: "User & Governance",
-    items: [
-      { id: "kelola-pengguna", label: "Kelola Pengguna", icon: Users, href: "/admin/pengguna", roles: ["super_admin_pc"] },
-      { id: "hak-akses", label: "Hak Akses", icon: Shield, href: "/admin/hak-akses", roles: ["super_admin_pc"] },
-      { id: "riwayat-login", label: "Riwayat Login", icon: LogIn, href: "/admin/riwayat-login", roles: ["super_admin_pc"] },
-    ],
-  },
-  {
-    title: "Monitoring & Audit",
-    items: [
-      { id: "activity-log", label: "Activity Log", icon: Activity, href: "/admin/activity", roles: ["super_admin_pc", "admin_pc"] },
-      { id: "audit-trail", label: "Audit Trail", icon: ShieldCheck, href: "/admin/audit-trail", roles: ["super_admin_pc"] },
-    ],
-  },
-  {
-    title: "Sistem & Integrasi",
-    items: [
-      { id: "aplikasi-terintegrasi", label: "Aplikasi Terintegrasi", icon: Contact, href: "/admin/aplikasi", roles: ["super_admin_pc"] },
-      { id: "pengaturan-sistem", label: "Pengaturan Sistem", icon: Settings, href: "/admin/pengaturan", roles: ["super_admin_pc"] },
-      { id: "system-health", label: "System Health", icon: ShieldCheck, href: "/admin/system-health", roles: ["super_admin_pc"] },
-      { id: "maintenance-mode", label: "Maintenance Mode", icon: MonitorCog, href: "/admin/maintenance", roles: ["super_admin_pc"] },
-      { id: "backup-restore", label: "Backup & Restore", icon: Database, href: "/admin/backup", roles: ["super_admin_pc"] },
-    ],
-  },
-]
-
-function getVisibleItems(items: SidebarItem[], role: UserRole): SidebarItem[] {
-  return items.filter(item => item.roles.includes(role))
+const navigationIcons: Record<PortalNavigationIcon, React.ElementType> = {
+  home: LayoutDashboard,
+  members: Users,
+  help: CircleHelp,
+  profile: User,
 }
 
 export function flattenSidebarItems() {
-  return sidebarSections.flatMap((section) => section.items)
+  return primaryNavigation.map((item) => ({
+    ...item,
+    roles: ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"] as const,
+    icon: navigationIcons[item.icon],
+  }))
 }
 
 interface DashboardSidebarProps {
@@ -125,23 +50,13 @@ export function DashboardSidebar({ collapsed = false, onCollapsedChange }: Dashb
   const navContainerRef = useRef<HTMLDivElement | null>(null)
   const { user, logout } = useAuth()
   const { settings } = useStoredSystemSettings()
-  const permissions = useRolePermissions()
-  const inboxMessages = useInboxMessages()
   const userRole = user?.role || "admin_kordes"
-  const unreadInboxCount = getUnreadInboxCount(inboxMessages)
-  
-  const visibleSections = sidebarSections
-    .map((section) => ({
-      ...section,
-      items: getVisibleItems(section.items, userRole).filter((item) => canAccessMenu(userRole, item.id, permissions)),
-    }))
-    .filter((section) => section.items.length > 0)
 
-  const NavItem = ({ item }: { item: SidebarItem }) => {
-    const isDashboardRootItem = item.href === "/admin"
-    const isActive = isDashboardRootItem ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/")
+  const items = flattenSidebarItems().filter((item) => item.roles.includes(userRole))
+
+  const NavItem = ({ item }: { item: ReturnType<typeof flattenSidebarItems>[number] }) => {
+    const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
     const Icon = item.icon
-    const showInboxBadge = item.id === "pesan-masuk" && unreadInboxCount > 0
 
     const content = (
       <Link
@@ -156,12 +71,7 @@ export function DashboardSidebar({ collapsed = false, onCollapsedChange }: Dashb
         )}
       >
         <div className="relative shrink-0">
-          <Icon className={cn("h-5 w-5", collapsed ? "h-5 w-5" : "h-5 w-5")} />
-          {showInboxBadge ? (
-            <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-medium text-white">
-              {unreadInboxCount > 99 ? "99+" : unreadInboxCount}
-            </span>
-          ) : null}
+          <Icon className="h-5 w-5" />
         </div>
         {!collapsed && <span className="truncate">{item.label}</span>}
       </Link>
@@ -251,30 +161,24 @@ export function DashboardSidebar({ collapsed = false, onCollapsedChange }: Dashb
         {/* Navigation */}
         <div ref={navContainerRef} className="flex-1 overflow-y-auto px-3 py-4">
           <nav className="space-y-4">
-            {visibleSections.map((section, sectionIndex) => (
-              <div key={section.title} className="space-y-2">
-                {!collapsed ? (
-                  <div className="px-3">
-                    <div className="flex items-center gap-2 pb-2">
-                      <div className="h-px flex-1 bg-border/70" />
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/80">
-                        {section.title}
-                      </span>
-                    </div>
+            <div className="space-y-2">
+              {!collapsed ? (
+                <div className="px-3">
+                  <div className="flex items-center gap-2 pb-2">
+                    <div className="h-px flex-1 bg-border/70" />
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/80">
+                      Navigasi
+                    </span>
                   </div>
-                ) : sectionIndex > 0 ? (
-                  <div className="px-2 pt-1">
-                    <div className="h-px rounded-full bg-border/70" />
-                  </div>
-                ) : null}
-
-                <div className="space-y-1">
-                  {section.items.map((item) => (
-                    <NavItem key={item.id} item={item} />
-                  ))}
                 </div>
+              ) : null}
+
+              <div className="space-y-1">
+                {items.map((item) => (
+                  <NavItem key={item.id} item={item} />
+                ))}
               </div>
-            ))}
+            </div>
           </nav>
 
         </div>

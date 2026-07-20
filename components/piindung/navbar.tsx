@@ -38,17 +38,10 @@ import {
   useNotifications,
 } from "@/lib/notifications"
 import { updateStoredSystemColorMode, type ColorMode } from "@/lib/system-settings"
-import { 
-  useAuth, 
-  roleDisplayNames, 
-} from "@/lib/auth-context"
+import { useAuth, roleDisplayNames } from "@/lib/auth-context"
+import { primaryNavigation } from "@/lib/portal-navigation"
 
-const navItems = [
-  { label: "Beranda", href: "/dashboard" },
-  { label: "Member Area", href: "/member-area" },
-  { label: "Bantuan Teknis", href: "/bantuan" },
-  { label: "Profil", href: "/profil" },
-]
+const navItems = primaryNavigation
 
 function iconFor(iconKey: NotificationIconKey) {
   if (iconKey === "credit-card") return CreditCard

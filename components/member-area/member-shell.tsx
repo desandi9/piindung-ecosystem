@@ -5,24 +5,19 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   Bell,
-  Box,
   Check,
-  ChevronDown,
+  CircleHelp,
   LayoutDashboard,
   LogOut,
-  MapPin,
   Menu,
   Moon,
-  Search,
-  Settings,
-  ShieldCheck,
   Sun,
-  Users,
-  X,
   User,
+  Users,
 } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 import { useAuth, roleDisplayNames } from "@/lib/auth-context"
+import { primaryNavigation, type PortalNavigationIcon } from "@/lib/portal-navigation"
 import { getResolvedLogoUrl, useStoredSystemSettings, updateStoredSystemColorMode, type ColorMode } from "@/lib/system-settings"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
@@ -34,30 +29,20 @@ import {
 } from "@/lib/notifications"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+const navigationIcons: Record<PortalNavigationIcon, React.ElementType> = {
+  home: LayoutDashboard,
+  members: Users,
+  help: CircleHelp,
+  profile: User,
+}
+
 export const memberMenuSections = [
   {
-    title: "MAIN",
-    items: [{ id: "ringkasan", label: "Ringkasan", href: "/member-area", icon: LayoutDashboard }],
-  },
-  {
-    title: "MANAJEMEN",
-    items: [
-      { id: "pengguna", label: "Pengguna & Akses", href: "/member-area/pengguna", icon: Users },
-      { id: "organisasi", label: "Organisasi & Wilayah", href: "#", icon: MapPin, status: "Segera Tersedia" },
-      { id: "produk", label: "Produk & Modul", href: "#", icon: Box, status: "Segera Tersedia" },
-    ],
-  },
-  {
-    title: "KONTEN",
-    items: [{ id: "konten-publik", label: "Konten Publik", href: "/member-area/konten", icon: Search }],
-  },
-  {
-    title: "PEMANTAUAN",
-    items: [{ id: "monitoring", label: "Monitoring & Audit", href: "#", icon: ShieldCheck, status: "Segera Tersedia" }],
-  },
-  {
-    title: "SISTEM",
-    items: [{ id: "pengaturan", label: "Pengaturan Sistem", href: "#", icon: Settings, status: "Segera Tersedia" }],
+    title: "Navigasi",
+    items: primaryNavigation.map((item) => ({
+      ...item,
+      icon: navigationIcons[item.icon],
+    })),
   },
 ]
 
@@ -82,10 +67,6 @@ export function MemberSidebar({ collapsed, onCloseMobile }: { collapsed?: boolea
             <Link href="/dashboard" className="shrink-0">
               <Image src={getResolvedLogoUrl(settings.logoUrl, isDarkMode ? "dark" : "light")} alt={settings.websiteTitle} width={140} height={32} className="h-7 w-auto" />
             </Link>
-            <div className="flex flex-col border-l border-border pl-3">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-[#15945b]">Member Area</span>
-              <span className="text-[10px] font-medium text-muted-foreground">Super Admin</span>
-            </div>
           </div>
         ) : (
           <Link href="/dashboard" className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#15945b] text-xs font-bold text-white">PI</Link>
@@ -104,19 +85,16 @@ export function MemberSidebar({ collapsed, onCloseMobile }: { collapsed?: boolea
               <div className="space-y-1">
                 {section.items.map((item) => {
                   const isActive = pathname === item.href || (item.href !== "/member-area" && pathname.startsWith(item.href))
-                  const isDisabled = item.status === "Segera Tersedia"
                   const content = (
                     <div className="relative flex items-center justify-between">
-                      <div className={cn("flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors", isActive ? "bg-[#e6f7ee] text-[#15945b] dark:bg-emerald-500/10 dark:text-emerald-400" : isDisabled ? "cursor-not-allowed opacity-50" : "text-muted-foreground hover:bg-accent hover:text-foreground", collapsed && "justify-center px-0")}>
+                      <div className={cn("flex flex-1 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors", isActive ? "bg-[#e6f7ee] text-[#15945b] dark:bg-emerald-500/10 dark:text-emerald-400" : "text-muted-foreground hover:bg-accent hover:text-foreground", collapsed && "justify-center px-0")}>
                         <item.icon className="h-5 w-5 shrink-0" />
                         {!collapsed && <span className="truncate">{item.label}</span>}
                       </div>
                     </div>
                   )
 
-                  return isDisabled ? (
-                    <div key={item.id} className="cursor-not-allowed" title="Segera Tersedia">{content}</div>
-                  ) : (
+                  return (
                     <Link key={item.id} href={item.href} onClick={onCloseMobile}>{content}</Link>
                   )
                 })}

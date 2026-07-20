@@ -6,10 +6,8 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { getUnreadInboxCount, markAllInboxMessagesAsRead, updateInboxMessageStatus, useInboxMessages } from "@/lib/admin-inbox"
 import { useAuth, roleDisplayNames } from "@/lib/auth-context"
-import { canAccessMenu, useRolePermissions } from "@/lib/access-permissions"
 import { useActivityLogs } from "@/lib/activity-log"
 import { useMaintenanceSettings } from "@/lib/maintenance-mode"
-import { useAssignedGorutKecamatan } from "@/MODUL GORUT TERBARU/lib/gorut/operational-scope"
 import { cn } from "@/lib/utils"
 import {
   ArrowUpRight,
@@ -62,8 +60,6 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
   const router = useRouter()
   const { setTheme } = useTheme()
   const { user } = useAuth()
-  const { scopedRoleLabel } = useAssignedGorutKecamatan()
-  const permissions = useRolePermissions()
   const [searchQuery, setSearchQuery] = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -87,7 +83,7 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
     if (!user?.role) return [] as SearchResultItem[]
 
     return flattenSidebarItems()
-      .filter((item) => item.roles.includes(user.role) && canAccessMenu(user.role, item.id, permissions))
+      .filter((item) => item.roles.includes(user.role))
       .map((item) => ({
         id: `menu-${item.id}`,
         title: item.label,
@@ -96,7 +92,7 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
         group: "Menu",
         icon: item.icon,
       }))
-  }, [permissions, user?.role])
+  }, [user?.role])
 
   const searchGroups = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -325,7 +321,7 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
                 <div className="hidden lg:flex flex-col items-start">
                   <span className="text-sm font-medium leading-none">{user?.name || "Admin"}</span>
                   <span className="text-xs text-muted-foreground leading-none mt-0.5">
-                    {scopedRoleLabel ?? (user?.role ? roleDisplayNames[user.role] : "Admin")}
+                    {user?.role ? roleDisplayNames[user.role] : "Admin"}
                   </span>
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground hidden lg:block" />
