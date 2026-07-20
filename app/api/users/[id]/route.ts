@@ -1,149 +1,57 @@
-import bcrypt from "bcryptjs"
-import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { getPrismaClient } from "@/lib/prisma"
-import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
-import { normalizePhoneNumber } from "@/lib/phone"
-import type { AppRole } from "@/types/auth"
+import { registeredModules } from "@/lib/portal-access"
+import { getModuleGrantsForUserIds } from "@/lib/portal-access-server"
+import { requireUserManagementAccess, serializeUserDetail, updateCentralUser, validateModules, validateUserPayload } from "@/lib/portal-user-management-server"
+import { isAppRole, isUserStatus, normalizeEmail } from "@/lib/portal-user-management"
+import { isValidPhoneNumber, normalizePhoneNumber } from "@/lib/phone"
 
-const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
-const validRoles: AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
-const validStatuses = ["Aktif", "Nonaktif"] as const
+const userSelect = { id: true, name: true, email: true, phone: true, role: true, status: true, avatar: true, createdAt: true, updatedAt: true } as const
 
-function formatLastLogin(lastLoginAt: Date | null) {
-  if (!lastLoginAt) return "Belum pernah login"
-
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(lastLoginAt)
-}
-
-function mapUser(user: {
-  id: string
-  name: string
-  email: string | null
-  phone: string
-  role: string
-  status: string
-  avatar: string | null
-  lastLoginAt: Date | null
-}) {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email ?? "",
-    phone: user.phone,
-    role: user.role,
-    status: user.status,
-    lastLogin: formatLastLogin(user.lastLoginAt),
-    avatar: user.avatar ?? "",
-    password: "",
-    passwordUpdatedAt: undefined,
-  }
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+  const required = await requireUserManagementAccess()
+  if (required.response) return required.response
+  const { id } = await Promise.resolve(params)
+  const user = await getPrismaClient().user.findUnique({ where: { id }, select: userSelect })
+  if (!user) return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 })
+  const grants = (await getModuleGrantsForUserIds([id])).get(id) ?? []
+  const modules = registeredModules.map((module) => {
+    const enabled = user.role === "super_admin_pc" || grants.some((grant) => grant.moduleKey === module.key && grant.enabled)
+    return { ...module, enabled, effective: user.status === "Aktif" && enabled }
+  })
+  return NextResponse.json({ user: serializeUserDetail(user, modules) })
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+  const required = await requireUserManagementAccess()
+  if (required.response) return required.response
   try {
-    const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value
-    const session = token ? await verifySessionToken(token, AUTH_SECRET) : null
-    if (!session) return NextResponse.json({ error: "Sesi tidak ditemukan." }, { status: 401 })
-    if (session.role !== "super_admin_pc") return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
-
-    const prisma = getPrismaClient()
     const { id } = await Promise.resolve(params)
-    const body = (await request.json()) as {
-      name?: string
-      email?: string
-      phone?: string
-      role?: string
-      status?: string
-      avatar?: string
-      password?: string
-      passwordUpdatedAt?: string
-    }
-
-    const currentUsers = await prisma.$queryRaw<Array<{
-      id: string
-      name: string
-      email: string | null
-      phone: string
-      role: string
-      status: string
-      avatar: string | null
-      passwordHash: string
-      lastLoginAt: Date | null
-    }>>`SELECT id, name, email, phone, role, status, avatar, "passwordHash", "lastLoginAt" FROM "User" WHERE id = ${id} LIMIT 1`
-
-    const currentUser = currentUsers[0]
-    if (!currentUser) return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 })
-
-    if (body.role !== undefined && !validRoles.includes(body.role as AppRole)) {
-      return NextResponse.json({ error: "Role pengguna tidak valid." }, { status: 400 })
-    }
-    if (body.status !== undefined && !validStatuses.includes(body.status as (typeof validStatuses)[number])) {
-      return NextResponse.json({ error: "Status akun tidak valid." }, { status: 400 })
-    }
-    if (id === session.sub && (body.role !== undefined || body.status !== undefined)) {
-      return NextResponse.json({ error: "Role dan status akun sendiri tidak dapat diubah." }, { status: 403 })
-    }
-
-    const nextRole = body.role ?? currentUser.role
-    const nextStatus = body.status ?? currentUser.status
-    if (currentUser.role === "super_admin_pc" && currentUser.status === "Aktif" && (nextRole !== "super_admin_pc" || nextStatus !== "Aktif")) {
-      const activeSuperAdmins = await prisma.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS count FROM "User" WHERE role = 'super_admin_pc' AND status = 'Aktif'`
-      if (Number(activeSuperAdmins[0]?.count ?? 0) <= 1) {
-        return NextResponse.json({ error: "Aksi diblokir: sistem harus memiliki minimal satu Super Admin PC aktif." }, { status: 409 })
-      }
-    }
-
-    const nextPasswordHash = body.password ? await bcrypt.hash(body.password, 10) : currentUser.passwordHash
-    const phone = body.phone ? normalizePhoneNumber(body.phone) : currentUser.phone
-    const email = body.email !== undefined ? (body.email.trim() || null) : currentUser.email
-    const avatar = body.avatar !== undefined ? (body.avatar.trim() || null) : currentUser.avatar
-
-    const updatedUsers = await prisma.$queryRaw<Array<{
-      id: string
-      name: string
-      email: string | null
-      phone: string
-      role: string
-      status: string
-      avatar: string | null
-      lastLoginAt: Date | null
-    }>>`
-      UPDATE "User"
-      SET
-        name = ${body.name ?? currentUser.name},
-        email = ${email},
-        phone = ${phone},
-        role = ${body.role ?? currentUser.role},
-        status = ${body.status ?? currentUser.status},
-        avatar = ${avatar},
-        "passwordHash" = ${nextPasswordHash},
-        "updatedAt" = NOW()
-      WHERE id = ${id}
-      RETURNING id, name, email, phone, role, status, avatar, "lastLoginAt"
-    `
-
-    return NextResponse.json({ user: mapUser(updatedUsers[0]) })
+    const body = (await request.json()) as Record<string, unknown>
+    const validation = validateUserPayload(body, true)
+    if (validation) return NextResponse.json({ error: validation }, { status: 400 })
+    if (body.password !== undefined) return NextResponse.json({ error: "Password tidak dapat diubah melalui pembaruan umum." }, { status: 400 })
+    const current = await getPrismaClient().user.findUnique({ where: { id }, select: userSelect })
+    if (!current) return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 })
+    const nextRole = body.role === undefined ? current.role : body.role
+    const nextStatus = body.status === undefined ? current.status : body.status
+    if (!isAppRole(nextRole) || !isUserStatus(nextStatus)) return NextResponse.json({ error: "Role atau status tidak valid." }, { status: 400 })
+    const phone = body.phone === undefined ? current.phone : normalizePhoneNumber(String(body.phone))
+    if (!isValidPhoneNumber(phone)) return NextResponse.json({ error: "Nomor HP tidak valid." }, { status: 400 })
+    const modules = validateModules(body.modules)
+    if (!modules) return NextResponse.json({ error: "Assignment modul tidak valid." }, { status: 400 })
+    const result = await updateCentralUser(required.actor.id, id, { name: body.name === undefined ? current.name : String(body.name).trim(), email: body.email === undefined ? (current.email ?? "") : normalizeEmail(String(body.email)), phone, role: nextRole, status: nextStatus, avatar: body.avatar === undefined ? current.avatar : String(body.avatar).trim() || null, modules })
+    const grants = (await getModuleGrantsForUserIds([id])).get(id) ?? []
+    const moduleDetails = registeredModules.map((module) => {
+      const enabled = result.after.role === "super_admin_pc" || grants.some((grant) => grant.moduleKey === module.key && grant.enabled)
+      return { ...module, enabled, effective: result.after.status === "Aktif" && enabled }
+    })
+    return NextResponse.json({ user: serializeUserDetail(result.after, moduleDetails) })
   } catch (error) {
-    console.error("Users update error", error)
+    if (error instanceof Error && error.message === "NOT_FOUND") return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 })
+    if (error instanceof Error && error.message === "SELF_CHANGE") return NextResponse.json({ error: "Role dan status akun sendiri tidak dapat diubah." }, { status: 403 })
+    if (error instanceof Error && error.message === "LAST_SUPER_ADMIN") return NextResponse.json({ error: "Sistem harus memiliki minimal satu Super Admin PC aktif." }, { status: 409 })
+    if (error instanceof Error && error.message === "DUPLICATE") return NextResponse.json({ error: "Email atau nomor HP sudah digunakan." }, { status: 409 })
     return NextResponse.json({ error: "Gagal memperbarui pengguna." }, { status: 500 })
-  }
-}
-
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
-  try {
-    const prisma = getPrismaClient()
-    const { id } = await Promise.resolve(params)
-    await prisma.$executeRaw`DELETE FROM "User" WHERE id = ${id}`
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error("Users delete error", error)
-    return NextResponse.json({ error: "Gagal menghapus pengguna." }, { status: 500 })
   }
 }

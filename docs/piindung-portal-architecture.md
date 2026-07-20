@@ -101,4 +101,14 @@ Akses masuk ke modul operasional (seperti GORUT) dikonfigurasi per pengguna:
   - Rute `/member-area/konten/artikel` dan subrutenya hanya mengizinkan peran dengan izin `articles.manage` atau peran Super Admin.
   - Rute `/member-area/hak-akses` memerlukan `access.manage`.
   - Rute `/member-area/pengguna` memerlukan `users.manage`.
-  - Rute `/member-area/**` lain yang tidak dikenali atau tidak memiliki pemetaan kebijakan otorisasi akan otomatis ditolak.
+- Rute `/member-area/**` lain yang tidak dikenali atau tidak memiliki pemetaan kebijakan otorisasi akan otomatis ditolak.
+
+## PIINDUNG User Management and Module Assignment Boundary
+
+PIINDUNG secara eksklusif memiliki data identitas pengguna terpusat, autentikasi sesi, organisasi role global, status keaktifan akun, metadata unit organisasi pendukung, dan izin masuk modul (*module-entry permissions*).
+
+Sistem menerapkan aturan perlindungan dan pembatasan berikut:
+- **Soft Deactivation & Deny-by-Default:** Pengguna yang dinonaktifkan (`status !== "Aktif"`) secara otomatis diblokir dari autentikasi maupun akses masuk ke seluruh portal dan modul operasional. Akun tidak pernah dihapus secara permanen (*no hard deletion*) untuk menjaga integritas riwayat transaksi dan audit.
+- **Last-Super-Admin Invariant:** Mutasi yang menyebabkan jumlah Super Admin PC aktif bernilai kurang dari satu akan ditolak. Super Admin juga dilarang menurunkan perannya sendiri (*self-demotion*) atau menonaktifkan akun sendiri (*self-deactivation*).
+- **Module Assignment Boundary:** Assignment modul (seperti pintu masuk ke GORUT) dikonfigurasi menggunakan *portal-module-grants* yang diakses melalui hak akses. Grant ini hanya memvalidasi pintu masuk pertama. Modul GORUT mempertahankan peran, wilayah cakupan kerja operasional, dan alur validasi transaksi secara internal tanpa mencampuri data portal terpusat.
+- **Audit Trails:** Seluruh aksi pembuatan pengguna, pengubahan status/role, serta pemberian grant dicatat secara aman dalam scope audit server-side (`portal-user-audit` dan `portal-access-audit`) yang tidak dapat dimutasi dari API publik.

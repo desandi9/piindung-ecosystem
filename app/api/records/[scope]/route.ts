@@ -7,7 +7,7 @@ import { requireSiteContactManager } from "@/lib/site-contact-server"
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string }> | { scope: string } }) {
   try {
     const { scope } = await Promise.resolve(params)
-    if (scope === "portal-module-grants" || scope === "portal-access-audit") {
+    if (scope === "portal-module-grants" || scope === "portal-access-audit" || scope === "portal-user-audit") {
       return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
     }
     if (scope === "gallery-content") {
@@ -43,7 +43,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
 export async function POST(request: Request, { params }: { params: Promise<{ scope: string }> | { scope: string } }) {
   try {
     const { scope } = await Promise.resolve(params)
-    if (scope === "portal-module-grants" || scope === "portal-access-audit") {
+    if (scope === "portal-module-grants" || scope === "portal-access-audit" || scope === "portal-user-audit") {
       return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
     }
     if (scope === "gallery-content") {

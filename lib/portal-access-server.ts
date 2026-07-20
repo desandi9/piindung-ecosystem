@@ -1,7 +1,8 @@
+import { randomUUID } from "crypto"
+import type { Prisma } from "@prisma/client"
 import { cookies } from "next/headers"
 import { getPrismaClient } from "@/lib/prisma"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
-import { getRecord, listRecords, updateRecord } from "@/lib/record-store-server"
 import { roleHasPortalPermission, registeredModules, isRegisteredModuleKey, type PortalPermission, type RegisteredModuleKey } from "@/lib/portal-access"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
@@ -10,6 +11,7 @@ const AUDIT_SCOPE = "portal-access-audit"
 
 type CurrentUser = { id: string; name: string; role: string; status: string }
 type Grant = { userId: string; moduleKey: RegisteredModuleKey; enabled: boolean; updatedAt?: string; actorId?: string }
+type GrantStoreClient = Pick<Prisma.TransactionClient, "appRecord">
 
 function parseGrantsArray(data: unknown): Grant[] {
   if (!data || typeof data !== "object") return []
@@ -17,8 +19,8 @@ function parseGrantsArray(data: unknown): Grant[] {
   if (!Array.isArray(array)) return []
   return array.filter((item): item is Grant => {
     if (!item || typeof item !== "object") return false
-    const v = item as Record<string, unknown>
-    return typeof v.userId === "string" && typeof v.moduleKey === "string" && isRegisteredModuleKey(v.moduleKey) && typeof v.enabled === "boolean"
+    const value = item as Record<string, unknown>
+    return typeof value.userId === "string" && typeof value.moduleKey === "string" && isRegisteredModuleKey(value.moduleKey) && typeof value.enabled === "boolean"
   })
 }
 
@@ -27,42 +29,17 @@ export async function resolveCurrentPortalAccess() {
   const session = token ? await verifySessionToken(token, AUTH_SECRET) : null
   if (!session) return { kind: "unauthenticated" as const }
 
-  const users = await getPrismaClient().$queryRaw<CurrentUser[]>`SELECT id, name, role, status FROM "User" WHERE id = ${session.sub} LIMIT 1`
-  const user = users[0]
+  const user = await getPrismaClient().user.findUnique({ where: { id: session.sub }, select: { id: true, name: true, role: true, status: true } })
   if (!user) return { kind: "unauthenticated" as const }
-  if (user.status !== "Aktif") return { kind: "inactive" as const, user }
+  if (user.status !== "Aktif") return { kind: "inactive" as const, user: user as CurrentUser }
 
-  const record = await getRecord(GRANTS_SCOPE, user.id)
-  const grants = parseGrantsArray(record?.data)
+  const grants = await getModuleGrantsForUserIds([user.id]).then((byUser) => byUser.get(user.id) ?? [])
   const canEnter = (moduleKey: RegisteredModuleKey) => user.role === "super_admin_pc" || grants.some((grant) => grant.moduleKey === moduleKey && grant.enabled)
   const permissions = [
-    "dashboard.view",
-    "member_area.view",
-    "profile.view",
-    "help.view",
-    "notifications.view",
-    "users.manage",
-    "access.manage",
-    "articles.manage",
-    "homepage.manage",
-    "products.manage",
-    "impact.manage",
-    "gallery.manage",
-    "downloads.manage",
-    "help_content.manage",
-    "contact.manage",
-    "branding.manage",
-    "settings.manage",
-    "audit.view",
+    "dashboard.view", "member_area.view", "profile.view", "help.view", "notifications.view", "users.manage", "access.manage", "articles.manage", "homepage.manage", "products.manage", "impact.manage", "gallery.manage", "downloads.manage", "help_content.manage", "contact.manage", "branding.manage", "settings.manage", "audit.view",
   ].filter((permission) => roleHasPortalPermission(user.role, permission as PortalPermission))
 
-  return {
-    kind: "authorized" as const,
-    user,
-    permissions,
-    modules: registeredModules.filter((module) => canEnter(module.key)),
-    grants,
-  }
+  return { kind: "authorized" as const, user: user as CurrentUser, permissions, modules: registeredModules.filter((module) => canEnter(module.key)), grants }
 }
 
 export async function requirePortalPermission(permission: PortalPermission) {
@@ -73,47 +50,50 @@ export async function requirePortalPermission(permission: PortalPermission) {
   return { access }
 }
 
-export async function setModuleGrant(userId: string, moduleKey: RegisteredModuleKey, enabled: boolean, actorId: string) {
-  const record = await getRecord(GRANTS_SCOPE, userId)
-  const existing = parseGrantsArray(record?.data)
+async function setModuleGrantWithClient(client: GrantStoreClient, userId: string, moduleKey: RegisteredModuleKey, enabled: boolean, actorId: string) {
+  const existingRecord = await client.appRecord.findUnique({ where: { scope_key: { scope: GRANTS_SCOPE, key: userId } }, select: { data: true } })
+  const existing = parseGrantsArray(existingRecord?.data)
   const previous = existing.find((grant) => grant.moduleKey === moduleKey)
-  const wasEnabled = previous ? previous.enabled : false
+  const before = previous?.enabled ?? false
+  const timestamp = new Date().toISOString()
+  const grants = [...existing.filter((grant) => grant.moduleKey !== moduleKey), { userId, moduleKey, enabled, actorId, updatedAt: timestamp }]
 
-  const next = existing.filter((grant) => grant.moduleKey !== moduleKey)
-  next.push({ userId, moduleKey, enabled, actorId, updatedAt: new Date().toISOString() })
-
-  const updated = await updateRecord(GRANTS_SCOPE, userId, { grants: next })
-
-  const auditKey = `audit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-  await updateRecord(AUDIT_SCOPE, auditKey, {
-    action: "module_grant_updated",
-    actorId,
-    targetUserId: userId,
-    moduleKey,
-    beforeState: wasEnabled,
-    afterState: enabled,
-    timestamp: new Date().toISOString(),
+  const updated = await client.appRecord.upsert({
+    where: { scope_key: { scope: GRANTS_SCOPE, key: userId } },
+    create: { id: randomUUID(), scope: GRANTS_SCOPE, key: userId, data: { grants } },
+    update: { data: { grants } },
+    select: { updatedAt: true },
   })
-
+  await client.appRecord.create({
+    data: {
+      id: randomUUID(),
+      scope: AUDIT_SCOPE,
+      key: `audit-${randomUUID()}`,
+      data: { actorId, targetUserId: userId, action: enabled ? "module_entry_enabled" : "module_entry_disabled", moduleKey, before: { enabled: before }, after: { enabled }, timestamp },
+    },
+  })
   return updated
 }
 
+export async function setModuleGrant(userId: string, moduleKey: RegisteredModuleKey, enabled: boolean, actorId: string, client?: GrantStoreClient) {
+  if (client) return setModuleGrantWithClient(client, userId, moduleKey, enabled, actorId)
+  return getPrismaClient().$transaction((tx) => setModuleGrantWithClient(tx, userId, moduleKey, enabled, actorId), { isolationLevel: "Serializable" })
+}
+
+export async function getModuleGrantsForUserIds(userIds: string[]) {
+  const result = new Map<string, Grant[]>()
+  if (userIds.length === 0) return result
+  const records = await getPrismaClient().appRecord.findMany({ where: { scope: GRANTS_SCOPE, key: { in: userIds } }, select: { key: true, data: true } })
+  for (const record of records) result.set(record.key, parseGrantsArray(record.data))
+  return result
+}
+
 export async function listPortalUsersWithModules() {
-  const users = await getPrismaClient().$queryRaw<Array<{ id: string; name: string; role: string; status: string }>>`SELECT id, name, role, status FROM "User" ORDER BY name ASC`
-  const records = await listRecords(GRANTS_SCOPE)
-  return users.map((user) => {
-    const grantsRecord = records.find((record) => record.key === user.id)
-    const grants = parseGrantsArray(grantsRecord?.data)
-    return {
-      ...user,
-      modules: user.role === "super_admin_pc"
-        ? [...registeredModules]
-        : registeredModules.filter((module) => grants.some((grant) => grant.moduleKey === module.key && grant.enabled)),
-    }
-  })
+  const users = await getPrismaClient().user.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, role: true, status: true } })
+  const grantsByUser = await getModuleGrantsForUserIds(users.map((user) => user.id))
+  return users.map((user) => ({ ...user, modules: user.role === "super_admin_pc" ? [...registeredModules] : registeredModules.filter((module) => grantsByUser.get(user.id)?.some((grant) => grant.moduleKey === module.key && grant.enabled)) }))
 }
 
 export async function portalUserExists(userId: string) {
-  const users = await getPrismaClient().$queryRaw<Array<{ id: string }>>`SELECT id FROM "User" WHERE id = ${userId} LIMIT 1`
-  return Boolean(users[0])
+  return Boolean(await getPrismaClient().user.findUnique({ where: { id: userId }, select: { id: true } }))
 }
