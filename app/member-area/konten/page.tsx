@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
-import { ArrowRight, Box, CircleDashed, FileText, Image as ImageIcon, MessageCircleQuestion, Settings, Phone } from "lucide-react"
+import { ArrowRight, Box, CircleDashed, Download, FileText, Image as ImageIcon, MessageCircleQuestion, Settings, Phone } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
@@ -111,6 +111,15 @@ export default function KontenPublikPage() {
       statusType: "ready",
       actionLabel: "Kelola Konten",
       href: "/member-area/konten/galeri",
+    },
+    {
+      title: "Pusat Download",
+      description: "Kelola dokumen publik, kategori, sumber file, dan visibilitas unduhan.",
+      icon: Download,
+      statusLabel: "Tersedia",
+      statusType: "ready",
+      actionLabel: "Kelola Konten",
+      href: "/member-area/konten/download",
     },
     {
       title: "Media & Branding",
