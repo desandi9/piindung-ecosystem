@@ -1,97 +1,70 @@
 "use client"
 
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import {
-  Archive,
-  ArrowLeft,
-  Download,
-  FileArchive,
-  FileImage,
-  FileText,
-} from "lucide-react"
-import { SimpleFooter } from "@/components/piindung/simple-footer"
+import { Download, FileText, Search } from "lucide-react"
 import { Navbar } from "@/components/piindung/navbar"
-import { categoryLabel, useDownloadItems, type DownloadCategory } from "@/lib/download-center"
-import { cn } from "@/lib/utils"
+import { PublicFooter } from "@/components/piindung/public-footer"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { formatDownloadSize, type PublicDownloadContent, type PublicDownloadItem } from "@/lib/download-content"
 
-function categoryIcon(category: DownloadCategory) {
-  if (category === "logo") return FileImage
-  if (category === "media asset") return FileArchive
-  return FileText
+type PublicResponse = { content: PublicDownloadContent }
+
+function isPublicResponse(value: unknown): value is PublicResponse {
+  return typeof value === "object" && value !== null && "content" in value
 }
 
 export default function DownloadPage() {
-  const downloadItems = useDownloadItems()
+  const [content, setContent] = useState<PublicDownloadContent | null>(null)
+  const [error, setError] = useState(false)
+  const [query, setQuery] = useState("")
+  const [category, setCategory] = useState("all")
 
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Navbar />
-      <main className="container mx-auto flex-1 px-4 lg:px-8 py-6">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Beranda
-        </Link>
+  const load = useCallback(async () => {
+    setError(false)
+    try {
+      const response = await fetch("/api/download-content")
+      const data: unknown = await response.json()
+      if (!response.ok || !isPublicResponse(data)) throw new Error("Invalid download response")
+      setContent(data.content)
+    } catch {
+      setError(true)
+    }
+  }, [])
 
-        <div className="mb-6">
-          <h1 className="text-xl lg:text-2xl font-semibold text-foreground">
-            Download Center
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Unduh logo, template berkas, dokumen, dan media assets resmi
-          </p>
-        </div>
+  useEffect(() => { void load() }, [load])
 
-        <div className="grid gap-3 lg:gap-4 md:grid-cols-2">
-          {downloadItems.map((item) => {
-            const Icon = categoryIcon(item.category)
+  const items = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase("id")
+    return (content?.items ?? []).filter(item =>
+      (category === "all" || item.categoryId === category) &&
+      (!needle || `${item.title} ${item.description}`.toLocaleLowerCase("id").includes(needle)),
+    )
+  }, [content, query, category])
 
-            return (
-            <div
-              key={item.id}
-              className={cn(
-                "group flex flex-col bg-card rounded-xl border border-border overflow-hidden",
-                "hover:border-[#2e8b57]/30 hover:shadow-md transition-all duration-300"
-              )}
-            >
-              <div className="p-4 lg:p-5 border-b border-border bg-gradient-to-r from-[#2e8b57]/10 to-[#2e8b57]/5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#2e8b57]/10 flex items-center justify-center group-hover:bg-[#2e8b57]/20 transition-colors">
-                    <Icon className="h-5 w-5 text-[#2e8b57]" />
-                  </div>
-                  <span className="rounded-full bg-[#2e8b57]/10 px-2.5 py-1 text-xs font-medium text-[#2e8b57]">
-                    {categoryLabel(item.category)}
-                  </span>
-                </div>
-              </div>
-              <div className="p-4 lg:p-5 flex flex-1 flex-col">
-                <h3 className="text-sm font-semibold text-foreground mb-1">{item.name}</h3>
-                <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{item.description}</p>
-                <div className="mt-auto flex items-center gap-3 rounded-xl border border-border bg-background p-3">
-                  <Archive className="h-4 w-4 text-[#2e8b57] shrink-0" />
-                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{item.fileName}</span>
-                </div>
-                <a
-                  href={item.link}
-                  download={item.fileName}
-                  className={cn(
-                    "mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl",
-                    "bg-[#2e8b57] hover:bg-[#236b43] text-white font-medium text-sm",
-                    "transition-all duration-200 hover:shadow-lg hover:shadow-[#2e8b57]/20"
-                  )}
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </a>
-              </div>
-            </div>
-            )
-          })}
-        </div>
-      </main>
-      <SimpleFooter />
-    </div>
-  )
+  if (error) return <Shell><div className="mx-auto max-w-xl px-4 py-24 text-center"><p>Pusat dokumen tidak dapat dimuat.</p><Button className="mt-4" onClick={() => void load()}>Coba lagi</Button></div></Shell>
+  if (!content) return <Shell><div aria-label="Memuat dokumen" className="mx-auto max-w-6xl animate-pulse space-y-6 px-4 py-20"><div className="h-12 rounded bg-muted"/><div className="grid gap-4 md:grid-cols-2"><div className="h-48 rounded bg-muted"/><div className="h-48 rounded bg-muted"/></div></div></Shell>
+
+  return <Shell>
+    <section className="bg-gradient-to-br from-emerald-950 to-emerald-700 px-4 py-20 text-white">
+      <div className="mx-auto max-w-6xl"><p className="text-sm font-semibold tracking-[.2em]">{content.hero.eyebrow}</p><h1 className="mt-4 max-w-4xl text-4xl font-bold sm:text-6xl">{content.hero.title} <span className="text-emerald-300">{content.hero.highlightedText}</span></h1><p className="mt-5 max-w-2xl text-emerald-50">{content.hero.description}</p></div>
+    </section>
+    <main className="mx-auto w-full max-w-6xl px-4 py-12">
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <label className="relative flex-1"><span className="sr-only">Cari dokumen</span><Search aria-hidden="true" className="absolute left-4 top-3.5 h-5 w-5 text-muted-foreground"/><Input className="h-12 pl-12" value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari dokumen..."/></label>
+        <div aria-label="Filter kategori" className="flex gap-2 overflow-x-auto pb-1"><Filter active={category === "all"} onClick={() => setCategory("all")}>Semua</Filter>{content.categories.map(item => <Filter key={item.id} active={category === item.id} onClick={() => setCategory(item.id)}>{item.name}</Filter>)}</div>
+      </div>
+      {items.length ? <div className="mt-8 space-y-12">{items.some(item => item.featured) && <section><h2 className="text-2xl font-bold">Dokumen unggulan</h2><div className="mt-5 grid gap-5 md:grid-cols-2">{items.filter(item => item.featured).map(item => <DocumentCard key={item.id} item={item}/>)}</div></section>}{items.some(item => !item.featured) && <section><h2 className="text-2xl font-bold">Dokumen lainnya</h2><div className="mt-5 grid gap-5 md:grid-cols-2">{items.filter(item => !item.featured).map(item => <DocumentCard key={item.id} item={item}/>)}</div></section>}</div> : <div className="py-20 text-center"><FileText aria-hidden="true" className="mx-auto h-12 w-12 text-muted-foreground"/><h2 className="mt-4 text-xl font-semibold">Dokumen tidak ditemukan</h2><p className="mt-2 text-muted-foreground">Coba kata kunci atau kategori lain.</p></div>}
+    </main>
+    {content.callToAction.visible && <section className="bg-emerald-950 px-4 py-14 text-white"><div className="mx-auto max-w-6xl"><p className="text-sm font-semibold tracking-widest text-emerald-300">{content.callToAction.eyebrow}</p><h2 className="mt-3 text-3xl font-bold">{content.callToAction.title}</h2><p className="mt-3 max-w-2xl text-emerald-50">{content.callToAction.description}</p><div className="mt-6 flex flex-wrap gap-3"><Button asChild><Link href={content.callToAction.primaryHref}>{content.callToAction.primaryLabel}</Link></Button><Button asChild variant="outline"><Link href={content.callToAction.secondaryHref}>{content.callToAction.secondaryLabel}</Link></Button></div></div></section>}
+  </Shell>
 }
+
+function DocumentCard({ item }: { item: PublicDownloadItem }) {
+  const href = item.sourceType === "uploaded" ? item.file?.url : item.externalUrl
+  return <article className="rounded-2xl border bg-card p-6 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-xl bg-emerald-100 p-3 text-emerald-800"><FileText aria-hidden="true"/></div><div className="min-w-0 flex-1"><h2 className="text-lg font-semibold">{item.title}</h2><p className="mt-2 text-sm text-muted-foreground">{item.description}</p><div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground"><span>{item.fileType}</span>{item.version && <span>Versi {item.version}</span>}{item.file && <span>{formatDownloadSize(item.file.fileSize)}</span>}{item.updatedLabel && <span>{item.updatedLabel}</span>}</div>{href && <Button asChild className="mt-5"><a href={href} target={item.sourceType === "external" ? "_blank" : undefined} rel={item.sourceType === "external" ? "noopener noreferrer" : undefined} download={item.sourceType === "uploaded" ? item.file?.originalDisplayName : undefined}><Download aria-hidden="true" className="mr-2 h-4 w-4"/>Unduh dokumen</a></Button>}</div></div></article>
+}
+
+function Filter({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) { return <button type="button" aria-pressed={active} className={`min-h-11 whitespace-nowrap rounded-xl border px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 ${active ? "bg-emerald-700 text-white" : "bg-card"}`} onClick={onClick}>{children}</button> }
+function Shell({ children }: { children: React.ReactNode }) { return <div className="flex min-h-screen flex-col overflow-x-hidden bg-background"><Navbar/><div className="flex-1">{children}</div><PublicFooter/></div> }
