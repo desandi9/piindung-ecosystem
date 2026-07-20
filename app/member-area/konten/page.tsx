@@ -109,7 +109,7 @@ export default function KontenPublikPage() {
       statusLabel: "Tersedia",
       statusType: "ready",
       actionLabel: "Kelola Konten",
-      href: "/admin/galeri",
+      href: "/member-area/konten/media",
     },
     {
       title: "Kontak & Footer",
