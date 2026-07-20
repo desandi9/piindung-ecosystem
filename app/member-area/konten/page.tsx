@@ -80,9 +80,10 @@ export default function KontenPublikPage() {
       title: "Dampak",
       description: "Narasi dampak, area manfaat, dan CTA.",
       icon: CircleDashed,
-      statusLabel: "Belum Tersedia",
-      statusType: "unavailable",
-      actionLabel: "Segera Tersedia",
+      statusLabel: "Tersedia",
+      statusType: "ready",
+      actionLabel: "Kelola Konten",
+      href: "/member-area/konten/dampak",
     },
     {
       title: "Artikel & Berita",
