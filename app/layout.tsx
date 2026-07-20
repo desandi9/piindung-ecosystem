@@ -12,7 +12,16 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await readSiteBranding()
+  const rawUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || "http://localhost:3000"
+  const siteUrl = rawUrl.startsWith("http://") || rawUrl.startsWith("https://") ? rawUrl : `https://${rawUrl}`
+  let metadataBase: URL
+  try {
+    metadataBase = new URL(siteUrl)
+  } catch {
+    metadataBase = new URL("http://localhost:3000")
+  }
   return {
+    metadataBase,
     title: { default: branding.socialPreview.defaultOgTitle, template: `%s | ${branding.identity.shortName}` },
     description: branding.socialPreview.defaultOgDescription || branding.identity.tagline,
     keywords: ["donasi", "zakat", "infaq", "sedekah", "NU Care", "LAZISNU", "Garut"],

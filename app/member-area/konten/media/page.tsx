@@ -182,7 +182,7 @@ export default function MemberMediaBrandingPage() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="border-border shadow-sm"><div className="border-b border-border p-5"><h2 className="text-lg font-bold">Social Preview (Open Graph)</h2></div>
                 <CardContent className="p-5 space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -200,7 +200,7 @@ export default function MemberMediaBrandingPage() {
               </Card>
 
             </div>
-            
+
             <aside className="w-full lg:w-80 shrink-0">
               <Card className="border-border bg-card shadow-sm sticky top-24">
                 <CardContent className="p-5 space-y-4">
