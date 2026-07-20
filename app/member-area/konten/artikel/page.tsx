@@ -4,7 +4,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
-import { ArrowLeft, Eye, FileText, ImageIcon, Pencil, Plus, RefreshCcw, RotateCcw, Search, Star, Trash2, X, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Eye, FileText, ImageIcon, Pencil, Plus, RefreshCcw, RotateCcw, Search, Star, Trash2, X, AlertTriangle, type LucideIcon } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
@@ -32,6 +32,7 @@ const featuredOptions: { label: string; value: FeaturedFilter }[] = [
   { label: "Featured", value: "featured" },
   { label: "Regular", value: "regular" },
 ]
+const summaryIcons: Array<[string, LucideIcon]> = [["Total Artikel", FileText], ["Draft", FileText], ["Dipublikasikan", Star], ["Tidak Dipublikasikan", FileText]]
 
 function safeText(value: string, length = 110) {
   const text = value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
@@ -89,7 +90,7 @@ export default function MemberArticleDirectoryPage() {
   const [retirement, setRetirement] = useState<ArticleRetirementStatus | null>(null)
   const [retirementLoading, setRetirementLoading] = useState(false)
   const [retirementError, setRetirementError] = useState("")
-  const ready = !isLoading && user?.role === "super_admin_pc"
+  const ready = !isLoading && (user?.role === "super_admin_pc" || user?.role === "admin_pc")
   const reveal = prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : fadeUp
   const itemReveal = prefersReducedMotion ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : staggerItem
 
@@ -125,7 +126,7 @@ export default function MemberArticleDirectoryPage() {
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/login?next=/member-area/konten/artikel")
-    else if (!isLoading && user?.role !== "super_admin_pc") router.replace("/dashboard")
+    else if (!isLoading && user?.role !== "super_admin_pc" && user?.role !== "admin_pc") router.replace("/dashboard")
   }, [isLoading, router, user])
 
   useEffect(() => { if (ready) void loadArticles() }, [ready])
@@ -234,7 +235,10 @@ export default function MemberArticleDirectoryPage() {
       {error && <div role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><span>{error}</span><button onClick={loadArticles} disabled={deleting} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-destructive/20 px-3 font-semibold disabled:opacity-60"><RefreshCcw className="h-4 w-4" /> Coba Lagi</button></div></div>}
 
       <motion.section variants={prefersReducedMotion ? { hidden: {}, visible: {} } : staggerContainer} initial="hidden" animate="visible" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[["Total Artikel", summary.total, FileText], ["Draft", summary.draft, FileText], ["Dipublikasikan", summary.published, Star], ["Tidak Dipublikasikan", summary.unpublished, FileText]].map(([label, value, Icon]) => <motion.div key={label as string} variants={itemReveal} className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{label as string}</p><Icon className="h-5 w-5 text-[#15945b]" /></div><p className="mt-2 text-3xl font-bold text-foreground">{value as number}</p></motion.div>)}
+        {summaryIcons.map(([label, Icon]) => {
+          const value = label === "Total Artikel" ? summary.total : label === "Draft" ? summary.draft : label === "Dipublikasikan" ? summary.published : summary.unpublished
+          return <motion.div key={label} variants={itemReveal} className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{label}</p><Icon className="h-5 w-5 text-[#15945b]" /></div><p className="mt-2 text-3xl font-bold text-foreground">{value}</p></motion.div>
+        })}
       </motion.section>
 
       <motion.section variants={reveal} initial="hidden" animate="visible" className="rounded-[24px] border border-border bg-card p-4 shadow-sm sm:p-5">

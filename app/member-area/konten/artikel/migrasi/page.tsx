@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
-import { AlertCircle, ArrowLeft, CheckCircle2, Eye, FileText, Info, PlayCircle, RefreshCcw, RotateCcw, Search, ShieldAlert, X } from "lucide-react"
+import { AlertCircle, ArrowLeft, CheckCircle2, Eye, FileText, Info, PlayCircle, RefreshCcw, RotateCcw, Search, ShieldAlert, X, type LucideIcon } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
@@ -40,7 +40,7 @@ export default function ArticleMigrationPreviewPage() {
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
   const [archiving, setArchiving] = useState(false)
   const [archiveResults, setArchiveResults] = useState<Array<{ legacyRecordKey: string; status: string; articleSlug?: string; reason?: string }>>([])
-  const ready = !isLoading && user?.role === "super_admin_pc"
+  const ready = !isLoading && (user?.role === "super_admin_pc" || user?.role === "admin_pc")
 
   const load = async () => {
     setLoading(true); setError("")
@@ -57,7 +57,7 @@ export default function ArticleMigrationPreviewPage() {
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/login?next=/member-area/konten/artikel/migrasi")
-    else if (!isLoading && user?.role !== "super_admin_pc") router.replace("/dashboard")
+    else if (!isLoading && user?.role !== "super_admin_pc" && user?.role !== "admin_pc") router.replace("/dashboard")
   }, [isLoading, router, user])
 
   useEffect(() => { if (ready) void load() }, [ready])
@@ -100,6 +100,13 @@ export default function ArticleMigrationPreviewPage() {
   }, [preview])
 
   const readyKeys = preview?.candidates.filter((item) => item.article !== null && item.issues.length === 0).map((item) => item.legacyReference) ?? []
+const summaryItems: Array<[string, LucideIcon, string]> = [
+  ["Total Konten Lama", FileText, "text-[#0b1f33]"],
+  ["Siap Dimigrasikan", CheckCircle2, "text-[#15945b]"],
+  ["Memerlukan Perbaikan", AlertCircle, "text-amber-600"],
+  ["Konflik Slug", ShieldAlert, "text-destructive"],
+  ["Kemungkinan Sudah Dimigrasi", Info, "text-sky-600"]
+]
   const toggleSelected = (key: string) => setSelected((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key])
   const migrateSelected = async () => {
     if (selected.length === 0 || migrating) return
@@ -150,13 +157,10 @@ export default function ArticleMigrationPreviewPage() {
       {error && <div role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><span>{error}</span><button onClick={load} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-destructive/20 px-3 font-semibold"><RefreshCcw className="h-4 w-4" /> Coba Lagi</button></div></div>}
 
       <motion.section variants={prefersReducedMotion ? { hidden: {}, visible: {} } : staggerContainer} initial="hidden" animate="visible" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {[
-          ["Total Konten Lama", summary?.total ?? 0, FileText, "text-[#0b1f33]"], 
-          ["Siap Dimigrasikan", summary?.ready ?? 0, CheckCircle2, "text-[#15945b]"], 
-          ["Memerlukan Perbaikan", summary?.invalid ?? 0, AlertCircle, "text-amber-600"], 
-          ["Konflik Slug", summary?.conflict ?? 0, ShieldAlert, "text-destructive"],
-          ["Kemungkinan Sudah Dimigrasi", summary?.migrated ?? 0, Info, "text-sky-600"]
-        ].map(([label, value, Icon, colorClass]) => <motion.div key={label as string} variants={itemReveal} className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{label as string}</p><Icon className={cn("h-5 w-5", colorClass)} /></div><p className="mt-2 text-3xl font-bold text-foreground">{value as number}</p></motion.div>)}
+        {summaryItems.map(([label, Icon, colorClass]) => {
+          const value = label === "Total Konten Lama" ? (summary?.total ?? 0) : label === "Siap Dimigrasikan" ? (summary?.ready ?? 0) : label === "Memerlukan Perbaikan" ? (summary?.invalid ?? 0) : label === "Konflik Slug" ? (summary?.conflict ?? 0) : (summary?.migrated ?? 0)
+          return <motion.div key={label} variants={itemReveal} className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{label}</p><Icon className={cn("h-5 w-5", colorClass)} /></div><p className="mt-2 text-3xl font-bold text-foreground">{value}</p></motion.div>
+        })}
       </motion.section>
 
       <motion.section variants={reveal} initial="hidden" animate="visible" className="rounded-[24px] border border-border bg-card p-4 shadow-sm sm:p-5">
