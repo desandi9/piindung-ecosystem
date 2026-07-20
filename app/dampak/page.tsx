@@ -33,6 +33,16 @@ function SectionHeading({ eyebrow, title, description }: { eyebrow: string; titl
   )
 }
 
+function isImpactContentEmpty(data: ImpactContent | null): boolean {
+  if (!data) return true
+  const hasHero = !!(data.hero.title || data.hero.description)
+  const hasStats = data.statistics.length > 0
+  const hasAchievements = data.achievements.length > 0
+  const hasStories = data.stories.length > 0
+  const hasTimeline = data.timeline.length > 0
+  return !(hasHero || hasStats || hasAchievements || hasStories || hasTimeline)
+}
+
 export default function ImpactPage() {
   const [content, setContent] = useState<ImpactContent | null>(null)
   const [loading, setLoading] = useState(true)
@@ -45,7 +55,8 @@ export default function ImpactPage() {
     try {
       const res = await fetch("/api/impact-content", { cache: "no-store" })
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`)
+        console.error("Permintaan konten dampak gagal:", { status: res.status })
+        throw new Error("Impact content request failed")
       }
       const data = await res.json().catch(() => ({}))
       if (data.content) {
@@ -55,7 +66,7 @@ export default function ImpactPage() {
       }
     } catch (err) {
       console.error("Gagal memuat data dampak:", err)
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan koneksi.")
+      setError("Informasi dampak belum dapat dimuat. Silakan coba kembali.")
     } finally {
       setLoading(false)
     }
@@ -65,17 +76,8 @@ export default function ImpactPage() {
     void loadData()
   }, [])
 
-  const isEmpty = useMemoState(content)
-
-  function useMemoState(data: ImpactContent | null) {
-    if (!data) return true
-    const hasHero = !!(data.hero.title || data.hero.description)
-    const hasStats = data.statistics.length > 0
-    const hasAchievements = data.achievements.length > 0
-    const hasStories = data.stories.length > 0
-    const hasTimeline = data.timeline.length > 0
-    return !(hasHero || hasStats || hasAchievements || hasStories || hasTimeline)
-  }
+  const isEmpty = isImpactContentEmpty(content)
+  const cta = content?.callToAction
 
   const featuredStory = content?.stories.find(x => x.featured)
   const regularStories = content?.stories.filter(x => !x.featured) ?? []
@@ -177,29 +179,29 @@ export default function ImpactPage() {
                   <SectionHeading eyebrow="PENCAPAIAN" title="Langkah-Langkah Besar" description="Catatan perjalanan dan penghargaan yang diraih dalam pelayanan masyarakat." />
                   <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {content.achievements.map((ach) => {
-                      const CardWrapper = ach.link ? "a" : "div"
-                      const wrapperProps = ach.link ? { href: ach.link, target: "_blank", rel: "noreferrer", className: "group text-left" } : {}
-                      return (
-                        <CardWrapper key={ach.id} {...(wrapperProps as any)}>
-                          <article className="h-full rounded-[22px] border border-[#dde7e2] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 flex flex-col justify-between transition hover:-translate-y-1 hover:border-[#15945b]/35 hover:shadow-lg focus-within:ring-2 focus-within:ring-[#15945b]">
-                            <div className="space-y-4">
-                              {ach.image && (
-                                <div className="relative w-full h-[180px] rounded-xl overflow-hidden border border-[#dde7e2] dark:border-white/10 bg-slate-100">
-                                  <Image src={ach.image.path} alt={ach.title} fill className="object-cover" unoptimized />
-                                </div>
-                              )}
-                              <span className="inline-flex rounded-full bg-[#15945b]/10 px-3 py-1 text-xs font-semibold text-[#15945b] dark:text-emerald-300">{ach.year ?? "Milestone"}</span>
-                              <h3 className="text-xl font-bold text-[#0b1f33] dark:text-white group-hover:text-[#15945b] transition-colors">{ach.title}</h3>
-                              <p className="text-sm leading-7 text-[#566473] dark:text-slate-300">{ach.description}</p>
-                            </div>
-                            {ach.link && (
-                              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-xs font-bold text-[#15945b] group-hover:underline">
-                                Selengkapnya <ArrowRight className="h-3.5 w-3.5" />
+                      const article = (
+                        <article className="h-full rounded-[22px] border border-[#dde7e2] bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900 flex flex-col justify-between transition hover:-translate-y-1 hover:border-[#15945b]/35 hover:shadow-lg focus-within:ring-2 focus-within:ring-[#15945b]">
+                          <div className="space-y-4">
+                            {ach.image && (
+                              <div className="relative w-full h-[180px] rounded-xl overflow-hidden border border-[#dde7e2] dark:border-white/10 bg-slate-100">
+                                <Image src={ach.image.path} alt={ach.title} fill className="object-cover" unoptimized />
                               </div>
                             )}
-                          </article>
-                        </CardWrapper>
+                            <span className="inline-flex rounded-full bg-[#15945b]/10 px-3 py-1 text-xs font-semibold text-[#15945b] dark:text-emerald-300">{ach.year ?? "Milestone"}</span>
+                            <h3 className="text-xl font-bold text-[#0b1f33] dark:text-white group-hover:text-[#15945b] transition-colors">{ach.title}</h3>
+                            <p className="text-sm leading-7 text-[#566473] dark:text-slate-300">{ach.description}</p>
+                          </div>
+                          {ach.link && (
+                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-xs font-bold text-[#15945b] group-hover:underline">
+                              Selengkapnya <ArrowRight className="h-3.5 w-3.5" />
+                            </div>
+                          )}
+                        </article>
                       )
+
+                      if (ach.link?.startsWith("/")) return <Link key={ach.id} href={ach.link} className="group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]">{article}</Link>
+                      if (ach.link?.startsWith("https://")) return <a key={ach.id} href={ach.link} target="_blank" rel="noopener noreferrer" className="group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]">{article}</a>
+                      return <div key={ach.id} className="group text-left">{article}</div>
                     })}
                   </div>
                 </div>
@@ -302,7 +304,7 @@ export default function ImpactPage() {
               </section>
             )}
 
-            {cta.visible && (
+            {cta?.visible && (
               <section className="relative isolate overflow-hidden px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8" style={cta.backgroundImage ? { backgroundImage: `url('${cta.backgroundImage.path}')`, backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#0f3460" }}>
                 <div className="absolute inset-0 -z-10 bg-[#071426]/70" aria-hidden="true" />
                 <div className="relative mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[1fr_auto] lg:gap-12">
