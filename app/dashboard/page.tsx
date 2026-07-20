@@ -4,10 +4,11 @@ import Link from "next/link"
 import { CircleHelp, ExternalLink, ShieldCheck } from "lucide-react"
 import { Navbar } from "@/components/piindung/navbar"
 import { SimpleFooter } from "@/components/piindung/simple-footer"
+import { useEffect, useState } from "react"
 import { roleDisplayNames, useAuth } from "@/lib/auth-context"
-import { useIntegratedApps } from "@/lib/integrated-apps"
 import { getPublishedNotifications, useNotifications } from "@/lib/notifications"
-import { canPresentPortalModule } from "@/lib/portal-navigation"
+
+type PortalModule = { key: string; name: string; route: string; description: string }
 
 function Section({
   id,
@@ -34,15 +35,18 @@ function Section({
 export default function DashboardPage() {
   const { user, isLoading } = useAuth()
   const notifications = getPublishedNotifications(useNotifications()).slice(0, 3)
-  const integratedApps = useIntegratedApps()
+  const [modules, setModules] = useState<PortalModule[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    void fetch("/api/portal-access/me", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : { modules: [] }))
+      .then((data: { modules?: PortalModule[] }) => setModules(data.modules ?? []))
+  }, [user])
 
   if (isLoading || !user) {
     return <div className="min-h-screen bg-background" />
   }
-
-  const modules = integratedApps.filter(
-    (app) => app.enabled && canPresentPortalModule(user.role, app.link)
-  )
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -83,14 +87,14 @@ export default function DashboardPage() {
           {modules.length ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {modules.map((module) => (
-                <article key={module.id} className="rounded-xl border border-border p-5">
+                <article key={module.key} className="rounded-xl border border-border p-5">
                   <p className="text-sm font-semibold text-primary">Tersedia</p>
                   <h3 className="mt-2 text-lg font-bold text-foreground">{module.name}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     {module.description}
                   </p>
                   <Link
-                    href={module.link}
+                    href={module.route}
                     className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     Masuk modul

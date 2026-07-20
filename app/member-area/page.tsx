@@ -3,11 +3,12 @@
 import Link from "next/link"
 import { CircleHelp, Settings, User } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { MemberLayout } from "@/components/member-area/member-shell"
 import { useAuth } from "@/lib/auth-context"
-import { useIntegratedApps } from "@/lib/integrated-apps"
-import { canPresentPortalModule } from "@/lib/portal-navigation"
+
+type PortalModule = { key: string; name: string; route: string; description: string }
+type PortalAccess = { permissions: string[]; modules: PortalModule[] }
 
 function PortalCard({
   title,
@@ -35,7 +36,7 @@ function PortalCard({
 export default function MemberAreaPage() {
   const router = useRouter()
   const { user, isLoading } = useAuth()
-  const integratedApps = useIntegratedApps()
+  const [portalAccess, setPortalAccess] = useState<PortalAccess>({ permissions: [], modules: [] })
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -43,14 +44,21 @@ export default function MemberAreaPage() {
     }
   }, [isLoading, router, user])
 
+  useEffect(() => {
+    if (!user) return
+    void fetch("/api/portal-access/me", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : { permissions: [], modules: [] }))
+      .then((data: PortalAccess) => setPortalAccess(data))
+  }, [user])
+
   if (isLoading || !user) {
     return <div className="min-h-screen bg-background" />
   }
 
-  const modules = integratedApps.filter(
-    (app) => app.enabled && canPresentPortalModule(user.role, app.link)
-  )
-  const canManage = user.role === "super_admin_pc"
+  const modules = portalAccess.modules
+  const canManage = portalAccess.permissions.includes("portal.users.manage") || portalAccess.permissions.includes("portal.content.manage")
+  const canManageAccess = portalAccess.permissions.includes("portal.access.manage")
+  const canManageContent = portalAccess.permissions.includes("portal.articles.manage") || portalAccess.permissions.includes("portal.content.manage")
 
   return (
     <MemberLayout title="Member Area" breadcrumb="Portal PIINDUNG / Member Area">
@@ -81,10 +89,10 @@ export default function MemberAreaPage() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {modules.map((module) => (
                 <PortalCard
-                  key={module.id}
+                  key={module.key}
                   title={module.name}
                   description={module.description}
-                  href={module.link}
+                  href={module.route}
                   icon={Settings}
                 />
               ))}
@@ -100,20 +108,32 @@ export default function MemberAreaPage() {
           <h2 id="management-heading" className="text-xl font-bold text-foreground">
             Pengelolaan PIINDUNG
           </h2>
-          {canManage ? (
+          {canManage || canManageAccess ? (
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <PortalCard
-                title="Pengguna dan Akses"
-                description="Kelola akun pengguna sesuai perlindungan Super Admin yang berlaku."
-                href="/member-area/pengguna"
-                icon={Settings}
-              />
-              <PortalCard
-                title="Konten PIINDUNG"
-                description="Buka pusat pengelolaan konten publik PIINDUNG."
-                href="/member-area/konten"
-                icon={Settings}
-              />
+              {portalAccess.permissions.includes("portal.users.manage") && (
+                <PortalCard
+                  title="Pengguna"
+                  description="Kelola akun pengguna dan unit organisasi."
+                  href="/member-area/pengguna"
+                  icon={Settings}
+                />
+              )}
+              {canManageAccess && (
+                <PortalCard
+                  title="Hak Akses"
+                  description="Kelola hak akses modul pengguna dan kapasitas peran."
+                  href="/member-area/hak-akses"
+                  icon={Settings}
+                />
+              )}
+              {canManageContent && (
+                <PortalCard
+                  title="Konten PIINDUNG"
+                  description="Buka pusat pengelolaan konten publik PIINDUNG."
+                  href="/member-area/konten"
+                  icon={Settings}
+                />
+              )}
             </div>
           ) : (
             <p className="mt-4 rounded-2xl border border-dashed border-border bg-card p-5 text-sm leading-6 text-muted-foreground">

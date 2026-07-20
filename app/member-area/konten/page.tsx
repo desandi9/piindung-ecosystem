@@ -14,6 +14,7 @@ import { useHomepageContent } from "@/lib/homepage-content"
 import { useIntegratedApps } from "@/lib/integrated-apps"
 import { useHelpFaqCategories } from "@/lib/faq-manager"
 import { useGalleryItems } from "@/lib/gallery-content-client"
+import { roleDisplayNames } from "@/lib/auth-context"
 
 type CardMapping = {
   title: string
@@ -38,20 +39,26 @@ export default function KontenPublikPage() {
   const faqs = useHelpFaqCategories()
   const galleries = useGalleryItems()
 
+  const isSuperAdmin = user?.role === "super_admin_pc"
+
   const summary = useMemo(() => {
     return {
       pagesCount: 5,
-      activeModules: 6,
-      pendingModules: 2,
+      activeModules: isSuperAdmin ? 10 : 1,
+      pendingModules: isSuperAdmin ? 0 : 9,
       mediaCount: galleries.length,
     }
-  }, [galleries.length])
+  }, [galleries.length, isSuperAdmin])
 
   useEffect(() => {
     if (!isLoading) {
-      if (!user) router.replace("/login?next=/member-area/konten")
-      else if (user.role !== "super_admin_pc") router.replace("/dashboard")
-      else setReady(true)
+      if (!user) {
+        router.replace("/login?next=/member-area/konten")
+      } else if (user.role !== "super_admin_pc" && user.role !== "admin_pc") {
+        router.replace("/dashboard")
+      } else {
+        setReady(true)
+      }
     }
   }, [user, isLoading, router])
 
@@ -62,28 +69,28 @@ export default function KontenPublikPage() {
       title: "Beranda",
       description: "Hero, CTA, gambar utama, dan susunan section.",
       icon: ImageIcon,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/beranda",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/beranda" : undefined,
     },
     {
       title: "Produk",
       description: "Produk publik, deskripsi, status, logo, dan urutan.",
       icon: Box,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/produk",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/produk" : undefined,
     },
     {
       title: "Dampak",
       description: "Narasi dampak, area manfaat, dan CTA.",
       icon: CircleDashed,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/dampak",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/dampak" : undefined,
     },
     {
       title: "Artikel & Berita",
@@ -98,55 +105,55 @@ export default function KontenPublikPage() {
       title: "Pusat Bantuan",
       description: "FAQ, topik bantuan, dan informasi dukungan.",
       icon: MessageCircleQuestion,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/bantuan",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/bantuan" : undefined,
     },
     {
       title: "Galeri & Dokumentasi",
       description: "Hero galeri, kategori, item dokumentasi, dan pengaturan visibilitas.",
       icon: ImageIcon,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/galeri",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/galeri" : undefined,
     },
     {
       title: "Pusat Download",
       description: "Kelola dokumen publik, kategori, sumber file, dan visibilitas unduhan.",
       icon: Download,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/download",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/download" : undefined,
     },
     {
       title: "Media & Branding",
       description: "Logo, gambar, galeri, favicon, dan aset publik.",
       icon: ImageIcon,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/media",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/media" : undefined,
     },
     {
       title: "Kontak & Footer",
       description: "Alamat, kontak, media sosial, dan tautan footer.",
       icon: Phone,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/member-area/konten/kontak",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/member-area/konten/kontak" : undefined,
     },
     {
       title: "SEO",
       description: "Judul situs, deskripsi, Open Graph, dan metadata halaman.",
       icon: Settings,
-      statusLabel: "Tersedia",
-      statusType: "ready",
-      actionLabel: "Kelola Konten",
-      href: "/admin/pengaturan",
+      statusLabel: isSuperAdmin ? "Tersedia" : "Terbatas",
+      statusType: isSuperAdmin ? "ready" : "unavailable",
+      actionLabel: isSuperAdmin ? "Kelola Konten" : "Super Admin Saja",
+      href: isSuperAdmin ? "/admin/pengaturan" : undefined,
     },
   ]
 
@@ -156,7 +163,7 @@ export default function KontenPublikPage() {
         <motion.section variants={reveal} initial="hidden" animate="visible" className="rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15945b]">KONTEN PUBLIK</p>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#0b1f33] dark:text-white sm:text-4xl">Kelola Tampilan dan Informasi Publik</h2>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-muted-foreground">Kelola konten landing page, artikel, pusat bantuan, media, kontak, dan identitas publik PIINDUNG melalui satu pusat kendali.</p>
+          <p className="mt-4 max-w-3xl text-base leading-8 text-muted-foreground">Kelola konten sesuai izin {roleDisplayNames[user.role]}.</p>
         </motion.section>
 
         <motion.section variants={prefersReducedMotion ? { hidden: {}, visible: {} } : staggerContainer} initial="hidden" animate="visible" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
