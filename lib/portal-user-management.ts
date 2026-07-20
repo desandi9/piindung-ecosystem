@@ -35,9 +35,10 @@ export function canChangeCentralUser(
   return !removesFinalActiveSuperAdmin || activeSuperAdminCount > 1
 }
 
-export function serializeManagedUser(user: { id: string; name: string; email: string | null; role: string; status: string; createdAt: Date; updatedAt: Date }, modules: Array<{ key: string; name: string; route: string }> = []) {
+export function serializeManagedUser(user: { id: string; memberId?: string; name: string; email: string | null; role: string; status: string; createdAt: Date; updatedAt: Date }, modules: Array<{ key: string; name: string; route: string }> = []) {
   return {
     id: user.id,
+    ...(user.memberId ? { memberId: user.memberId } : {}),
     name: user.name,
     email: user.email,
     role: user.role,

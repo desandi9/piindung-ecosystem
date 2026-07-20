@@ -58,7 +58,7 @@ void test("portal-user-management: safe serialization logic", () => {
     updatedAt: new Date("2026-07-21T01:00:00Z"),
   }
 
-  const listSerialized = serializeUserListItem(raw, [{ key: "gorut", name: "GORUT", route: "/gorut" }])
+  const listSerialized = serializeUserListItem({ ...raw, memberId: undefined }, [{ key: "gorut", name: "GORUT", route: "/gorut" }])
   assert.deepEqual(listSerialized, {
     id: "user-123",
     name: "Ahmad",
@@ -74,7 +74,7 @@ void test("portal-user-management: safe serialization logic", () => {
   assert.equal("phone" in listSerialized, false)
   assert.equal("avatar" in listSerialized, false)
 
-  const detailSerialized = serializeUserDetail(raw, [{ key: "gorut", name: "GORUT", route: "/gorut", enabled: true, effective: true }])
+  const detailSerialized = serializeUserDetail({ ...raw, memberId: undefined }, [{ key: "gorut", name: "GORUT", route: "/gorut", enabled: true, effective: true }])
   assert.deepEqual(detailSerialized, {
     id: "user-123",
     name: "Ahmad",

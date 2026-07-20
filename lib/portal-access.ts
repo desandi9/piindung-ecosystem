@@ -63,8 +63,11 @@ export function hasEffectiveModuleEntry(role: string, active: boolean, moduleKey
 
 export function canAccessMemberAreaRoute(role: string, pathname: string) {
   if (!(role in capabilities)) return false
-  if (pathname === "/member-area") return roleHasPortalPermission(role, "member_area.view")
+  if (pathname === "/member-area" || pathname === "/member-area/identitas") return roleHasPortalPermission(role, "member_area.view")
+
   if (pathname === "/member-area/konten" || pathname.startsWith("/member-area/konten/artikel")) return roleHasPortalPermission(role, "articles.manage") || role === "super_admin_pc"
+  if (pathname.startsWith("/member-area/konten/beranda") || pathname.startsWith("/member-area/konten/produk") || pathname.startsWith("/member-area/konten/dampak") || pathname.startsWith("/member-area/konten/bantuan") || pathname.startsWith("/member-area/konten/galeri") || pathname.startsWith("/member-area/konten/download") || pathname.startsWith("/member-area/konten/media") || pathname.startsWith("/member-area/konten/kontak")) return role === "super_admin_pc"
+
   if (pathname === "/member-area/hak-akses") return roleHasPortalPermission(role, "access.manage")
   if (pathname === "/member-area/pengguna") return roleHasPortalPermission(role, "users.manage")
   return false

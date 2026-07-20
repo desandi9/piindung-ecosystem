@@ -3,6 +3,7 @@ import { randomUUID } from "crypto"
 import { getPrismaClient } from "@/lib/prisma"
 import type { AppRole } from "@/types/auth"
 import { normalizePhoneNumber } from "@/lib/phone"
+import { generateMemberId } from "@/lib/member-identity"
 
 export interface SeedUserInput {
   name: string
@@ -106,10 +107,9 @@ export async function ensureDefaultUsers() {
         return
       }
 
-      await prisma.$executeRaw`
-        INSERT INTO "User" (id, name, phone, email, "passwordHash", role, status, avatar, "updatedAt")
-        VALUES (${randomUUID()}, ${user.name}, ${phone}, ${user.email ?? null}, ${passwordHash}, ${user.role}, ${user.status}, ${user.avatar ?? null}, NOW())
-      `
+      await prisma.user.create({
+        data: { id: randomUUID(), memberId: generateMemberId(), name: user.name, phone, email: user.email ?? null, passwordHash, role: user.role, status: user.status, avatar: user.avatar ?? null },
+      })
     }),
   )
 }

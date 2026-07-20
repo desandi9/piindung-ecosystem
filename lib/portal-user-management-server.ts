@@ -5,18 +5,19 @@ import { getPrismaClient } from "@/lib/prisma"
 import { resolveCurrentPortalAccess, getModuleGrantsForUserIds, setModuleGrant } from "@/lib/portal-access-server"
 import { isRegisteredModuleKey, registeredModules, type RegisteredModuleKey } from "@/lib/portal-access"
 import { canChangeCentralUser, isAppRole, isUserStatus, normalizeEmail, type UserStatus } from "@/lib/portal-user-management"
+import { generateMemberId } from "@/lib/member-identity"
 import type { AppRole } from "@/types/auth"
 
 export const userAuditScope = "portal-user-audit"
-const userSelect = { id: true, name: true, email: true, phone: true, role: true, status: true, avatar: true, createdAt: true, updatedAt: true } as const
+const userSelect = { id: true, memberId: true, name: true, email: true, phone: true, role: true, status: true, avatar: true, createdAt: true, updatedAt: true } as const
 type DbUser = Prisma.UserGetPayload<{ select: typeof userSelect }>
 type ModuleAssignment = { key: RegisteredModuleKey; enabled: boolean }
 
-export function serializeUserListItem(user: DbUser, modules: Array<{ key: RegisteredModuleKey; name: string; route: string }> = []) {
-  return { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status, createdAt: user.createdAt.toISOString(), updatedAt: user.updatedAt.toISOString(), modules: modules.map(({ key, name, route }) => ({ key, name, route })) }
+export function serializeUserListItem(user: { id: string; memberId?: string; name: string; email: string | null; role: string; status: string; createdAt: Date; updatedAt: Date; phone?: string; avatar?: string | null }, modules: Array<{ key: RegisteredModuleKey; name: string; route: string }> = []) {
+  return { id: user.id, ...(user.memberId ? { memberId: user.memberId } : {}), name: user.name, email: user.email, role: user.role, status: user.status, createdAt: user.createdAt.toISOString(), updatedAt: user.updatedAt.toISOString(), modules: modules.map(({ key, name, route }) => ({ key, name, route })) }
 }
 
-export function serializeUserDetail(user: DbUser, modules: Array<{ key: RegisteredModuleKey; name: string; route: string; enabled: boolean; effective: boolean }>) {
+export function serializeUserDetail(user: { id: string; memberId?: string; name: string; email: string | null; role: string; status: string; createdAt: Date; updatedAt: Date; phone?: string; avatar?: string | null }, modules: Array<{ key: RegisteredModuleKey; name: string; route: string; enabled: boolean; effective: boolean }>) {
   return { ...serializeUserListItem(user), phone: user.phone, avatar: user.avatar, modules }
 }
 
@@ -49,6 +50,7 @@ export function validateModules(value: unknown): ModuleAssignment[] | null {
 export function validateUserPayload(body: Record<string, unknown>, partial = false) {
   const allowed = ["name", "email", "phone", "role", "status", "avatar", "password", "modules"]
   if (Object.keys(body).some((key) => !allowed.includes(key))) return "Field pengguna tidak didukung."
+  if (body.memberId !== undefined) return "Pembaruan memberId tidak diizinkan."
   if (!partial && (typeof body.name !== "string" || typeof body.email !== "string" || typeof body.phone !== "string" || typeof body.password !== "string" || typeof body.role !== "string" || typeof body.status !== "string")) return "Data pengguna belum lengkap."
   if (body.name !== undefined && (typeof body.name !== "string" || body.name.trim().length < 2)) return "Nama pengguna tidak valid."
   if (body.email !== undefined && (typeof body.email !== "string" || !/^\S+@\S+\.\S+$/.test(normalizeEmail(body.email)))) return "Email pengguna tidak valid."
@@ -74,17 +76,23 @@ export async function writeUserAudit(actorId: string, targetUserId: string, acti
 
 export async function createCentralUser(actorId: string, input: { name: string; email: string; phone: string; role: AppRole; status: UserStatus; password: string; avatar?: string; modules: ModuleAssignment[] }) {
   const passwordHash = await bcrypt.hash(input.password, 10)
-  try {
-    return await getPrismaClient().$transaction(async (tx) => {
-      const user = await tx.user.create({ data: { name: input.name.trim(), email: normalizeEmail(input.email), phone: input.phone, passwordHash, role: input.role, status: input.status, avatar: input.avatar?.trim() || null }, select: userSelect })
-      await writeUserAuditWithClient(tx, actorId, user.id, "user_created", {}, { name: user.name, email: user.email, role: user.role, status: user.status })
-      for (const module of input.modules) await setModuleGrant(user.id, module.key, module.enabled, actorId, tx)
-      return user
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new Error("DUPLICATE")
-    throw error
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      return await getPrismaClient().$transaction(async (tx) => {
+        const user = await tx.user.create({ data: { memberId: generateMemberId(), name: input.name.trim(), email: normalizeEmail(input.email), phone: input.phone, passwordHash, role: input.role, status: input.status, avatar: input.avatar?.trim() || null }, select: userSelect })
+        await writeUserAuditWithClient(tx, actorId, user.id, "user_created", {}, { name: user.name, email: user.email, role: user.role, status: user.status })
+        for (const module of input.modules) await setModuleGrant(user.id, module.key, module.enabled, actorId, tx)
+        return user
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        if (Array.isArray(error.meta?.target) && error.meta.target.includes("memberId")) continue
+        throw new Error("DUPLICATE")
+      }
+      throw error
+    }
   }
+  throw new Error("MEMBER_ID_COLLISION")
 }
 
 export async function updateCentralUser(actorId: string, targetId: string, input: { name: string; email: string; phone: string; role: AppRole; status: UserStatus; avatar: string | null; modules: ModuleAssignment[] }) {

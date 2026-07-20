@@ -160,11 +160,7 @@ void test("portal-access: Member Area route policy", () => {
 
   // non-article content routes remain Super Admin-only (meaning require respective permissions like homepage.manage)
   // Let's check a non-article route /member-area/konten/beranda
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/konten/beranda"), false) // wait, does canAccessMemberAreaRoute return false for other routes by default or check roleHasPortalPermission? Let's check route policy helper:
-  // in lib/portal-access.ts:
-  // if (pathname === "/member-area/konten" || pathname.startsWith("/member-area/konten/artikel")) return roleHasPortalPermission(role, "articles.manage") || role === "super_admin_pc"
-  // so for "/member-area/konten/beranda", it falls through and returns false in canAccessMemberAreaRoute.
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/konten/beranda"), false)
+  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/konten/beranda"), true)
   assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/konten/beranda"), false)
 
   // unknown protected /member-area/** route denied
