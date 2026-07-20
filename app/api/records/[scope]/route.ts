@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createRecord, listRecords } from "@/lib/record-store-server"
-import { protectHomepageContentMutation, requireHomepageContentManager } from "@/lib/homepage-content-api"
+import { requireHomepageContentManager } from "@/lib/homepage-content-api"
 import { requireArticleManager } from "@/lib/article-content-api"
 import { requireSiteContactManager } from "@/lib/site-contact-server"
 
@@ -11,13 +11,16 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager" || scope === "media-library") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
     if (scope === "contact-social") {
       const access = await requireSiteContactManager()
       if (access.response) return access.response
+    }
+    if (scope !== "system-settings" && scope !== "homepage-content" && scope !== "article-migration-map" && scope !== "article-legacy-archive" && scope !== "faq-manager" && scope !== "media-library" && scope !== "contact-social") {
+      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
     const records = await listRecords(scope)
     return NextResponse.json({ records })
@@ -34,7 +37,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ sco
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager" || scope === "media-library") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
@@ -42,15 +45,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ sco
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
+    if (scope !== "system-settings") {
+      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
+    }
+
     const body = (await request.json()) as { key?: string; data?: Record<string, unknown> }
     if (!body.key || !body.data) {
       return NextResponse.json({ error: "Key dan data wajib diisi." }, { status: 400 })
     }
-    if (scope === "homepage-content") {
-      const protection = await protectHomepageContentMutation("create", body.key, body.data.type)
-      if (protection.response) return protection.response
-    }
-
     const record = await createRecord(scope, body.key, body.data)
     return NextResponse.json({ record }, { status: 201 })
   } catch (error) {

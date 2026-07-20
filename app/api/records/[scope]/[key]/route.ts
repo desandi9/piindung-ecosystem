@@ -11,7 +11,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager" || scope === "media-library") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
@@ -19,6 +19,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
+    if (scope !== "system-settings") {
+      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
+    }
+
     const record = await getRecord(scope, key)
     if (!record) return NextResponse.json({ error: "Data tidak ditemukan." }, { status: 404 })
     return NextResponse.json({ record })
@@ -35,7 +39,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager" || scope === "media-library") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
@@ -43,11 +47,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
-    const body = (await request.json()) as Record<string, unknown>
-    if (scope === "homepage-content") {
-      const protection = await protectHomepageContentMutation("update", key, body.type)
-      if (protection.response) return protection.response
+    if (scope !== "system-settings") {
+      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
+
+    const body = (await request.json()) as Record<string, unknown>
     const record = await updateRecord(scope, key, body)
     return NextResponse.json({ record })
   } catch (error) {
@@ -65,7 +69,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
       const protection = await protectHomepageContentMutation("delete", key)
       if (protection.response) return protection.response
     }
-    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager") {
+    if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager" || scope === "media-library") {
       const access = await requireArticleManager()
       if (access.response) return access.response
     }
@@ -73,6 +77,10 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
+    if (scope !== "system-settings") {
+      return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
+    }
+
     await deleteRecord(scope, key)
     return NextResponse.json({ ok: true })
   } catch (error) {
