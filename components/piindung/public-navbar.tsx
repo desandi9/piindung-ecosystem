@@ -8,11 +8,9 @@ import { Menu, Moon, Sun, X } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import type { ColorMode } from "@/lib/system-settings"
+import { DEFAULT_SITE_BRANDING, type SiteBranding } from "@/lib/site-branding"
 import { mobileMenuItems, mobileMenuPanel, motionEase, motionTransition, softSpring } from "@/lib/motion"
 import { cn } from "@/lib/utils"
-
-const lightLogo = "/Logo-navbar2.png"
-const darkLogo = "/Logo-navbarputih.png"
 
 const navItems = [
   { label: "Beranda", href: "/", id: "beranda" },
@@ -27,12 +25,20 @@ export function PublicNavbar() {
   const [mounted, setMounted] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [activeItem, setActiveItem] = useState("beranda")
+  const [branding, setBranding] = useState<SiteBranding>(DEFAULT_SITE_BRANDING)
   const pathname = usePathname()
   const prefersReducedMotion = useReducedMotion()
   const { resolvedTheme, setTheme } = useTheme()
 
   useEffect(() => {
     setMounted(true)
+    fetch("/api/site-branding")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.branding) setBranding(data.branding)
+      })
+      .catch(() => {})
+
     const handleScroll = () => {
       const scrollY = window.scrollY
       setExpanded((current) => (current ? scrollY > 8 : scrollY > 160))
@@ -56,6 +62,9 @@ export function PublicNavbar() {
   }, [])
 
   const isDarkMode = mounted && (resolvedTheme === "dark" || document.documentElement.classList.contains("dark"))
+  const lightLogo = branding.logos.navbarLight.path
+  const darkLogo = branding.logos.navbarDark.path
+  const logoAlt = branding.identity.logoAltText || "PIINDUNG dan NU Care-LAZISNU Garut"
   const currentItem = pathname === "/produk" || pathname.startsWith("/produk/") ? "produk" : pathname === "/dampak" || pathname.startsWith("/dampak/") ? "dampak" : pathname === "/artikel" || pathname.startsWith("/artikel/") ? "artikel" : pathname === "/bantuan" || pathname.startsWith("/bantuan/") ? "bantuan" : activeItem
   const toggleDarkMode = () => setTheme((isDarkMode ? "light" : "dark") as ColorMode)
   const menuPanelVariants = prefersReducedMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1 }, exit: { opacity: 0 } } : mobileMenuPanel
@@ -83,7 +92,7 @@ export function PublicNavbar() {
       <motion.header initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={navbarTransition} className={cn("fixed inset-x-0 top-0 z-50", expanded ? "px-0 py-0" : "px-4 py-4 sm:px-6 lg:px-8")}>
       <motion.div layout transition={prefersReducedMotion ? { duration: 0 } : softSpring} className={cn("mx-auto border border-white/45 bg-white/72 shadow-[0_18px_50px_rgba(7,20,38,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72", expanded ? "max-w-none rounded-none" : "max-w-7xl rounded-[24px]")}>
         <div className={cn("mx-auto flex h-[72px] items-center px-4 transition-all duration-[650ms] sm:px-6 lg:px-8", expanded && "h-16 max-w-7xl px-6 sm:px-8")}>
-          <Link href="/" className="shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]" aria-label="Beranda PIINDUNG"><Image src={isDarkMode ? darkLogo : lightLogo} alt="PIINDUNG dan NU Care-LAZISNU Garut" width={1366} height={306} priority className="h-auto w-[170px] object-contain sm:w-[225px]" /></Link>
+          <Link href="/" className="shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]" aria-label="Beranda PIINDUNG"><Image src={isDarkMode ? darkLogo : lightLogo} alt={logoAlt} width={isDarkMode ? branding.logos.navbarDark.width : branding.logos.navbarLight.width} height={isDarkMode ? branding.logos.navbarDark.height : branding.logos.navbarLight.height} priority className="h-auto w-[170px] object-contain sm:w-[225px]" /></Link>
           <div className="ml-auto hidden items-center gap-3 lg:flex">
             <nav aria-label="Navigasi utama" className="flex items-center gap-2">
               {navItems.map((item) => <Link key={item.id} href={item.href} onClick={() => setActiveItem(item.id)} className={cn("relative rounded-full px-4 py-2 text-sm font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]", currentItem === item.id ? "text-[#15945b]" : "text-[#0b1f33] hover:bg-[#eaf7f0] dark:text-white dark:hover:bg-white/10")}>{currentItem === item.id && <motion.span layoutId="public-navbar-active-pill" transition={prefersReducedMotion ? { duration: 0 } : softSpring} className="absolute inset-0 -z-10 rounded-full bg-[#e6f7ee] dark:bg-emerald-300/10" />}{item.label}</Link>)}

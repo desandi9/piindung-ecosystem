@@ -6,8 +6,8 @@ import { useEffect, useState } from "react"
 import { motion, useReducedMotion } from "motion/react"
 import { Facebook, Globe2, Instagram, Mail, MapPin, Music2, Phone, Youtube, Twitter, Linkedin } from "lucide-react"
 import { fadeUp } from "@/lib/motion"
-import { getResolvedLogoUrl, useStoredSystemSettings } from "@/lib/system-settings"
-import { whatsappHref, type SiteContactContent, type SocialLink } from "@/lib/site-contact"
+import { whatsappHref, type SiteContactContent } from "@/lib/site-contact"
+import { DEFAULT_SITE_BRANDING, type SiteBranding } from "@/lib/site-branding"
 
 const mainNav = [
   { label: "Beranda", href: "/" },
@@ -28,15 +28,20 @@ function getSocialIcon(platform: string) {
 }
 
 export function PublicFooter() {
-  const { settings } = useStoredSystemSettings()
   const [contact, setContact] = useState<SiteContactContent | null>(null)
+  const [branding, setBranding] = useState<SiteBranding>(DEFAULT_SITE_BRANDING)
   const reduced = useReducedMotion()
 
   const load = async () => {
     try {
-      const res = await fetch("/api/site-contact", { cache: "no-store" })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok && data.contact) setContact(data.contact)
+      const [resContact, resBranding] = await Promise.all([
+        fetch("/api/site-contact", { cache: "no-store" }),
+        fetch("/api/site-branding", { cache: "no-store" })
+      ])
+      const dataContact = await resContact.json().catch(() => ({}))
+      const dataBranding = await resBranding.json().catch(() => ({}))
+      if (resContact.ok && dataContact.contact) setContact(dataContact.contact)
+      if (resBranding.ok && dataBranding.branding) setBranding(dataBranding.branding)
     } catch {}
   }
 
@@ -57,7 +62,7 @@ export function PublicFooter() {
         <h2 id="public-footer-heading" className="sr-only">Footer PIINDUNG</h2>
         <div className="grid gap-10 border-b border-white/15 pb-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           <div>
-            <Image src={getResolvedLogoUrl(settings.logoUrl, "dark")} alt="PIINDUNG NU Care-LAZISNU Garut" width={180} height={50} className="h-10 w-auto" />
+            <Image src={branding.logos.footerDark.path} alt={branding.identity.logoAltText} width={branding.logos.footerDark.width} height={branding.logos.footerDark.height} className="h-10 w-auto" />
             <p className="mt-5 max-w-xs text-sm leading-7 text-white/70">{contact?.footer.description ?? "Ekosistem digital NU Care–LAZISNU Garut untuk mendukung layanan, pengelolaan, dan tata kelola organisasi."}</p>
           </div>
           <nav aria-label="Navigasi footer">
