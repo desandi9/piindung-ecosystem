@@ -24,7 +24,7 @@ import {
 import { getUnreadInboxCount, useInboxMessages } from "@/lib/admin-inbox"
 import { addActivityLog, useActivityLogs } from "@/lib/activity-log"
 import { useAuth, roleDisplayNames } from "@/lib/auth-context"
-import { useGalleryItems } from "@/lib/gallery-content"
+import { useGalleryItems } from "@/lib/gallery-content-client"
 import { useHomepageContent } from "@/lib/homepage-content"
 import { useMaintenanceSettings, writeStoredMaintenanceSettings } from "@/lib/maintenance-mode"
 import { useStoredMediaItems } from "@/lib/media-library"
@@ -563,7 +563,7 @@ export function DashboardContent() {
                   icon={FolderOpen}
                   title="Galeri Terbaru"
                   value={latestGalleryItem?.title ?? "Belum ada item galeri"}
-                  description={latestGalleryItem?.caption ?? "Belum ada dokumentasi terbaru yang tampil."}
+                  description={latestGalleryItem?.description ?? "Belum ada dokumentasi terbaru yang tampil."}
                   href="/galeri"
                 />
               </div>
@@ -892,7 +892,7 @@ export function DashboardContent() {
                 icon={ImageIcon}
                 title="Galeri Terbaru"
                 value={latestGalleryItem?.title ?? "Belum ada update"}
-                description={latestGalleryItem?.caption ?? "Tambahkan dokumentasi terbaru untuk menjaga halaman publik tetap hidup."}
+                description={latestGalleryItem?.description ?? "Tambahkan dokumentasi terbaru untuk menjaga halaman publik tetap hidup."}
                 href="/admin/galeri"
               />
               <PreviewCard
@@ -947,7 +947,7 @@ export function DashboardContent() {
                 icon={FolderOpen}
                 title="Latest Gallery Item"
                 value={latestGalleryItem?.title ?? "Belum ada item galeri"}
-                description={latestGalleryItem?.caption ?? "Tambahkan dokumentasi visual terbaru."}
+                description={latestGalleryItem?.description ?? "Tambahkan dokumentasi visual terbaru."}
                 href="/admin/galeri"
               />
             </div>

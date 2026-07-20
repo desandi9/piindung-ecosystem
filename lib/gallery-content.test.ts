@@ -1,0 +1,17 @@
+import assert from "node:assert/strict"
+import test from "node:test"
+import { DEFAULT_GALLERY_CONTENT, toPublicGalleryContent, validateGalleryContent, type GalleryContent } from "./gallery-content"
+
+const asset = { path: "/uploads/images/gallery-content/test.jpg", width: 1200, height: 800, mimeType: "image/jpeg" as const, fileSize: 1000, updatedAt: new Date(0).toISOString() }
+function valid(): GalleryContent { return { ...DEFAULT_GALLERY_CONTENT, categories: [{ id: "public", name: "Publik", description: "Dokumentasi publik", visible: true, position: 1 }, { id: "hidden", name: "Tersembunyi", description: "Tidak dipublikasi", visible: false, position: 0 }], items: [{ id: "visible", title: "Dokumentasi", description: "Dokumentasi publik", categoryId: "public", image: { ...asset }, featured: true, visible: true, position: 1 }, { id: "hidden-item", title: "Tersembunyi", description: "Tidak dipublikasi", categoryId: "public", image: { ...asset, path: "/uploads/images/gallery-content/hidden.jpg" }, featured: false, visible: false, position: 0 }, { id: "hidden-category-item", title: "Kategori tersembunyi", description: "Tidak dipublikasi", categoryId: "hidden", image: { ...asset, path: "/uploads/images/gallery-content/category.jpg" }, featured: false, visible: true, position: 2 }], callToAction: { ...DEFAULT_GALLERY_CONTENT.callToAction, primaryHref: "/program", secondaryHref: "/kontak" }, updatedAt: new Date(0).toISOString() } }
+
+test("public projection excludes hidden categories and items", () => { const output = toPublicGalleryContent(valid()); assert.deepEqual(output.categories.map(item => item.id), ["public"]); assert.deepEqual(output.items.map(item => item.id), ["visible"]) })
+test("invalid category references are rejected", () => { const content = valid(); content.items[0].categoryId = "missing"; assert.throws(() => validateGalleryContent(content), /Kategori item/) })
+test("duplicate IDs are rejected", () => { const content = valid(); content.items[1].id = content.items[0].id; assert.throws(() => validateGalleryContent(content), /ID item harus unik/) })
+test("unsafe image paths are rejected", () => { const content = valid(); content.items[0].image.path = "https://example.com/image.jpg"; assert.throws(() => validateGalleryContent(content), /path tidak aman/) })
+test("unsafe CTA links are rejected", () => { const content = valid(); content.callToAction.primaryHref = "javascript:alert(1)"; assert.throws(() => validateGalleryContent(content), /tidak aman/) })
+test("invalid dates are rejected", () => { const content = valid(); content.items[0].date = "19 Juli 2026"; assert.throws(() => validateGalleryContent(content), /Tanggal tidak valid/) })
+test("invalid positions are rejected", () => { const content = valid(); content.items[0].position = -1; assert.throws(() => validateGalleryContent(content), /Posisi tidak valid/) })
+test("ordering is deterministic", () => { const output = validateGalleryContent(valid()); assert.deepEqual(output.categories.map(item => item.id), ["hidden", "public"]); assert.deepEqual(output.items.map(item => item.id), ["hidden-item", "visible", "hidden-category-item"]) })
+test("defaults contain no unapproved items and are not mutated", () => { const before = JSON.stringify(DEFAULT_GALLERY_CONTENT); const defaults = JSON.parse(before); defaults.callToAction.primaryHref = "/program"; defaults.callToAction.secondaryHref = "/kontak"; validateGalleryContent(defaults); assert.equal(DEFAULT_GALLERY_CONTENT.items.length, 0); assert.equal(JSON.stringify(DEFAULT_GALLERY_CONTENT), before) })
+

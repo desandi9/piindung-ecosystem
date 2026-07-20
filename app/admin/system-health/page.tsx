@@ -19,7 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { useActivityLogs } from "@/lib/activity-log"
 import { getUnreadInboxCount, useInboxMessages } from "@/lib/admin-inbox"
-import { useGalleryItems } from "@/lib/gallery-content"
+import { useGalleryItems } from "@/lib/gallery-content-client"
 import { useHomepageContent } from "@/lib/homepage-content"
 import { useMaintenanceSettings } from "@/lib/maintenance-mode"
 import { useStoredMediaItems } from "@/lib/media-library"

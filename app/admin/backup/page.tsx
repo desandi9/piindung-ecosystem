@@ -59,11 +59,11 @@ const BACKUP_SOURCES = [
   { key: "admin-inbox", scope: "admin-inbox", kind: "collection" },
   { key: "faq-manager", scope: "faq-manager", kind: "collection" },
   { key: "download-center", scope: "download-center", kind: "collection" },
-  { key: "gallery-content", scope: "gallery-content", kind: "collection" },
+  { key: "gallery-content", scope: "gallery-content", kind: "managed-gallery" },
   { key: "integrated-apps", scope: "integrated-apps", kind: "collection" },
   { key: "media-library", scope: "media-library", kind: "collection" },
   { key: "popup-announcements", scope: "popup-announcements", kind: "collection" },
-]
+] as const
 
 async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit) {
   const response = await fetch(input, {
@@ -114,7 +114,9 @@ async function createBackupPayload(): Promise<BackupPayload> {
   const data = await BACKUP_SOURCES.reduce<Promise<Record<string, string | null>>>(async (previous, source) => {
     const backupData = await previous
     try {
-      const payload = await requestJson<Record<string, unknown>>(`/api/records/${source.scope}`)
+      const payload = source.kind === "managed-gallery"
+        ? await requestJson<Record<string, unknown>>("/api/gallery-content/manage")
+        : await requestJson<Record<string, unknown>>(`/api/records/${source.scope}`)
       backupData[source.key] = JSON.stringify(payload)
     } catch {
       backupData[source.key] = null
@@ -224,6 +226,13 @@ export default function BackupRestorePage() {
       for (const source of BACKUP_SOURCES) {
         const value = pendingRestore.data[source.key]
         if (!value) continue
+
+        if (source.kind === "managed-gallery") {
+          const parsed = JSON.parse(value) as { content?: Record<string, unknown> }
+          if (!parsed.content) throw new Error("Backup galeri tidak valid")
+          await requestJson("/api/gallery-content/manage", { method: "PATCH", body: JSON.stringify(parsed.content) })
+          continue
+        }
 
         const parsed = JSON.parse(value) as { records?: Array<{ key: string; data: Record<string, unknown> }> }
 

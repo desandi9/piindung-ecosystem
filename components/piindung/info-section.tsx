@@ -32,7 +32,8 @@ import { ModalFooter } from "@/components/piindung/modal-footer"
 import { ModalHeader } from "@/components/piindung/modal-header"
 import { cn } from "@/lib/utils"
 import { useHomepageContent, type HomepageContentItem } from "@/lib/homepage-content"
-import { getGalleryImages, useGalleryItems, type GalleryItem } from "@/lib/gallery-content"
+import { getGalleryImages, useGalleryItems } from "@/lib/gallery-content-client"
+import type { GalleryItem } from "@/lib/gallery-content"
 import { categoryLabel, useDownloadItems, type DownloadCategory, type DownloadItem } from "@/lib/download-center"
 
 const infoItems = [
@@ -440,7 +441,7 @@ function GalleryModal({
       {selectedItem ? (
         <div className="grid overflow-hidden rounded-2xl lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="relative aspect-[4/5] bg-muted sm:max-h-[80vh]">
-            <NextImage src={selectedImages[selectedIndex] ?? selectedItem.image} alt={selectedItem.title} fill sizes="100vw" className="object-contain bg-black" unoptimized />
+            <NextImage src={selectedImages[selectedIndex] ?? selectedItem.image.path} alt={selectedItem.altText || selectedItem.title} fill sizes="100vw" className="object-contain bg-black" unoptimized />
             {selectedImages.length > 1 ? (
               <>
                 <button
@@ -498,20 +499,15 @@ function GalleryModal({
 
             <div className="mt-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Caption</p>
-              <p className="mt-2 text-sm leading-7 text-zinc-300">{selectedItem.caption}</p>
+              <p className="mt-2 text-sm leading-7 text-zinc-300">{selectedItem.description}</p>
             </div>
 
-            <div className="mt-4">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Sumber</p>
-              {selectedItem.instagramUrl ? (
-                <a href={selectedItem.instagramUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#2e8b57] px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-[#236b43] hover:shadow-lg hover:shadow-[#2e8b57]/20">
-                  Lihat Postingan Asli
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              ) : (
-                <p className="mt-2 text-sm text-zinc-400">Belum ada link sosial media untuk kegiatan ini.</p>
-              )}
-            </div>
+            {selectedItem.photographer && (
+              <div className="mt-4">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">Fotografer</p>
+                <p className="mt-2 text-sm text-zinc-400">{selectedItem.photographer}</p>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -538,13 +534,13 @@ function GalleryModal({
                   )}
                 >
                   <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-                    <NextImage src={item.image} alt={item.title} fill sizes="(max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />
-                    <div className="absolute left-3 top-3 rounded-full border border-border bg-card/90 px-2.5 py-1 text-xs font-medium text-[#2e8b57] backdrop-blur-sm">{item.category}</div>
+                    <NextImage src={item.image.path} alt={item.altText || item.title} fill sizes="(max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />
+                    <div className="absolute left-3 top-3 rounded-full border border-border bg-card/90 px-2.5 py-1 text-xs font-medium text-[#2e8b57] backdrop-blur-sm">Dokumentasi</div>
                     <div className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">{getGalleryImages(item).length} foto</div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="line-clamp-1 text-sm font-semibold text-zinc-100">{item.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-xs text-zinc-400">{item.caption}</p>
+                    <div className="p-4">
+                      <h3 className="line-clamp-1 text-sm font-semibold text-zinc-100">{item.title}</h3>
+                      <p className="mt-1 line-clamp-2 text-xs text-zinc-400">{item.description}</p>
                     <div className="mt-3 space-y-1 text-xs text-zinc-400">
                       <p className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 text-[#2e8b57]" />{item.date}</p>
                       <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-[#2e8b57]" />{item.location}</p>
