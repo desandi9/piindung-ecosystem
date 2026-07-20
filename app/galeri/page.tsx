@@ -1,174 +1,38 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import {
-  ArrowLeft,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  MapPin,
-  X,
-} from "lucide-react"
-import { SimpleFooter } from "@/components/piindung/simple-footer"
-import { Navbar } from "@/components/piindung/navbar"
-import { getGalleryImages, useGalleryItems, type GalleryItem } from "@/lib/gallery-content"
-import { cn } from "@/lib/utils"
+import { Calendar, Camera, ChevronLeft, ChevronRight, MapPin, RefreshCcw } from "lucide-react"
+import { PublicFooter } from "@/components/piindung/public-footer"
+import { PublicNavbar } from "@/components/piindung/public-navbar"
+import { PublicThemeDefault } from "@/components/piindung/public-theme-default"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import type { GalleryItem, PublicGalleryContent } from "@/lib/gallery-content"
 
-export default function GaleriPage() {
-  const galleryItems = useGalleryItems()
-  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null)
-  const [selectedIndex, setSelectedIndex] = useState(0)
-
-  function openGalleryItem(item: GalleryItem) {
-    setSelectedImage(item)
-    setSelectedIndex(0)
-  }
-
-  const selectedImages = selectedImage ? getGalleryImages(selectedImage) : []
-
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Navbar />
-      <main className="container mx-auto flex-1 px-4 lg:px-8 py-6">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Beranda
-        </Link>
-
-        <div className="mb-6">
-          <h1 className="text-xl lg:text-2xl font-semibold text-foreground">
-            Galeri Kegiatan
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Dokumentasi kegiatan NU Care-LAZISNU PCNU Kabupaten Garut
-          </p>
-        </div>
-
-        <div className="grid gap-3 lg:gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {galleryItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => openGalleryItem(item)}
-              className={cn(
-                "group overflow-hidden bg-card rounded-xl border border-border text-left",
-                "hover:border-[#2e8b57]/30 hover:shadow-md transition-all duration-300"
-              )}
-            >
-              <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  unoptimized
-                />
-                <div className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-                  {getGalleryImages(item).length} foto
-                </div>
-              </div>
-              <div className="p-4 lg:p-5">
-                <h3 className="text-sm font-semibold text-foreground mb-1">{item.title}</h3>
-                <p className="mb-2 text-xs text-muted-foreground line-clamp-2">{item.caption}</p>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    <CalendarDays className="h-3.5 w-3.5 text-[#2e8b57]" />
-                    {item.date}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 text-[#2e8b57]" />
-                    {item.location}
-                  </p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </main>
-      <SimpleFooter />
-
-      {selectedImage && (
-        <>
-          <div
-            className="fixed inset-0 z-[9998] bg-black/65 backdrop-blur-[2px] transition-opacity duration-300"
-            onClick={() => setSelectedImage(null)}
-            aria-hidden="true"
-          />
-          <div className="fixed inset-x-4 top-1/2 z-[9999] -translate-y-1/2 sm:left-1/2 sm:right-auto sm:w-full sm:max-w-4xl sm:-translate-x-1/2">
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-              <div className="relative aspect-[4/5] bg-muted sm:max-h-[80vh]">
-                <Image
-                  src={selectedImages[selectedIndex] ?? selectedImage.image}
-                  alt={selectedImage.title}
-                  fill
-                  sizes="100vw"
-                  className="object-contain bg-black"
-                  priority
-                  unoptimized
-                />
-                {selectedImages.length > 1 ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedIndex((current) => (current - 1 + selectedImages.length) % selectedImages.length)}
-                      className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
-                      aria-label="Foto sebelumnya"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedIndex((current) => (current + 1) % selectedImages.length)}
-                      className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
-                      aria-label="Foto berikutnya"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                    <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 backdrop-blur-sm">
-                      {selectedImages.map((_, index) => (
-                        <span key={`${selectedImage.id}-${index}`} className={cn("h-2 w-2 rounded-full", index === selectedIndex ? "bg-white" : "bg-white/40")} />
-                      ))}
-                    </div>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => setSelectedImage(null)}
-                  className="absolute right-4 top-4 rounded-xl bg-card/90 p-2 text-muted-foreground backdrop-blur-sm hover:bg-card hover:text-foreground"
-                  aria-label="Close preview"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="p-4 lg:p-5">
-                <h2 className="text-base font-semibold text-foreground">{selectedImage.title}</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {selectedImage.date} - {selectedImage.location}
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">{selectedImage.caption}</p>
-                {selectedImage.instagramUrl ? (
-                  <a
-                    href={selectedImage.instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#2e8b57] px-4 py-3 text-sm font-medium text-white hover:bg-[#236b43] hover:shadow-lg hover:shadow-[#2e8b57]/20"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Buka Sumber Instagram
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  )
+const message = "Galeri belum dapat dimuat. Silakan coba kembali."
+export default function GalleryPage() {
+  const [content, setContent] = useState<PublicGalleryContent | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [category, setCategory] = useState("all")
+  const [selected, setSelected] = useState<GalleryItem | null>(null)
+  const load = useCallback(async () => { setLoading(true); setError(""); try { const response = await fetch("/api/gallery-content", { cache: "no-store" }); if (!response.ok) throw new Error(`Gallery HTTP ${response.status}`); const payload: { content?: PublicGalleryContent } = await response.json(); if (!payload.content) throw new Error("Gallery payload missing"); setContent(payload.content) } catch (cause) { console.error("Gagal memuat galeri publik:", cause); setError(message) } finally { setLoading(false) } }, [])
+  useEffect(() => { void load() }, [load])
+  const items = useMemo(() => content?.items.filter(item => category === "all" || item.categoryId === category) ?? [], [category, content])
+  const index = selected ? items.findIndex(item => item.id === selected.id) : -1
+  useEffect(() => { if (!selected) return; const onKey = (event: KeyboardEvent) => { if (event.key === "ArrowLeft" && items.length) setSelected(items[(index - 1 + items.length) % items.length]); if (event.key === "ArrowRight" && items.length) setSelected(items[(index + 1) % items.length]) }; window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey) }, [index, items, selected])
+  const featured = content?.items.find(item => item.featured)
+  const cta = content?.callToAction
+  return <div className="min-h-screen overflow-x-hidden bg-[#f7faf8] text-[#0b1f33] dark:bg-slate-950 dark:text-white"><PublicThemeDefault /><PublicNavbar /><main>
+    {loading ? <div className="mx-auto max-w-7xl space-y-8 px-4 py-36 sm:px-6 lg:px-8"><div className="h-48 animate-pulse rounded-3xl bg-slate-200 motion-reduce:animate-none dark:bg-slate-800" /><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }).map((_, index) => <div key={index} className="aspect-[4/3] animate-pulse rounded-2xl bg-slate-200 motion-reduce:animate-none dark:bg-slate-800" />)}</div></div> : error ? <div className="mx-auto max-w-md px-4 py-36 text-center"><h1 className="text-2xl font-bold">Galeri Tidak Tersedia</h1><p className="mt-3 text-slate-600 dark:text-slate-300">{error}</p><button onClick={() => void load()} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#15945b] px-5 font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b]"><RefreshCcw className="h-4 w-4" />Coba Lagi</button></div> : content ? <>
+      <section className="relative px-4 pb-20 pt-36 sm:px-6 lg:px-8"><div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center"><div><p className="text-xs font-bold tracking-[.18em] text-[#15945b]">{content.hero.eyebrow}</p><h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">{content.hero.title} <span className="text-[#15945b]">{content.hero.highlightedText}</span></h1><p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">{content.hero.description}</p></div>{content.hero.image && <div className="relative aspect-[4/3] overflow-hidden rounded-3xl"><Image src={content.hero.image.path} alt={content.hero.highlightedText || content.hero.title} fill className="object-cover" priority unoptimized /></div>}</div></section>
+      {featured && <section className="px-4 pb-16 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><p className="mb-5 text-sm font-bold text-[#15945b]">DOKUMENTASI UNGGULAN</p><GalleryCard item={featured} onOpen={setSelected} featured /></div></section>}
+      <section className="border-y border-[#dde7e2] bg-white px-4 py-16 dark:border-white/10 dark:bg-slate-900/50 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl"><div role="group" aria-label="Filter kategori" className="mb-10 flex flex-wrap gap-3"><Filter active={category === "all"} onClick={() => setCategory("all")}>Semua</Filter>{content.categories.map(item => <Filter key={item.id} active={category === item.id} onClick={() => setCategory(item.id)}>{item.name}</Filter>)}</div>{items.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{items.map(item => <GalleryCard key={item.id} item={item} onOpen={setSelected} />)}</div> : <div className="py-20 text-center"><Camera className="mx-auto h-10 w-10 text-slate-400" /><h2 className="mt-4 text-xl font-bold">Belum Ada Dokumentasi Publik</h2><p className="mt-2 text-slate-600 dark:text-slate-300">Dokumentasi untuk kategori ini belum tersedia.</p></div>}</div></section>
+      {cta?.visible && <section className="relative isolate px-4 py-20 text-white sm:px-6 lg:px-8" style={cta.backgroundImage ? { backgroundImage: `url('${cta.backgroundImage.path}')`, backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#0f3460" }}><div className="absolute inset-0 -z-10 bg-[#071426]/70" /><div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 lg:flex-row lg:items-center"><div><p className="text-xs font-bold tracking-[.18em] text-emerald-200">{cta.eyebrow}</p><h2 className="mt-4 text-3xl font-bold">{cta.title}</h2><p className="mt-4 max-w-2xl text-white/80">{cta.description}</p></div><div className="flex flex-wrap gap-3"><Link className="inline-flex min-h-11 items-center rounded-xl bg-white px-5 font-semibold text-[#071426] focus-visible:ring-2 focus-visible:ring-white" href={cta.primaryHref}>{cta.primaryLabel}</Link>{cta.secondaryHref && <Link className="inline-flex min-h-11 items-center rounded-xl border border-white/60 px-5 font-semibold focus-visible:ring-2 focus-visible:ring-white" href={cta.secondaryHref}>{cta.secondaryLabel}</Link>}</div></div></section>}
+    </> : null}
+  </main><PublicFooter /><Dialog open={Boolean(selected)} onOpenChange={open => !open && setSelected(null)}><DialogContent className="max-h-[90vh] overflow-y-auto p-0 sm:max-w-4xl"><DialogHeader className="sr-only"><DialogTitle>{selected?.title ?? "Pratinjau galeri"}</DialogTitle><DialogDescription>Detail dokumentasi galeri</DialogDescription></DialogHeader>{selected && <><div className="relative aspect-[4/3] bg-black"><Image src={selected.image.path} alt={selected.altText || selected.title} fill className="object-contain" unoptimized />{items.length > 1 && <><button aria-label="Dokumentasi sebelumnya" onClick={() => setSelected(items[(index - 1 + items.length) % items.length])} className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 focus-visible:ring-2 focus-visible:ring-white"><ChevronLeft /></button><button aria-label="Dokumentasi berikutnya" onClick={() => setSelected(items[(index + 1) % items.length])} className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 focus-visible:ring-2 focus-visible:ring-white"><ChevronRight /></button></>}</div><div className="space-y-3 p-6"><h2 className="text-2xl font-bold">{selected.title}</h2><Meta item={selected} /><p className="leading-7 text-zinc-300">{selected.description}</p>{selected.photographer && <p className="text-sm text-zinc-400">Fotografer: {selected.photographer}</p>}</div></>}</DialogContent></Dialog></div>
 }
+function Filter({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) { return <button type="button" aria-pressed={active} onClick={onClick} className={`min-h-11 rounded-full px-5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b] ${active ? "bg-[#15945b] text-white" : "border border-[#dde7e2] bg-white dark:border-white/10 dark:bg-slate-900"}`}>{children}</button> }
+function GalleryCard({ item, onOpen, featured = false }: { item: GalleryItem; onOpen: (item: GalleryItem) => void; featured?: boolean }) { return <button type="button" onClick={() => onOpen(item)} className={`group overflow-hidden rounded-3xl border border-[#dde7e2] bg-white text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b] motion-reduce:transition-none dark:border-white/10 dark:bg-slate-900 ${featured ? "grid w-full lg:grid-cols-2" : ""}`}><div className="relative aspect-[4/3] overflow-hidden"><Image src={(item.thumbnail ?? item.image).path} alt={item.altText || item.title} fill sizes={featured ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 640px) 100vw, 33vw"} className="object-cover transition duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:transform-none" unoptimized /></div><div className="p-6"><h2 className={featured ? "text-2xl font-bold" : "text-lg font-bold"}>{item.title}</h2><Meta item={item} /><p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{item.description}</p></div></button> }
+function Meta({ item }: { item: GalleryItem }) { return <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">{item.date && <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(`${item.date}T00:00:00`).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>}{item.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{item.location}</span>}</div> }
