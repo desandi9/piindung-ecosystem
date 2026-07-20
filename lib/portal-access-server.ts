@@ -81,7 +81,7 @@ export async function setModuleGrant(userId: string, moduleKey: RegisteredModule
 
   const next = existing.filter((grant) => grant.moduleKey !== moduleKey)
   next.push({ userId, moduleKey, enabled, actorId, updatedAt: new Date().toISOString() })
-  
+
   const updated = await updateRecord(GRANTS_SCOPE, userId, { grants: next })
 
   const auditKey = `audit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
