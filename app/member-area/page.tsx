@@ -56,9 +56,9 @@ export default function MemberAreaPage() {
   }
 
   const modules = portalAccess.modules
-  const canManage = portalAccess.permissions.includes("portal.users.manage") || portalAccess.permissions.includes("portal.content.manage")
-  const canManageAccess = portalAccess.permissions.includes("portal.access.manage")
-  const canManageContent = portalAccess.permissions.includes("portal.articles.manage") || portalAccess.permissions.includes("portal.content.manage")
+  const canManage = portalAccess.permissions.includes("users.manage") || portalAccess.permissions.includes("homepage.manage")
+  const canManageAccess = portalAccess.permissions.includes("access.manage")
+  const canManageContent = portalAccess.permissions.includes("articles.manage") || portalAccess.permissions.includes("homepage.manage")
 
   return (
     <MemberLayout title="Member Area" breadcrumb="Portal PIINDUNG / Member Area">
@@ -110,7 +110,7 @@ export default function MemberAreaPage() {
           </h2>
           {canManage || canManageAccess ? (
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {portalAccess.permissions.includes("portal.users.manage") && (
+              {portalAccess.permissions.includes("users.manage") && (
                 <PortalCard
                   title="Pengguna"
                   description="Kelola akun pengguna dan unit organisasi."
@@ -148,6 +148,12 @@ export default function MemberAreaPage() {
             Akun dan Profil
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <PortalCard
+              title="Identitas Anggota"
+              description="Lihat kartu identitas digital dan kode QR resmi Anda."
+              href="/member-area/identitas"
+              icon={User}
+            />
             <PortalCard
               title="Profil"
               description="Lihat identitas, status, dan informasi akun Anda."

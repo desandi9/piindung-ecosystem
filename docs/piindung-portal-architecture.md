@@ -112,3 +112,12 @@ Sistem menerapkan aturan perlindungan dan pembatasan berikut:
 - **Last-Super-Admin Invariant:** Mutasi yang menyebabkan jumlah Super Admin PC aktif bernilai kurang dari satu akan ditolak. Super Admin juga dilarang menurunkan perannya sendiri (*self-demotion*) atau menonaktifkan akun sendiri (*self-deactivation*).
 - **Module Assignment Boundary:** Assignment modul (seperti pintu masuk ke GORUT) dikonfigurasi menggunakan *portal-module-grants* yang diakses melalui hak akses. Grant ini hanya memvalidasi pintu masuk pertama. Modul GORUT mempertahankan peran, wilayah cakupan kerja operasional, dan alur validasi transaksi secara internal tanpa mencampuri data portal terpusat.
 - **Audit Trails:** Seluruh aksi pembuatan pengguna, pengubahan status/role, serta pemberian grant dicatat secara aman dalam scope audit server-side (`portal-user-audit` dan `portal-access-audit`) yang tidak dapat dimutasi dari API publik.
+
+## Identitas Anggota dan Verifikasi Publik
+
+- PIINDUNG menerbitkan `memberId` pusat yang unik, stabil, tidak dapat diubah melalui API pengguna, dan tidak dipakai ulang. Migrasi menambahkan kolom unik ini serta membackfill seluruh akun yang telah ada tanpa mereset tabel User.
+- QR identitas hanya berisi URL verifikasi publik kanonis `/verify/{memberId}`; QR tidak memuat token, email, telepon, peran operasional, grant modul, atau data operasional.
+- Halaman verifikasi publik hanya menampilkan nama, member ID, label role organisasi, status akun, organisasi, dan waktu pemeriksaan. Status akun tetap bersumber dari database: `Aktif`, `Menunggu`, atau `Nonaktif`.
+- Verifikasi adalah pemeriksaan pendaftaran identitas PIINDUNG, bukan sertifikasi identitas pemerintah atau pernyataan legal.
+- Tidak ada direktori anggota publik, pencarian anggota publik, atau data operasional GORUT pada halaman verifikasi.
+- URL QR menggunakan `SITE_URL` atau `NEXT_PUBLIC_SITE_URL`. Konfigurasi produksi wajib memakai origin HTTPS tepercaya; fallback localhost hanya berlaku pada development.
