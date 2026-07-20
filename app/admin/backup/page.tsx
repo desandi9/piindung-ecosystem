@@ -58,7 +58,7 @@ const BACKUP_SOURCES = [
   { key: "activity-log", scope: "activity-log", kind: "collection" },
   { key: "admin-inbox", scope: "admin-inbox", kind: "collection" },
   { key: "faq-manager", scope: "faq-manager", kind: "collection" },
-  { key: "download-center", scope: "download-center", kind: "collection" },
+  { key: "download-content", scope: "download-content", kind: "managed-download" },
   { key: "gallery-content", scope: "gallery-content", kind: "managed-gallery" },
   { key: "integrated-apps", scope: "integrated-apps", kind: "collection" },
   { key: "media-library", scope: "media-library", kind: "collection" },
@@ -116,7 +116,9 @@ async function createBackupPayload(): Promise<BackupPayload> {
     try {
       const payload = source.kind === "managed-gallery"
         ? await requestJson<Record<string, unknown>>("/api/gallery-content/manage")
-        : await requestJson<Record<string, unknown>>(`/api/records/${source.scope}`)
+        : source.kind === "managed-download"
+          ? await requestJson<Record<string, unknown>>("/api/download-content/manage")
+          : await requestJson<Record<string, unknown>>(`/api/records/${source.scope}`)
       backupData[source.key] = JSON.stringify(payload)
     } catch {
       backupData[source.key] = null
@@ -227,10 +229,11 @@ export default function BackupRestorePage() {
         const value = pendingRestore.data[source.key]
         if (!value) continue
 
-        if (source.kind === "managed-gallery") {
+        if (source.kind === "managed-gallery" || source.kind === "managed-download") {
           const parsed = JSON.parse(value) as { content?: Record<string, unknown> }
-          if (!parsed.content) throw new Error("Backup galeri tidak valid")
-          await requestJson("/api/gallery-content/manage", { method: "PATCH", body: JSON.stringify(parsed.content) })
+          if (!parsed.content) throw new Error("Backup konten terkelola tidak valid")
+          const endpoint = source.kind === "managed-gallery" ? "/api/gallery-content/manage" : "/api/download-content/manage"
+          await requestJson(endpoint, { method: "PATCH", body: JSON.stringify(parsed.content) })
           continue
         }
 

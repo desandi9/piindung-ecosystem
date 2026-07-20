@@ -23,6 +23,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       if (access.response) return access.response
     }
     const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (scope === "download-content" || scope === "download-center") {
+      return NextResponse.json({ error: "Gunakan endpoint download khusus." }, { status: 403 })
+    }
     if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
@@ -55,6 +58,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
       if (access.response) return access.response
     }
     const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (scope === "download-content" || scope === "download-center") {
+      return NextResponse.json({ error: "Gunakan endpoint download khusus." }, { status: 403 })
+    }
     if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
@@ -89,6 +95,9 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
       if (access.response) return access.response
     }
     const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    if (scope === "download-content" || scope === "download-center") {
+      return NextResponse.json({ error: "Gunakan endpoint download khusus." }, { status: 403 })
+    }
     if (!allowedScopes.includes(scope)) {
       return NextResponse.json({ error: "Akses tidak diizinkan." }, { status: 403 })
     }
