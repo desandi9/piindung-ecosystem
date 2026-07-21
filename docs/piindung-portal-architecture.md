@@ -103,6 +103,18 @@ Akses masuk ke modul operasional (seperti GORUT) dikonfigurasi per pengguna:
   - Rute `/member-area/pengguna` memerlukan `users.manage`.
 - Rute `/member-area/**` lain yang tidak dikenali atau tidak memiliki pemetaan kebijakan otorisasi akan otomatis ditolak.
 
+## Self-Service Profile and Account Settings
+
+PIINDUNG self-service profile and account settings own authenticated profile presentation, safe profile updates (name, normalized email, phone), password verification and change, audit of personal changes, and accurate session behavior (cookie removal) after password change.
+
+- **Editable Fields:** Authenticated users may update `name`, `email`, and `phone` via a strict allowlist GET/PATCH `/api/account/profile`.
+- **Rejected Fields:** Attempts to update `id`, `memberId`, `role`, `status`, `permissions`, `modules`, `grants`, `passwordHash`, or operational scope return `400`.
+- **Avatar Upload:** Since no secure, sandboxed application asset storage exists, custom avatar upload is deferred. The UI presents initials fallback or reads from existing safe `/uploads/` URLs.
+- **Password Verification:** Password updates must verify the current password using `bcrypt` and verify minimum policy constraints (8+ characters) before updating the hash.
+- **Session Behavior:** Changing password clears the current session cookie (`piindung-session`) immediately. Other device sessions remain active.
+- **Server Audit:** Profile and password mutations are audited to `portal-user-audit` scope in transactions without logging credentials.
+- **Authority:** Self-service pages read directly from `/api/account/profile` instead of admin-scoped `managed-users`.
+
 ## PIINDUNG User Management and Module Assignment Boundary
 
 PIINDUNG secara eksklusif memiliki data identitas pengguna terpusat, autentikasi sesi, organisasi role global, status keaktifan akun, metadata unit organisasi pendukung, dan izin masuk modul (*module-entry permissions*).
