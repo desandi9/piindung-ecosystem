@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { LoginTransitionScreen } from "@/components/piindung/login-transition-screen"
+import { safeRedirectPath } from "@/lib/safe-redirect"
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -35,7 +37,7 @@ export function LoginForm() {
       setErrorMessage(null)
       setIsTransitioning(true)
       await new Promise((resolve) => window.setTimeout(resolve, 1250))
-      router.push("/dashboard")
+      router.push(safeRedirectPath(searchParams.get("next")))
     } else {
       setErrorMessage(result.error ?? "Nomor HP atau password tidak valid.")
     }

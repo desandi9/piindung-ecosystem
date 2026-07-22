@@ -186,8 +186,9 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
           <Button
             variant="ghost"
             size="icon"
-            onClick={onMenuClick}
-            className="lg:hidden h-9 w-9"
+onClick={onMenuClick}
+             aria-label="Buka menu navigasi"
+             className="lg:hidden h-9 w-9"
           >
             <Menu className="h-5 w-5" />
           </Button>
@@ -222,13 +223,13 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
         {/* Right Section */}
         <div className="flex items-center gap-2">
           {/* Mobile Search */}
-          <Button variant="ghost" size="icon" className="md:hidden h-9 w-9" onClick={() => setMobileSearchOpen(true)}>
+          <Button variant="ghost" size="icon" className="md:hidden h-9 w-9" onClick={() => setMobileSearchOpen(true)} aria-label="Cari global">
             <Search className="h-5 w-5" />
           </Button>
 
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
-              <Button variant="ghost" size="icon" className="relative h-9 w-9" onClick={() => setNotificationOpen((current) => !current)}>
+              <Button variant="ghost" size="icon" className="relative h-9 w-9" onClick={() => setNotificationOpen((current) => !current)} aria-label="Buka notifikasi inbox">
                 <Bell className="h-5 w-5" />
                 {unreadInboxCount > 0 ? (
                   <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-white">
@@ -299,6 +300,7 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
             size="icon"
             onClick={toggleTheme}
             className="h-9 w-9"
+            aria-label="Ganti tema warna"
           >
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
@@ -311,6 +313,7 @@ export function DashboardHeader({ onMenuClick, sidebarCollapsed }: DashboardHead
                 variant="ghost"
                 className="h-auto p-1.5 pl-2 pr-3 rounded-xl hover:bg-accent gap-2"
                 onClick={() => setProfileOpen((current) => !current)}
+                aria-label="Menu profil"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.avatar} alt={user?.name} />

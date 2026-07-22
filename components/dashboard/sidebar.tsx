@@ -196,6 +196,7 @@ export function DashboardSidebar({ collapsed = false, onCollapsedChange }: Dashb
                   size="icon"
                   onClick={() => void logout()}
                   className="h-10 w-10 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                  aria-label="Keluar"
                 >
                   <LogOut className="h-5 w-5" />
                 </Button>

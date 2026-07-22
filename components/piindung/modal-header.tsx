@@ -31,7 +31,7 @@ export function ModalHeader({
         ref={closeButtonRef}
         onClick={onClose}
         className="absolute right-4 top-4 rounded-xl p-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
-        aria-label="Close"
+        aria-label="Tutup dialog"
       >
         <X className="h-5 w-5" />
       </button>

@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client"
 import { getPrismaClient } from "@/lib/prisma"
 import { centralAuditActionsForQuery, centralAuditScopes, mapCentralAudit, type CentralAuditQuery } from "./central-audit"
 
-type AuditRecord = { data: Prisma.JsonValue; createdAt: Date; actorName: string | null; targetName: string | null }
+type AuditRecord = { data: { action?: unknown; timestamp?: unknown }; createdAt: Date; actorName: string | null; targetName: string | null }
 
 export async function getCentralAudit(query: CentralAuditQuery) {
   const actions = centralAuditActionsForQuery(query)
