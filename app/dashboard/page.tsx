@@ -6,8 +6,9 @@ import { Navbar } from "@/components/piindung/navbar"
 import { SimpleFooter } from "@/components/piindung/simple-footer"
 import { useEffect, useState } from "react"
 import { roleDisplayNames, useAuth } from "@/lib/auth-context"
-import { getPublishedNotifications, useNotifications } from "@/lib/notifications"
+import type { Notification } from "@/app/notifikasi/page"
 
+type AccountActivity = { id: string; label: string; description: string; category: string; timestamp: string }
 type PortalModule = { key: string; name: string; route: string; description: string }
 
 function Section({
@@ -34,14 +35,21 @@ function Section({
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth()
-  const notifications = getPublishedNotifications(useNotifications()).slice(0, 3)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [activities, setActivities] = useState<AccountActivity[]>([])
   const [modules, setModules] = useState<PortalModule[]>([])
 
   useEffect(() => {
     if (!user) return
-    void fetch("/api/portal-access/me", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : { modules: [] }))
-      .then((data: { modules?: PortalModule[] }) => setModules(data.modules ?? []))
+    void Promise.all([
+      fetch("/api/portal-access/me", { cache: "no-store" }).then((response) => response.ok ? response.json() : { modules: [] }),
+      fetch("/api/notifications/me?page=1&limit=3", { cache: "no-store" }).then((response) => response.ok ? response.json() : {}),
+      fetch("/api/account/activity?page=1&limit=5", { cache: "no-store" }).then((response) => response.ok ? response.json() : {}),
+    ]).then(([access, notificationData, activityData]) => {
+      setModules((access as { modules?: PortalModule[] }).modules ?? [])
+      setNotifications(((notificationData as { notifications?: Notification[]; data?: Notification[] }).notifications ?? (notificationData as { data?: Notification[] }).data ?? []).slice(0, 3))
+      setActivities(((activityData as { activities?: AccountActivity[]; data?: AccountActivity[] }).activities ?? (activityData as { data?: AccountActivity[] }).data ?? []).slice(0, 5))
+    })
   }, [user])
 
   if (isLoading || !user) {
@@ -118,16 +126,16 @@ export default function DashboardPage() {
                   <div key={notification.id} className="rounded-xl border border-border p-4">
                     <div className="flex items-start justify-between gap-4">
                       <h3 className="font-semibold text-foreground">{notification.title}</h3>
-                      {notification.unread ? (
-                        <span className="shrink-0 text-xs font-semibold text-primary">
-                          Belum dibaca
-                        </span>
-                      ) : null}
+                       {!notification.readAt ? (
+                         <span className="shrink-0 text-xs font-semibold text-primary">
+                           Belum dibaca
+                         </span>
+                       ) : null}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {notification.description}
+                      {notification.body}
                     </p>
-                    <p className="mt-2 text-xs text-muted-foreground">{notification.time}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{notification.createdAt ? new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(notification.createdAt)) : "Baru saja"}</p>
                   </div>
                 ))
               ) : (
@@ -143,9 +151,29 @@ export default function DashboardPage() {
           </Section>
 
           <Section id="recent-activity-heading" title="Aktivitas Akun Terbaru">
-            <p className="text-sm text-muted-foreground">
-              Belum ada aktivitas akun yang dapat ditampilkan.
-            </p>
+            {activities.length ? (
+              <div className="space-y-3">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="rounded-xl border border-border p-4">
+                    <p className="font-medium text-foreground">{activity.label}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{activity.description}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(activity.timestamp))}
+                    </p>
+                  </div>
+                ))}
+                <Link
+                  href="/member-area/aktivitas"
+                  className="inline-flex min-h-11 items-center text-sm font-semibold text-primary"
+                >
+                  Lihat semua aktivitas
+                </Link>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Belum ada aktivitas akun yang dapat ditampilkan.
+              </p>
+            )}
           </Section>
         </div>
 

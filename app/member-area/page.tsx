@@ -166,6 +166,12 @@ export default function MemberAreaPage() {
               href="/pengaturan-profil"
               icon={Settings}
             />
+            <PortalCard
+              title="Aktivitas Akun"
+              description="Lihat log riwayat aktivitas dan sesi masuk."
+              href="/member-area/aktivitas"
+              icon={User}
+            />
           </div>
         </section>
 
