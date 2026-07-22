@@ -2,6 +2,8 @@ import type { AppRole } from "@/types/auth"
 
 export const userStatuses = ["Aktif", "Menunggu", "Nonaktif"] as const
 export type UserStatus = (typeof userStatuses)[number]
+export const activeUserStatus: UserStatus = "Aktif"
+export const inactiveUserStatus: UserStatus = "Nonaktif"
 export const appRoles: readonly AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
 
 export function isAppRole(value: unknown): value is AppRole {
