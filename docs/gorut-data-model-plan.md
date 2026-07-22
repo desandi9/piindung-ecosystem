@@ -20,15 +20,17 @@ The active `prisma/schema.prisma` is small and serves central PIINDUNG requireme
 
 The `AppRecord` table contains several scopes starting with `gorut-`, acting as a mock persistence layer for the current UI iteration. These records date from July 10, 2026:
 
-| Scope | Count | Classification |
-|---|---|---|
-| `gorut-announcements` | 7 | Local GORUT dashboard notices |
-| `gorut-kordes-upzis` | 4 | Legacy GORUT |
-| `gorut-munfiq` | 10 | Legacy GORUT (Donors) |
-| `gorut-munfiq-plpk` | 5 | Legacy GORUT |
-| `gorut-penghimpunan-verification` | 1 | Legacy GORUT |
-| `gorut-plpk-kordes` | 5 | Legacy GORUT |
-| `user-operational-scope` | 1 | Shared internal assignment logic |
+| Scope | Source count | Classification | Valid | Unresolved | Malformed | Conflict | Normalized destination | Current disposition |
+|---|---:|---|---:|---:|---:|---:|---|---|
+| `gorut-announcements` | 7 | Legacy GORUT presentation content | 0 | 7 | 0 | 0 | None | Preserved; not operational authority |
+| `gorut-kordes-upzis` | 4 | Potential legacy GORUT wilayah summary | 4 | 0 | 0 | 0 | `GorutKecamatan`/`GorutRanting` | Source preserved; hierarchy only where deterministic |
+| `gorut-munfiq` | 10 | Potential legacy GORUT Munfiq | 0 | 10 | 0 | 0 | `GorutMunfiq` | Not imported; authoritative PLPK relationship unavailable |
+| `gorut-munfiq-plpk` | 5 | Potential legacy GORUT Munfiq/PLPK relation | 0 | 5 | 0 | 0 | `GorutMunfiq` | Not imported; relationship identity unresolved |
+| `gorut-penghimpunan-verification` | 1 | Legacy GORUT verification compatibility state | 0 | 1 | 0 | 0 | `GorutWorkflowEvent` | Not imported; no transaction authority |
+| `gorut-plpk-kordes` | 5 | Potential legacy GORUT PLPK hierarchy | 5 | 0 | 0 | 0 | `GorutPlpk` | Imported idempotently |
+| **Total** | **32** |  | **9** | **23** | **0** | **0** |  |  |
+
+The table intentionally excludes `user-operational-scope` because it is shared assignment infrastructure rather than one of the six discovered `gorut-*` scopes. Its single record was inspected during backfill but not imported because its current assignment shape does not satisfy the normalized role/scope contract.
 
 The `gorut-munfiq`, `gorut-munfiq-plpk`, `gorut-plpk-kordes`, and `gorut-kordes-upzis` scopes contain presentation-level strings and mock financial figures. For instance, `gorut-munfiq` contains an object mapping `plpk` explicitly by name rather than ID.
 
@@ -265,7 +267,26 @@ The following root API endpoints will be created in Batch 5B:
 
 ---
 
-## 8. Next Steps (Batch 5B-1 Checklist)
+## 8. Batch 5B-1 Implementation Record
+
+- Migration: `20260722193143_add_normalized_gorut_schema` (additive: four PostgreSQL enums and eight normalized GORUT tables).
+- Implemented enums: `GorutOperationalRole`, `GorutTransactionState`, `GorutWorkflowStage`, and `GorutWorkflowAction`.
+- Implemented models: `GorutKecamatan`, `GorutRanting`, `GorutPlpk`, `GorutOperationalAssignment`, `GorutMunfiq`, `GorutTransaction`, `GorutTransactionItem`, and `GorutWorkflowEvent`.
+- Financial fields use `Decimal(19,2)`; parent and historical relations use `Restrict`, including transaction items and workflow events.
+- Legacy idempotency uses nullable `legacyScope` / `legacyKey` unique pairs for imported PLPK, Munfiq, and transaction records. The current local source has no legacy normalized transaction scope, so no financial rows were created.
+- Backfill command: `node scripts/backfill-gorut-normalized.mjs`; write mode requires `GORUT_BACKFILL_ACK=local-development node scripts/backfill-gorut-normalized.mjs --apply` and rejects non-local database hosts.
+- Dry-run results: 5 valid PLPK source rows; 10 Munfiq, 5 Munfiq-PLPK, and 1 verification source record unresolved because their legacy payloads do not provide authoritative relational identifiers. No source records were changed.
+- First local apply: 1 kecamatan, 5 ranting, and 5 PLPK records created; no transactions, items, workflow events, Munfiq, or assignments were fabricated.
+- Second local apply: zero inserts and five unchanged PLPK records; AppRecord source count remained 32.
+- Follow-up hardening migration: `20260722194748_harden_gorut_assignment_constraints`. It adds a role/scope `CHECK` constraint and a partial expression unique index for active assignments without changing the already-applied normalized-schema migration.
+- Assignment contract: PC has no scope foreign key; UPZIS requires only `kecamatanId`; RANTING requires only `rantingId`; PLPK requires only `plpkId`.
+- Migration reality: the normalized-schema and hardening migrations were applied only to the local development database. No pre-existing AppRecord row was updated or deleted.
+- Sixteen operational legacy records remain unresolved: 10 Munfiq, 5 Munfiq-PLPK relationship rows, and 1 verification record. No Munfiq, transaction, item, assignment, or workflow record was guessed.
+- Current normalized counts: 1 kecamatan, 5 ranting, 5 PLPK, and zero Munfiq, transaction, item, assignment, or workflow records.
+- Safety limitations before Batch 5B-2: normalized reads must fail closed for missing assignments; unresolved legacy data cannot become operational authority; transactions must be created only through validated server mutations; and AppRecord must not be used for financial aggregation.
+- Compatibility: AppRecord stays intact and remains only a migration source. API and client migration remain Batch 5B-2 work.
+
+## 9. Next Steps (Batch 5B-2 Checklist)
 
 - [ ] Create `lib/gorut-api-server.ts` implementing `requireGorutSession` and `pageParams`.
 - [ ] Create `lib/gorut-data-server.ts` providing scoped reads from the existing `AppRecord` legacy data as a transitionary step.
