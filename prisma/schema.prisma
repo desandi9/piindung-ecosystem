@@ -7,26 +7,65 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum GorutOperationalRole {
+  PC
+  UPZIS
+  RANTING
+  PLPK
+}
+
+enum GorutTransactionState {
+  DRAFT
+  WAITING_RANTING_VERIFICATION
+  RETURNED_TO_PLPK
+  WAITING_UPZIS_VERIFICATION
+  RETURNED_TO_RANTING
+  WAITING_PC_APPROVAL
+  RETURNED_TO_UPZIS
+  FINAL_APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum GorutWorkflowStage {
+  RANTING
+  UPZIS
+  PC
+}
+
+enum GorutWorkflowAction {
+  SUBMIT
+  APPROVE
+  RETURN
+  REJECT
+  FINAL_CLOSE
+  CANCEL
+}
+
 model User {
-  id           String   @id @default(cuid())
-  memberId     String   @unique
-  name         String
-  phone        String   @unique
-  email        String?  @unique
-  passwordHash String
-  role         String
-  status       String   @default("Aktif")
-  avatar       String?
-  lastLoginAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  createdNotifications PortalNotification[] @relation("PortalNotificationCreator")
-  targetedNotifications PortalNotification[] @relation("PortalNotificationTarget")
-  notificationReceipts PortalNotificationReceipt[]
+  id                       String                       @id @default(cuid())
+  memberId                 String                       @unique
+  name                     String
+  phone                    String                       @unique
+  email                    String?                      @unique
+  password                 String?
+  passwordHash             String
+  role                     String
+  status                   String                       @default("Aktif")
+  avatar                   String?
+  lastLoginAt              DateTime?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+  createdNotifications     PortalNotification[]         @relation("PortalNotificationCreator")
+  targetedNotifications    PortalNotification[]         @relation("PortalNotificationTarget")
+  notificationReceipts     PortalNotificationReceipt[]
+  gorutAssignments         GorutOperationalAssignment[]
+  gorutCreatedTransactions GorutTransaction[]           @relation("GorutTransactionCreator")
+  gorutWorkflowEvents      GorutWorkflowEvent[]         @relation("GorutWorkflowActor")
 }
 
 model PortalNotification {
-  id           String   @id @default(cuid())
+  id           String                      @id @default(cuid())
   title        String
   body         String
   category     String
@@ -39,10 +78,10 @@ model PortalNotification {
   expiresAt    DateTime?
   publishedAt  DateTime?
   withdrawnAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  creator      User?    @relation("PortalNotificationCreator", fields: [creatorId], references: [id], onDelete: SetNull)
-  targetUser   User?    @relation("PortalNotificationTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+  creator      User?                       @relation("PortalNotificationCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  targetUser   User?                       @relation("PortalNotificationTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
   receipts     PortalNotificationReceipt[]
 
   @@index([publishedAt, withdrawnAt])
@@ -59,7 +98,7 @@ model PortalNotificationReceipt {
   userId         String
   readAt         DateTime?
   notification   PortalNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user           User               @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@id([notificationId, userId])
   @@index([notificationId])
@@ -76,4 +115,171 @@ model AppRecord {
 
   @@unique([scope, key])
   @@index([scope])
+}
+
+model GorutKecamatan {
+  id           String                       @id @default(cuid())
+  code         String                       @unique
+  name         String                       @unique
+  isActive     Boolean                      @default(true)
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  rantings     GorutRanting[]
+  assignments  GorutOperationalAssignment[] @relation("GorutAssignmentKecamatan")
+  transactions GorutTransaction[]
+}
+
+model GorutRanting {
+  id           String                       @id @default(cuid())
+  kecamatanId  String
+  code         String
+  name         String
+  isActive     Boolean                      @default(true)
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  kecamatan    GorutKecamatan               @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
+  plpks        GorutPlpk[]
+  munfiqs      GorutMunfiq[]
+  assignments  GorutOperationalAssignment[] @relation("GorutAssignmentRanting")
+  transactions GorutTransaction[]
+
+  @@unique([kecamatanId, code])
+  @@unique([kecamatanId, name])
+  @@index([kecamatanId])
+}
+
+model GorutPlpk {
+  id           String                       @id @default(cuid())
+  code         String                       @unique
+  name         String
+  phone        String?
+  rantingId    String
+  isActive     Boolean                      @default(true)
+  legacyScope  String?
+  legacyKey    String?
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  ranting      GorutRanting                 @relation(fields: [rantingId], references: [id], onDelete: Restrict)
+  assignments  GorutOperationalAssignment[] @relation("GorutAssignmentPlpk")
+  munfiqs      GorutMunfiq[]
+  transactions GorutTransaction[]
+
+  @@unique([legacyScope, legacyKey])
+  @@index([rantingId])
+}
+
+model GorutOperationalAssignment {
+  id             String               @id @default(cuid())
+  userId         String
+  role           GorutOperationalRole
+  kecamatanId    String?
+  rantingId      String?
+  plpkId         String?
+  isActive       Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  kecamatan      GorutKecamatan?      @relation("GorutAssignmentKecamatan", fields: [kecamatanId], references: [id], onDelete: Restrict)
+  ranting        GorutRanting?        @relation("GorutAssignmentRanting", fields: [rantingId], references: [id], onDelete: Restrict)
+  plpk           GorutPlpk?           @relation("GorutAssignmentPlpk", fields: [plpkId], references: [id], onDelete: Restrict)
+  workflowEvents GorutWorkflowEvent[]
+
+  @@index([userId, isActive])
+  @@index([role, isActive])
+  @@index([kecamatanId])
+  @@index([rantingId])
+  @@index([plpkId])
+}
+
+model GorutMunfiq {
+  id          String                 @id @default(cuid())
+  code        String                 @unique
+  nik         String                 @unique
+  name        String
+  phone       String?
+  address     String?
+  gender      String?
+  birthDate   DateTime?
+  rantingId   String
+  plpkId      String
+  isActive    Boolean                @default(true)
+  joinedAt    DateTime?
+  legacyScope String?
+  legacyKey   String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  ranting     GorutRanting           @relation(fields: [rantingId], references: [id], onDelete: Restrict)
+  plpk        GorutPlpk              @relation(fields: [plpkId], references: [id], onDelete: Restrict)
+  items       GorutTransactionItem[]
+
+  @@unique([legacyScope, legacyKey])
+  @@index([rantingId])
+  @@index([plpkId])
+}
+
+model GorutTransaction {
+  id              String                 @id @default(cuid())
+  code            String                 @unique
+  transactionDate DateTime
+  totalAmount     Decimal                @db.Decimal(19, 2)
+  sourceChannel   String
+  notes           String?
+  currentState    GorutTransactionState
+  kecamatanId     String
+  rantingId       String
+  plpkId          String
+  createdByUserId String
+  finalApprovedAt DateTime?
+  legacyScope     String?
+  legacyKey       String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  kecamatan       GorutKecamatan         @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
+  ranting         GorutRanting           @relation(fields: [rantingId], references: [id], onDelete: Restrict)
+  plpk            GorutPlpk              @relation(fields: [plpkId], references: [id], onDelete: Restrict)
+  createdBy       User                   @relation("GorutTransactionCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  items           GorutTransactionItem[]
+  workflowEvents  GorutWorkflowEvent[]
+
+  @@unique([legacyScope, legacyKey])
+  @@index([currentState])
+  @@index([transactionDate])
+  @@index([kecamatanId])
+  @@index([rantingId])
+  @@index([plpkId])
+}
+
+model GorutTransactionItem {
+  id            String           @id @default(cuid())
+  transactionId String
+  munfiqId      String
+  amount        Decimal          @db.Decimal(19, 2)
+  periodLabel   String?
+  notes         String?
+  createdAt     DateTime         @default(now())
+  transaction   GorutTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  munfiq        GorutMunfiq      @relation(fields: [munfiqId], references: [id], onDelete: Restrict)
+
+  @@unique([transactionId, munfiqId])
+  @@index([munfiqId])
+}
+
+model GorutWorkflowEvent {
+  id                String                      @id @default(cuid())
+  transactionId     String
+  previousState     GorutTransactionState?
+  resultingState    GorutTransactionState
+  action            GorutWorkflowAction
+  stage             GorutWorkflowStage?
+  reason            String?
+  actorUserId       String
+  actorAssignmentId String?
+  createdAt         DateTime                    @default(now())
+  transaction       GorutTransaction            @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  actor             User                        @relation("GorutWorkflowActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  actorAssignment   GorutOperationalAssignment? @relation(fields: [actorAssignmentId], references: [id], onDelete: Restrict)
+
+  @@index([transactionId])
+  @@index([actorUserId])
+  @@index([actorAssignmentId])
 }
