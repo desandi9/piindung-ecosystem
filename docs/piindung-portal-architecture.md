@@ -132,4 +132,16 @@ Sistem menerapkan aturan perlindungan dan pembatasan berikut:
 - Halaman verifikasi publik hanya menampilkan nama, member ID, label role organisasi, status akun, organisasi, dan waktu pemeriksaan. Status akun tetap bersumber dari database: `Aktif`, `Menunggu`, atau `Nonaktif`.
 - Verifikasi adalah pemeriksaan pendaftaran identitas PIINDUNG, bukan sertifikasi identitas pemerintah atau pernyataan legal.
 - Tidak ada direktori anggota publik, pencarian anggota publik, atau data operasional GORUT pada halaman verifikasi.
-- URL QR menggunakan `SITE_URL` atau `NEXT_PUBLIC_SITE_URL`. Konfigurasi produksi wajib memakai origin HTTPS tepercaya; fallback localhost hanya berlaku pada development.
+- URL QR menggunakan `SITE_URL` or `NEXT_PUBLIC_SITE_URL`. Konfigurasi produksi wajib memakai origin HTTPS tepercaya; fallback localhost hanya berlaku pada development.
+
+## PIINDUNG Portal Notifications and Auditing (Batch 4F)
+
+Sistem notifikasi portal, peninjau audit, dan aktivitas akun diimplementasikan dengan pemisahan batas data yang jelas antara portal PIINDUNG dan modul operasional GORUT:
+
+- **Portal Notification Ownership:** Portal memiliki kendali atas pengiriman notifikasi bertipe `general`, `security`, `account`, `access`, dan `system`. Notifikasi operasional (transaksi, nominal, persetujuan detail, dll.) dikelola penuh secara internal oleh modul masing-masing.
+- **Audience Types:** Notifikasi dikirimkan dengan model target `all` (semua pengguna aktif), `role` (satu peran tertentu), dan `user` (satu pengguna tertentu). Sistem menghindari duplikasi record per pengguna saat menyiarkan notifikasi umum.
+- **Auditing and Account Activity:** Aktivitas akun (`/member-area/aktivitas`) menyajikan riwayat log aman yang difilter di sisi database berdasarkan ID target pengguna. Log ini menampilkan label dan deskripsi ringkas tanpa memuat data sensitif (password, email lama/baru lengkap, session token, atau payload mentah JSON).
+- **Super Admin Notification Management & Audit Viewer:** Super Admin memiliki kontrol penuh (`notifications.manage` dan `/member-area/notifikasi`) untuk menerbitkan notifikasi portal baru, mengatur kedaluwarsa, dan melakukan penarikan (*withdrawal*) tanpa hard delete. Halaman audit (`/member-area/audit`) menyajikan agregasi log audit portal secara terpusat dengan filtrasi terarah.
+- **Persistence & Protected Scopes:** Data disimpan menggunakan model database Prisma `PortalNotification` dan `PortalNotificationReceipt` terindeks. Scope internal sensitif seperti `portal-user-audit`, `portal-access-audit`, dan `portal-notification-audit` terlindungi secara mutlak dari API generic records generik.
+- **No Real-Time Infrastructure:** Batch 4F tidak menyertakan WebSockets atau real-time polling server agresif. UI notifikasi memuat data saat halaman dimuat atau dimutasi.
+- **Navigation Safety:** Menu navigasi utama tetap dipertahankan sebanyak empat tujuan awal tanpa perubahan. Rute khusus seperti notifikasi, aktivitas, dan audit diakses melalui sub-link sekunder atau dashboard widget.

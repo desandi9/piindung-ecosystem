@@ -4,8 +4,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
-  Bell,
-  Check,
   CircleHelp,
   LayoutDashboard,
   LogOut,
@@ -15,19 +13,14 @@ import {
   User,
   Users,
 } from "lucide-react"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useAuth, roleDisplayNames } from "@/lib/auth-context"
 import { primaryNavigation, type PortalNavigationIcon } from "@/lib/portal-navigation"
 import { getResolvedLogoUrl, useStoredSystemSettings, updateStoredSystemColorMode, type ColorMode } from "@/lib/system-settings"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
-import {
-  getPublishedNotifications,
-  getUnreadNotificationsCount,
-  markAllNotificationsAsRead,
-  useNotifications,
-} from "@/lib/notifications"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { NotificationBell } from "@/components/notification-bell"
 
 const navigationIcons: Record<PortalNavigationIcon, React.ElementType> = {
   home: LayoutDashboard,
@@ -127,21 +120,10 @@ export function MemberSidebar({ collapsed, onCloseMobile }: { collapsed?: boolea
 
 export function MemberHeader({ title, breadcrumb, onOpenMobile }: { title: string; breadcrumb: string; onOpenMobile: () => void }) {
   const [mounted, setMounted] = useState(false)
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
-  const notificationRef = useRef<HTMLDivElement>(null)
   const { resolvedTheme, setTheme } = useTheme()
   const isDarkMode = mounted ? resolvedTheme === "dark" || (typeof document !== "undefined" && document.documentElement.classList.contains("dark")) : false
-  const notifications = getPublishedNotifications(useNotifications())
-  const unreadCount = getUnreadNotificationsCount(notifications)
 
   useEffect(() => setMounted(true), [])
-  useEffect(() => {
-    const clickOutside = (e: MouseEvent) => { if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) setIsNotificationOpen(false) }
-    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") setIsNotificationOpen(false) }
-    document.addEventListener("mousedown", clickOutside)
-    document.addEventListener("keydown", escape)
-    return () => { document.removeEventListener("mousedown", clickOutside); document.removeEventListener("keydown", escape) }
-  }, [])
 
   const toggleDarkMode = () => {
     const nextMode: ColorMode = isDarkMode ? "light" : "dark"
@@ -160,30 +142,7 @@ export function MemberHeader({ title, breadcrumb, onOpenMobile }: { title: strin
       </div>
       <div className="flex items-center gap-2">
         <button type="button" onClick={toggleDarkMode} className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="Ganti tema warna">{mounted && isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}</button>
-        <div className="relative" ref={notificationRef}>
-          <button type="button" onClick={() => setIsNotificationOpen(!isNotificationOpen)} className={cn("relative inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors", isNotificationOpen ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground")} aria-label="Notifikasi">
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && <span className="absolute right-2 top-2 flex h-3 min-w-[12px] items-center justify-center rounded-full bg-[#15945b] px-0.5 text-[8px] font-bold text-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}
-          </button>
-          {isNotificationOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:w-96">
-              <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <div><h3 className="font-semibold text-foreground">Notifikasi</h3><p className="text-xs text-muted-foreground">{unreadCount} belum dibaca</p></div>
-                {unreadCount > 0 && <button type="button" onClick={markAllNotificationsAsRead} className="flex items-center gap-1 text-xs font-medium text-[#15945b] hover:text-[#107947]"><Check className="h-3 w-3" /> Tandai dibaca</button>}
-              </div>
-              <div className="max-h-80 overflow-y-auto p-2">
-                {notifications.length ? notifications.map((notif) => (
-                  <div key={notif.id} className={cn("mb-1 rounded-xl p-3 text-sm", notif.unread ? "bg-accent" : "hover:bg-accent/50")}>
-                    <div className="flex items-center justify-between"><p className="font-semibold text-foreground">{notif.title}</p>{notif.unread && <span className="h-2 w-2 rounded-full bg-[#15945b]" />}</div>
-                    <p className="mt-1 text-xs text-muted-foreground">{notif.description}</p>
-                    <p className="mt-2 text-[10px] font-medium text-muted-foreground/70">{notif.time}</p>
-                  </div>
-                )) : <div className="p-4 text-center text-sm text-muted-foreground">Tidak ada notifikasi.</div>}
-              </div>
-              <div className="border-t border-border p-2"><Link href="/notifikasi" onClick={() => setIsNotificationOpen(false)} className="block rounded-lg py-2 text-center text-sm font-medium text-[#15945b] transition-colors hover:bg-[#e6f7ee] dark:hover:bg-emerald-500/10">Lihat Semua</Link></div>
-            </div>
-          )}
-        </div>
+        <NotificationBell />
       </div>
     </header>
   )

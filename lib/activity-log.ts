@@ -2,7 +2,7 @@
 
 import { createCollectionClient } from "@/services/api/record-client"
 
-export type ActivityType = "Login" | "Settings" | "User" | "Article/Banner" | "System" | "Permission"
+export type ActivityType = "Login" | "Settings" | "User" | "Article/Banner" | "System" | "Permission" | "Inbox"
 export type ActivityStatus = "Success" | "Warning" | "Failed"
 export type LoginActionType = "Login" | "Logout"
 

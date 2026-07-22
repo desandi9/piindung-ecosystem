@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
@@ -8,19 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useTheme } from "next-themes"
 import { getResolvedLogoUrl, useStoredSystemSettings } from "@/lib/system-settings"
 import { 
-  Bell, 
-  AlertCircle,
-  CreditCard,
-  FileText,
-   User,
-
   Moon,
   Sun,
-  LayoutDashboard,
   Menu,
-  Users,
-  X,
-  Check
+  User,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -30,72 +21,26 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import {
-  getPublishedNotifications,
-  getUnreadNotificationsCount,
-  markAllNotificationsAsRead,
-  type NotificationIconKey,
-  useNotifications,
-} from "@/lib/notifications"
 import { updateStoredSystemColorMode, type ColorMode } from "@/lib/system-settings"
 import { useAuth, roleDisplayNames } from "@/lib/auth-context"
 import { primaryNavigation } from "@/lib/portal-navigation"
+import { NotificationBell } from "@/components/notification-bell"
 
 const navItems = primaryNavigation
 
-function iconFor(iconKey: NotificationIconKey) {
-  if (iconKey === "credit-card") return CreditCard
-  if (iconKey === "file-text") return FileText
-  if (iconKey === "users") return Users
-  if (iconKey === "alert-circle") return AlertCircle
-  return Bell
-}
-
 export function Navbar() {
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const notificationRef = useRef<HTMLDivElement>(null)
   const { resolvedTheme, setTheme } = useTheme()
   const { settings } = useStoredSystemSettings()
   const { user } = useAuth()
   const pathname = usePathname()
-  const notifications = getPublishedNotifications(useNotifications())
-  const unreadCount = getUnreadNotificationsCount(notifications)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setIsNotificationOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  // Close dropdown on escape key
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsNotificationOpen(false)
-        setIsMobileMenuOpen(false)
-      }
-    }
-    document.addEventListener("keydown", handleEscape)
-    return () => document.removeEventListener("keydown", handleEscape)
-  }, [])
-
+  useEffect(() => setMounted(true), [])
   const toggleDarkMode = () => {
     const nextMode: ColorMode = document.documentElement.classList.contains("dark") ? "light" : "dark"
     setTheme(nextMode)
     updateStoredSystemColorMode(nextMode)
   }
-
   const isDarkMode = mounted ? resolvedTheme === "dark" || document.documentElement.classList.contains("dark") : false
 
   return (
@@ -208,112 +153,7 @@ export function Navbar() {
             </Sheet>
 
             {/* Notification Bell */}
-            <div className="relative" ref={notificationRef}>
-              <button 
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                className={cn(
-                  "relative p-2 text-muted-foreground hover:text-foreground transition-all duration-200 ease-out rounded-xl hover:bg-accent",
-                  isNotificationOpen && "bg-accent text-foreground"
-                )}
-                aria-label="Notifications"
-                aria-expanded={isNotificationOpen}
-              >
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[1rem] h-4 px-0.5 bg-[#2e8b57] rounded-full text-[10px] font-medium text-white flex items-center justify-center tabular-nums">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Notification Dropdown */}
-              <div 
-                className={cn(
-                  "absolute right-0 top-full mt-2 w-80 sm:w-96 bg-card rounded-2xl shadow-xl border border-border overflow-hidden",
-                  "transition-all duration-300 ease-out origin-top-right",
-                  isNotificationOpen 
-                    ? "opacity-100 scale-100 translate-y-0 visible" 
-                    : "opacity-0 scale-95 -translate-y-2 invisible"
-                )}
-                role="menu"
-              >
-                {/* Header */}
-                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-foreground">Notifikasi</h3>
-                    <p className="text-xs text-muted-foreground">{unreadCount} belum dibaca</p>
-                  </div>
-                  {unreadCount > 0 && (
-                    <button type="button" onClick={markAllNotificationsAsRead} className="text-xs text-[#2e8b57] hover:text-[#236b43] font-medium flex items-center gap-1 transition-colors">
-                      <Check className="h-3 w-3" />
-                      Tandai dibaca
-                    </button>
-                  )}
-                </div>
-
-                {/* Notification List */}
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.map((notification) => {
-                    const Icon = iconFor(notification.iconKey)
-
-                    return (
-                      <button
-                        key={notification.id}
-                        className={cn(
-                          "w-full flex items-start gap-3 px-4 py-3 hover:bg-accent transition-all duration-200 ease-out text-left border-b border-border/50 last:border-b-0",
-                          notification.unread && "bg-[#2e8b57]/5"
-                        )}
-                        onClick={() => setIsNotificationOpen(false)}
-                      >
-                        <div className={cn(
-                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
-                          notification.type === "success" && "bg-[#2e8b57]/10",
-                          notification.type === "info" && "bg-blue-500/10",
-                          notification.type === "warning" && "bg-amber-500/10"
-                        )}>
-                          <Icon className={cn(
-                          "h-4 w-4",
-                          notification.type === "success" && "text-[#2e8b57]",
-                          notification.type === "info" && "text-blue-500",
-                          notification.type === "warning" && "text-amber-500"
-                          )} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className={cn(
-                              "text-sm text-foreground truncate",
-                              notification.unread && "font-semibold"
-                            )}>
-                              {notification.title}
-                            </p>
-                            {notification.unread && (
-                              <span className="w-2 h-2 bg-[#2e8b57] rounded-full shrink-0 mt-1.5" />
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                            {notification.description}
-                          </p>
-                          <p className="text-xs text-muted-foreground/70 mt-1">
-                            {notification.time}
-                          </p>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Footer */}
-                <div className="border-t border-border p-2">
-                  <Link
-                    href="/notifications"
-                    onClick={() => setIsNotificationOpen(false)}
-                    className="block w-full text-center py-2 text-sm font-medium text-[#2e8b57] hover:bg-[#2e8b57]/10 rounded-xl transition-colors"
-                  >
-                    Lihat Semua
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <NotificationBell />
 
             {/* Dark Mode Toggle - Separate from dropdown */}
             <button

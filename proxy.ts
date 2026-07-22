@@ -5,7 +5,7 @@ import { canAccessMemberAreaRoute } from "@/lib/portal-access"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
-const protectedUiPrefixes = ["/dashboard", "/admin", "/profil", "/pengaturan-profil", "/gorut", "/member-area"]
+const protectedUiPrefixes = ["/dashboard", "/admin", "/profil", "/pengaturan-profil", "/gorut", "/member-area", "/notifikasi"]
 const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-scopes", "/api/public-products"]
 const publicReadableRecordScopes = new Set([
   "maintenance-mode",
@@ -113,7 +113,7 @@ function canAccessGorutPath(role: string | null | undefined, pathname: string) {
 
 function isPublicPath(pathname: string) {
   if (pathname === "/produk" || pathname === "/dampak" || pathname === "/artikel" || pathname.startsWith("/artikel/")) return true
-  return ["/", "/login", "/program", "/informasi", "/laporan", "/rekening-donasi", "/qris-donasi", "/bantuan", "/kontak", "/galeri", "/download", "/notifications", "/notifikasi", "/verify"].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  return ["/", "/login", "/program", "/informasi", "/laporan", "/rekening-donasi", "/qris-donasi", "/bantuan", "/kontak", "/galeri", "/download", "/verify"].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
 function isAuthApiPath(pathname: string) {
