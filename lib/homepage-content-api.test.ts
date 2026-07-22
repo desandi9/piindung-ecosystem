@@ -3,7 +3,8 @@ import { test } from "node:test"
 import { protectHomepageContentMutation } from "./homepage-content-api"
 
 async function responseStatus(result: Awaited<ReturnType<typeof protectHomepageContentMutation>>) {
-  return result.response?.status ?? 200
+  const response = "response" in result ? result.response : undefined
+  return response?.status ?? 200
 }
 
 test("protectHomepageContentMutation rejects legacy article mutations and allows Banner mutations", async () => {
@@ -26,7 +27,15 @@ test("protectHomepageContentMutation rejects legacy article mutations and allows
 
   for (const item of cases) {
     const key = item.existing ? `test-${item.name}` : undefined
-    const result = await protectHomepageContentMutation(item.operation, key, item.incoming, item.existing ? { key: key ?? "test", data: { type: item.existing } } : undefined)
+    const existingRecord = item.existing && key ? {
+      id: `record-${item.name}`,
+      scope: "homepage-content",
+      key,
+      data: { type: item.existing },
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
+    } : undefined
+    const result = await protectHomepageContentMutation(item.operation, key, item.incoming, existingRecord)
     assert.equal(await responseStatus(result), item.expected, item.name)
   }
 })

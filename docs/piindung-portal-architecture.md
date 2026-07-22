@@ -145,3 +145,41 @@ Sistem notifikasi portal, peninjau audit, dan aktivitas akun diimplementasikan d
 - **Persistence & Protected Scopes:** Data disimpan menggunakan model database Prisma `PortalNotification` dan `PortalNotificationReceipt` terindeks. Scope internal sensitif seperti `portal-user-audit`, `portal-access-audit`, dan `portal-notification-audit` terlindungi secara mutlak dari API generic records generik.
 - **No Real-Time Infrastructure:** Batch 4F tidak menyertakan WebSockets atau real-time polling server agresif. UI notifikasi memuat data saat halaman dimuat atau dimutasi.
 - **Navigation Safety:** Menu navigasi utama tetap dipertahankan sebanyak empat tujuan awal tanpa perubahan. Rute khusus seperti notifikasi, aktivitas, dan audit diakses melalui sub-link sekunder atau dashboard widget.
+
+## Matriks Rute Akhir
+
+| Rute | Audiens | Penegakan server |
+| --- | --- | --- |
+| `/dashboard` | pengguna aktif dengan `dashboard.view` | sesi cookie dan policy proxy; API tetap memvalidasi aksesnya sendiri |
+| `/profil`, `/pengaturan-profil` | pengguna aktif dengan `profile.view` | sesi cookie; API profil memakai allowlist self-service |
+| `/notifikasi` | pengguna aktif dengan `notifications.view` | sesi cookie; hanya notifikasi eligible yang dikembalikan |
+| `/member-area`, `/member-area/identitas`, `/member-area/aktivitas` | pengguna aktif dengan `member_area.view` | deny-by-default route matrix dan query aktivitas per-user |
+| `/member-area/notifikasi` | Super Admin PC (`notifications.manage`) | policy route dan endpoint manage khusus Super Admin |
+| `/member-area/audit` | Super Admin PC (`audit.view`) | policy route dan endpoint audit khusus Super Admin |
+| `/member-area/hak-akses` | Super Admin PC (`access.manage`) | policy route dan endpoint grant khusus Super Admin |
+| `/member-area/pengguna` | Super Admin PC (`users.manage`) | policy route dan API pengguna terproteksi |
+| `/member-area/konten/artikel/**` | Super Admin PC atau Admin PC (`articles.manage`) | policy route dan API artikel memvalidasi izin |
+| `/member-area/konten/{beranda,produk,dampak,bantuan,galeri,download,media,kontak}` | Super Admin PC | policy route dan API konten terproteksi |
+| `/verify/{memberId}` | publik | lookup ID tunggal, `noindex`, dan proyeksi identitas minimal |
+
+## Kontrak Cookie dan Redirect
+
+- Sesi berada hanya dalam cookie `piindung-session`: `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` pada production; token tidak disimpan pada `localStorage` atau `sessionStorage`.
+- Login membuat cookie dengan masa berlaku 30 hari untuk opsi remember, atau sesi browser untuk opsi non-remember. Logout dan perubahan password menghapus cookie sesi saat ini.
+- Permintaan UI protected tanpa sesi diarahkan ke `/login?next=...`. `next` diproses oleh `safeRedirectPath`: hanya path lokal, dan menolak URL protocol-relative, backslash, traversal, serta endpoint API sensitif.
+- Pengguna yang sudah login dan membuka `/login` diarahkan ke rute default peran. Rute Member Area atau admin yang tidak diizinkan diarahkan ke `/dashboard` atau `/admin` sesuai boundary.
+
+## Keamanan Request, Batas Query, dan Scope Terproteksi
+
+- Mutasi JSON portal memvalidasi `Content-Type: application/json`, batas ukuran payload, dan origin same-site saat browser mengirim header `Origin`. Respons private memakai `Cache-Control: private, no-store`.
+- Pagination notifikasi dan aktivitas menerima page positif dengan `limit` maksimum 50. Audit membatasi page sampai 10.000, limit sampai 50, search sampai 100 karakter, serta memvalidasi kategori, aksi, dan rentang tanggal.
+- Notifikasi memvalidasi audience secara eksplisit (`all`, `role`, `user`); target role/user hanya berlaku untuk audience yang sesuai dan eligibility ditentukan di database sebelum read/receipt mutation.
+- Aktivitas akun selalu dibatasi oleh ID pengguna terautentikasi di query database. Audit pusat membaca allowlist scope audit dan memproyeksikan label aman, bukan payload JSON mentah.
+- Generic records API menolak scope `portal-module-grants`, `portal-user-audit`, `portal-access-audit`, dan `portal-notification-audit`. Endpoint dedicated tetap memvalidasi permission server-side; pembatasan UI bukan otorisasi.
+
+## Boundary Legacy dan Validasi Rilis
+
+- `managed-users` tetap dipakai oleh dashboard/admin legacy dan tidak menjadi sumber profil self-service. Profil memakai `/api/account/profile` secara terpisah.
+- `admin-inbox-content` masih dipakai oleh `/admin/pesan-masuk`; tidak dihapus. Inbox legacy tetap terpisah dari notifikasi portal terarah.
+- Storage browser yang tersisa hanya untuk preferensi atau state UI non-auth; tidak ada kredensial atau token sesi portal di browser storage.
+- Checklist rilis yang dapat dieksekusi ada di `docs/piindung-release-checklist.md`.

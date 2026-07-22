@@ -4,6 +4,7 @@ import { listRecords } from "@/lib/record-store-server"
 import {
   ArticleConflictError,
   ArticleNotFoundError,
+  ArticleValidationError,
   generateArticleSlug,
   isValidStoredArticle,
   validateArticleMutationInput,
@@ -43,8 +44,27 @@ type StoredRecord = {
   updatedAt: Date
 }
 
-function articleFromRecord(record: StoredRecord) {
-  return isValidStoredArticle(record.data) ? record.data : null
+function articleFromRecord(record: StoredRecord): Article | null {
+  return isValidStoredArticle(record.data) ? {
+    id: record.data.id,
+    slug: record.data.slug,
+    title: record.data.title,
+    excerpt: record.data.excerpt,
+    body: record.data.body,
+    contentType: record.data.contentType,
+    coverImage: record.data.coverImage,
+    authorName: record.data.authorName,
+    status: record.data.status,
+    featured: record.data.featured,
+    position: record.data.position,
+    publishedAt: record.data.publishedAt,
+    createdAt: record.data.createdAt,
+    updatedAt: record.data.updatedAt,
+  } : null
+}
+
+function isArticle(article: Article | null): article is Article {
+  return article !== null
 }
 
 function sortDate(value: string | null) {
@@ -88,7 +108,8 @@ function ensureUniqueSlug(articles: Article[], slug: string, ignoredId?: string)
 
 function buildArticle(input: ArticleMutationInput, existing: Article | null, articles: Article[], id: string): Article {
   const timestamp = nowIso()
-  const status = (input.status ?? existing?.status) as ArticleStatus
+  const status = input.status ?? existing?.status
+  if (!status) throw new ArticleValidationError("Status artikel wajib diisi.")
   const requestedPublishedAt = input.publishedAt !== undefined ? input.publishedAt : existing?.publishedAt
   const publishedAt = status === "published" ? requestedPublishedAt ?? timestamp : requestedPublishedAt ?? null
 
@@ -120,7 +141,7 @@ async function persistArticle(article: Article, mode: "create" | "update", previ
       WHERE scope = ${ARTICLE_SCOPE}
       ORDER BY "updatedAt" DESC
     `
-    const articles = records.map(articleFromRecord).filter((value): value is Article => value !== null)
+    const articles = records.map(articleFromRecord).filter(isArticle)
     ensureUniqueSlug(articles, article.slug, previousId)
 
     if (article.featured) {
@@ -155,7 +176,7 @@ async function persistArticle(article: Article, mode: "create" | "update", previ
 
 export async function readManagedArticles() {
   const records = await getArticleRecords()
-  return sortArticles(records.map(articleFromRecord).filter((value): value is Article => value !== null))
+  return sortArticles(records.map(articleFromRecord).filter(isArticle))
 }
 
 export async function readPublishedArticles() {
