@@ -94,7 +94,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ scope: 
       const access = await requireHomepageContentManager()
       if (access.response) return access.response
       const protection = await protectHomepageContentMutation("delete", key)
-      if (protection.response) return protection.response
+      if ("response" in protection) return protection.response
     }
     if (scope === "article-migration-map" || scope === "article-legacy-archive" || scope === "faq-manager" || scope === "media-library") {
       const access = await requireArticleManager()

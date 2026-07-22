@@ -7,12 +7,34 @@ const decoder = new TextDecoder()
 export interface SessionTokenPayload {
   sub: string
   name: string
-  phone: string
   role: AppRole
   remember: boolean
   iat: number
   exp: number
 }
+
+export function getAuthCookieOptions(remember: boolean, isProduction: boolean) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: isProduction,
+    path: "/",
+    maxAge: remember ? 60 * 60 * 24 * 30 : undefined,
+    expires: remember ? new Date(Date.now() + 1000 * 60 * 60 * 24 * 30) : undefined,
+  }
+}
+
+export function getClearAuthCookieOptions(isProduction: boolean) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: isProduction,
+    path: "/",
+    maxAge: 0,
+    expires: new Date(0),
+  }
+}
+
 
 function toBase64Url(input: ArrayBuffer | Uint8Array | string) {
   const bytes = typeof input === "string" ? encoder.encode(input) : input instanceof Uint8Array ? input : new Uint8Array(input)

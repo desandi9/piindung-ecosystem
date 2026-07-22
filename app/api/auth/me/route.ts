@@ -3,15 +3,16 @@ import { getPrismaClient } from "@/lib/prisma"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
+const headers = { "Cache-Control": "private, no-store" }
 
 export async function GET(request: NextRequest) {
   try {
     const prisma = getPrismaClient()
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
-    if (!token) return NextResponse.json({ user: null }, { status: 401 })
+    if (!token) return NextResponse.json({ user: null }, { status: 401, headers })
 
     const session = await verifySessionToken(token, AUTH_SECRET)
-    if (!session) return NextResponse.json({ user: null }, { status: 401 })
+    if (!session) return NextResponse.json({ user: null }, { status: 401, headers })
 
     const users = await prisma.$queryRaw<Array<{
       id: string
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     }>>`SELECT id, name, email, role, avatar, status FROM "User" WHERE id = ${session.sub} LIMIT 1`
 
     const user = users[0]
-    if (!user || user.status !== "Aktif") return NextResponse.json({ user: null }, { status: 401 })
+    if (!user || user.status !== "Aktif") return NextResponse.json({ user: null }, { status: 401, headers })
 
     return NextResponse.json({
       user: {
@@ -33,9 +34,9 @@ export async function GET(request: NextRequest) {
         role: user.role,
         avatar: user.avatar ?? undefined,
       },
-    })
+    }, { headers })
   } catch (error) {
     console.error("Session lookup error", error)
-    return NextResponse.json({ user: null }, { status: 500 })
+    return NextResponse.json({ user: null }, { status: 500, headers })
   }
 }

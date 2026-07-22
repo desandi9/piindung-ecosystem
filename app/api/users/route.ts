@@ -4,6 +4,7 @@ import { registeredModules } from "@/lib/portal-access"
 import { createCentralUser, getUserModules, serializeUserListItem, requireUserManagementAccess, validateModules, validateUserPayload } from "@/lib/portal-user-management-server"
 import { isAppRole, isUserStatus, normalizeEmail } from "@/lib/portal-user-management"
 import { isValidPhoneNumber, normalizePhoneNumber } from "@/lib/phone"
+import { readJsonMutation } from "@/lib/request-security"
 
 const userSelect = { id: true, name: true, email: true, phone: true, role: true, status: true, avatar: true, createdAt: true, updatedAt: true } as const
 
@@ -35,8 +36,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const required = await requireUserManagementAccess()
   if (required.response) return required.response
+  const parsedJson = await readJsonMutation(request)
+  if (parsedJson.failure) {
+    return NextResponse.json({ error: parsedJson.failure.error }, { status: parsedJson.failure.status })
+  }
+  const body = parsedJson.value as Record<string, unknown>
   try {
-    const body = (await request.json()) as Record<string, unknown>
     const validation = validateUserPayload(body)
     if (validation) return NextResponse.json({ error: validation }, { status: 400 })
     const phone = normalizePhoneNumber(String(body.phone))

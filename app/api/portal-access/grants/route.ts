@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { isRegisteredModuleKey } from "@/lib/portal-access"
 import { listPortalUsersWithModules, requirePortalPermission, setModuleGrant } from "@/lib/portal-access-server"
+import { readJsonMutation } from "@/lib/request-security"
 
 export async function GET() {
   const required = await requirePortalPermission("access.manage")
@@ -16,8 +17,12 @@ export async function GET() {
 export async function PATCH(request: Request) {
   const required = await requirePortalPermission("access.manage")
   if (required.response) return required.response
+  const parsedJson = await readJsonMutation(request)
+  if (parsedJson.failure) {
+    return NextResponse.json({ error: parsedJson.failure.error }, { status: parsedJson.failure.status })
+  }
+  const body = parsedJson.value as { userId?: unknown; moduleKey?: unknown; enabled?: unknown }
   try {
-    const body = (await request.json()) as { userId?: unknown; moduleKey?: unknown; enabled?: unknown }
     if (typeof body.userId !== "string" || typeof body.moduleKey !== "string" || typeof body.enabled !== "boolean") return NextResponse.json({ error: "Data akses tidak valid." }, { status: 400 })
     if (!isRegisteredModuleKey(body.moduleKey)) return NextResponse.json({ error: "Modul tidak terdaftar." }, { status: 400 })
     const userId = body.userId

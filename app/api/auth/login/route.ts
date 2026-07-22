@@ -7,15 +7,21 @@ import { NextResponse, type NextRequest } from "next/server"
 import { ensureDefaultUsers } from "@/lib/auth-server"
 import { getPrismaClient } from "@/lib/prisma"
 import { normalizePhoneNumber } from "@/lib/phone"
-import { AUTH_COOKIE_NAME, createSessionToken } from "@/lib/session-token"
+import { AUTH_COOKIE_NAME, createSessionToken, getAuthCookieOptions } from "@/lib/session-token"
 import type { AuthUser } from "@/types/auth"
+import { safeRedirectPath } from "@/lib/safe-redirect"
+import { readJsonMutation } from "@/lib/request-security"
 
 export async function POST(request: NextRequest) {
   try {
+    const parsedJson = await readJsonMutation(request)
+    if (parsedJson.failure) {
+      return NextResponse.json({ error: parsedJson.failure.error }, { status: parsedJson.failure.status })
+    }
+    const body = parsedJson.value as { phoneNumber?: string; password?: string; remember?: boolean }
     await ensureDefaultUsers()
     const prisma = getPrismaClient()
     const authSecret = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
-    const body = (await request.json()) as { phoneNumber?: string; password?: string; remember?: boolean }
     const phoneNumber = normalizePhoneNumber(body.phoneNumber ?? "")
     const password = body.password ?? ""
 
@@ -37,21 +43,11 @@ export async function POST(request: NextRequest) {
     const user = users[0]
 
     if (!user || user.status !== "Aktif") {
-      console.warn("Login rejected", {
-        reason: !user ? "user_not_found" : "user_inactive",
-        phoneNumber,
-        status: user?.status ?? null,
-      })
       return NextResponse.json({ error: "Nomor HP atau password tidak valid." }, { status: 401 })
     }
 
     const passwordMatch = await bcrypt.compare(password, user.passwordHash)
     if (!passwordMatch) {
-      console.warn("Login rejected", {
-        reason: "password_mismatch",
-        phoneNumber,
-        userId: user.id,
-      })
       return NextResponse.json({ error: "Nomor HP atau password tidak valid." }, { status: 401 })
     }
 
@@ -68,7 +64,6 @@ export async function POST(request: NextRequest) {
       {
         sub: user.id,
         name: authUser.name,
-        phone: user.phone,
         role: authUser.role,
         remember: body.remember ?? true,
         iat: now,
@@ -78,15 +73,7 @@ export async function POST(request: NextRequest) {
     )
 
     const response = NextResponse.json({ user: authUser })
-    response.cookies.set({
-      name: AUTH_COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: body.remember ?? true ? 60 * 60 * 24 * 30 : undefined,
-    })
+    response.cookies.set({ name: AUTH_COOKIE_NAME, value: token, ...getAuthCookieOptions(body.remember ?? true, process.env.NODE_ENV === "production") })
 
     await prisma.$executeRaw`UPDATE "User" SET "lastLoginAt" = ${new Date()} WHERE id = ${user.id}`
 

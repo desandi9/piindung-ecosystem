@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { canAccessAdminDashboard, isSuperAdminOnlyRoute } from "@/features/auth"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 import { canAccessMemberAreaRoute } from "@/lib/portal-access"
+import { safeRedirectPath } from "@/lib/safe-redirect"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
@@ -192,7 +193,7 @@ export async function proxy(request: NextRequest) {
 
   if (!session) {
     const loginUrl = new URL("/login", request.url)
-    loginUrl.searchParams.set("next", pathname)
+    loginUrl.searchParams.set("next", safeRedirectPath(`${pathname}${request.nextUrl.search}`))
     return NextResponse.redirect(loginUrl)
   }
 

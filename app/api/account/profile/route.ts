@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { currentAccount, currentVerificationUrl, updateCurrentAccount } from "@/lib/account-profile-server"
 import { serializeAccountProfile as clientSerialize, validateProfilePatch } from "@/lib/account-profile"
+import { readJsonMutation, PRIVATE_NO_STORE_HEADERS } from "@/lib/request-security"
 
 export const dynamic = "force-dynamic"
 const headers = { "Cache-Control": "private, no-store" }
@@ -21,7 +22,9 @@ export async function PATCH(request: NextRequest) {
     const account = await currentAccount(request)
     if (account.kind === "unauthenticated") return NextResponse.json({ error: "Sesi tidak ditemukan." }, { status: 401, headers })
     if (account.kind === "inactive") return NextResponse.json({ error: "Akun tidak aktif." }, { status: 403, headers })
-    const validation = validateProfilePatch(await request.json().catch(() => null))
+    const parsedJson = await readJsonMutation(request)
+    if (parsedJson.failure) return NextResponse.json({ error: parsedJson.failure.error }, { status: parsedJson.failure.status, headers })
+    const validation = validateProfilePatch(parsedJson.value)
     if (validation.error || !validation.value) return NextResponse.json({ error: validation.error ?? "Data profil tidak valid." }, { status: 400, headers })
     const updated = await updateCurrentAccount(account.user.id, validation.value)
     return NextResponse.json({ profile: clientSerialize(updated, currentVerificationUrl(updated.memberId)) }, { headers })

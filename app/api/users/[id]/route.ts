@@ -5,6 +5,7 @@ import { getModuleGrantsForUserIds } from "@/lib/portal-access-server"
 import { requireUserManagementAccess, serializeUserDetail, updateCentralUser, validateModules, validateUserPayload } from "@/lib/portal-user-management-server"
 import { isAppRole, isUserStatus, normalizeEmail } from "@/lib/portal-user-management"
 import { isValidPhoneNumber, normalizePhoneNumber } from "@/lib/phone"
+import { readJsonMutation } from "@/lib/request-security"
 
 const userSelect = { id: true, name: true, email: true, phone: true, role: true, status: true, avatar: true, createdAt: true, updatedAt: true } as const
 
@@ -25,9 +26,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   const required = await requireUserManagementAccess()
   if (required.response) return required.response
+  const parsedJson = await readJsonMutation(request)
+  if (parsedJson.failure) {
+    return NextResponse.json({ error: parsedJson.failure.error }, { status: parsedJson.failure.status })
+  }
+  const body = parsedJson.value as Record<string, unknown>
   try {
     const { id } = await Promise.resolve(params)
-    const body = (await request.json()) as Record<string, unknown>
     const validation = validateUserPayload(body, true)
     if (validation) return NextResponse.json({ error: validation }, { status: 400 })
     if (body.password !== undefined) return NextResponse.json({ error: "Password tidak dapat diubah melalui pembaruan umum." }, { status: 400 })

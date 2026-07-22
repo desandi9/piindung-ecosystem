@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requirePortalPermission } from "@/lib/portal-access-server"
 import { listNotificationsManage, publishNotification } from "@/lib/portal-notifications-server"
 import { parseNotificationInput, parseNotificationPagination } from "@/lib/portal-notifications"
+import { readJsonMutation } from "@/lib/request-security"
 
 export const dynamic = "force-dynamic"
 const headers = { "Cache-Control": "private, no-store" }
@@ -22,7 +23,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const required = await requirePortalPermission("notifications.manage")
   if (required.response) return required.response
-  const parsed = parseNotificationInput(await request.json().catch(() => null))
+  const parsedJson = await readJsonMutation(request)
+  if (parsedJson.failure) return NextResponse.json({ error: parsedJson.failure.error }, { status: parsedJson.failure.status, headers })
+  const parsed = parseNotificationInput(parsedJson.value)
   if (!parsed.value) return NextResponse.json({ error: parsed.error }, { status: 400, headers })
   try {
     const notification = await publishNotification(required.access.user.id, parsed.value)
