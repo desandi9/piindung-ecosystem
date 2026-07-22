@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { 
+import {
   FileText,
   FileSpreadsheet,
   Download,
@@ -24,11 +24,13 @@ import {
   CheckCircle2,
   FileDown,
   Inbox,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react'
 import { MetricCard, EmptyState, PageSectionHeader, IconBox } from '@/components/ui/ds-patterns'
 import { formatRupiah } from '@/lib/gorut/data'
 import { exportReportToPdf, exportRowsToSpreadsheet } from '@/lib/gorut/export'
-import { fetchGorutLaporanSummary, generateGorutRekapDana, refreshGorutRekapDana, useGorutLaporanSummary } from '@/lib/gorut/laporan-control'
+import { useGorutLaporanSummary } from '@/lib/gorut/laporan-control'
 import { cn } from '@/lib/utils'
 
 const reportTypes = [
@@ -101,9 +103,9 @@ function formatDateTime(dateString: string) {
 
 export default function LaporanPage() {
   const { toast } = useToast()
-  const [selectedMonth, setSelectedMonth] = useState('mei-2026')
+  const [selectedMonth, setSelectedMonth] = useState('2026-05')
   const [selectedKecamatan, setSelectedKecamatan] = useState('semua')
-  const overview = useGorutLaporanSummary(selectedMonth, selectedKecamatan)
+  const { summary: overview, loading, error } = useGorutLaporanSummary(selectedMonth, selectedKecamatan)
   const topUpzis = overview.perUpzis[0]
   const topRanting = overview.perRanting[0]
   const topPlpk = overview.perPlpk[0]
@@ -189,16 +191,6 @@ export default function LaporanPage() {
     const config = reportConfig[reportId as keyof typeof reportConfig]
     if (!config) return
 
-    if (reportId === 'keuangan' || reportId === 'bulanan') {
-      try {
-        if (latestRekapDana) await refreshGorutRekapDana(latestRekapDana.id)
-        else await generateGorutRekapDana(selectedMonth)
-        await fetchGorutLaporanSummary(selectedMonth, selectedKecamatan)
-      } catch (error) {
-        toast({ variant: 'destructive', title: 'Rekap Dana belum diperbarui', description: error instanceof Error ? error.message : 'Gagal memproses Rekap Dana.' })
-      }
-    }
-
     const fileBase = `${reportId}-${selectedMonth}${selectedKecamatan === 'semua' ? '' : `-${selectedKecamatan}`}`.toLowerCase().replace(/\s+/g, '-')
 
     if (format === 'PDF') {
@@ -220,6 +212,25 @@ export default function LaporanPage() {
     toast({ variant: 'default', title: `Export ${format} siap`, description: `${config.title} berhasil diunduh dan bisa dibuka di Excel.` })
   }
 
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
+        <Loader2 className="size-8 animate-spin text-emerald-600" />
+        <p className="text-sm text-muted-foreground">Memuat laporan...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="Gagal memuat laporan"
+        description={error}
+      />
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageSectionHeader title={<h1 className="text-2xl font-bold tracking-tight">Laporan &amp; Export</h1>} description="Generate dan unduh laporan dalam berbagai format. Hanya transaksi FINAL_APPROVED yang masuk laporan." />
@@ -234,11 +245,11 @@ export default function LaporanPage() {
                   <SelectValue placeholder="Pilih Bulan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mei-2026">Mei 2026</SelectItem>
-                  <SelectItem value="apr-2026">April 2026</SelectItem>
-                  <SelectItem value="mar-2026">Maret 2026</SelectItem>
-                  <SelectItem value="feb-2026">Februari 2026</SelectItem>
-                  <SelectItem value="jan-2026">Januari 2026</SelectItem>
+                  <SelectItem value="2026-05">Mei 2026</SelectItem>
+                  <SelectItem value="2026-04">April 2026</SelectItem>
+                  <SelectItem value="2026-03">Maret 2026</SelectItem>
+                  <SelectItem value="2026-02">Februari 2026</SelectItem>
+                  <SelectItem value="2026-01">Januari 2026</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -251,7 +262,7 @@ export default function LaporanPage() {
                 <SelectContent>
                   <SelectItem value="semua">Semua Kecamatan</SelectItem>
                   {overview.availableKecamatan.map((kecamatan) => (
-                    <SelectItem key={kecamatan} value={kecamatan}>{kecamatan}</SelectItem>
+                    <SelectItem key={kecamatan.id} value={kecamatan.name}>{kecamatan.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

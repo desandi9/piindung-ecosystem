@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth, roleDisplayNames } from '@/lib/auth-context'
-import { loadAccountProfile } from '@/lib/gorut/account-profile'
+import { useGorutAccountProfile } from '@/lib/gorut/account-profile'
 import { useAssignedGorutKecamatan } from '@/lib/gorut/operational-scope'
 import { Users, Coins, MapPin, Clock, ArrowUpRight, ArrowDownRight, TrendingUp, ArrowRight, ShieldCheck } from 'lucide-react'
 import type { StatistikGorut } from '@/lib/gorut/types'
@@ -207,7 +207,7 @@ export function RevenueCard({ stats }: StatsCardsProps) {
   const { user } = useAuth()
   const { scopedRoleLabel } = useAssignedGorutKecamatan()
   const [isVisible, setIsVisible] = useState(false)
-  const [storedProfile, setStoredProfile] = useState(() => loadAccountProfile())
+  const { profile: storedProfile } = useGorutAccountProfile()
   const pointerGlowRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -215,9 +215,6 @@ export function RevenueCard({ stats }: StatsCardsProps) {
     return () => clearTimeout(timer)
   }, [])
 
-  useEffect(() => {
-    setStoredProfile(loadAccountProfile())
-  }, [])
 
   const dashboardAdminProfile = {
     name: user?.name ?? storedProfile.name,

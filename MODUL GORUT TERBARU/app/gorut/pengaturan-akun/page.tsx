@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,16 +9,12 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
 import { Upload } from 'lucide-react'
-import { defaultAccountProfile, loadAccountProfile, saveAccountProfile, type AccountProfileState } from '@/lib/gorut/account-profile'
+import { useGorutAccountProfile } from '@/lib/gorut/account-profile'
 
 export default function PengaturanAkunPage() {
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [profile, setProfile] = useState<AccountProfileState>(defaultAccountProfile)
-
-  useEffect(() => {
-    setProfile(loadAccountProfile())
-  }, [])
+  const { profile, setProfile, loading, error } = useGorutAccountProfile()
 
   const handleUploadAvatar = () => fileInputRef.current?.click()
 
@@ -42,14 +38,16 @@ export default function PengaturanAkunPage() {
   }
 
   const handleSave = () => {
-    saveAccountProfile(profile)
-    toast({ variant: 'default', title: 'Pengaturan akun tersimpan', description: 'Perubahan profil dan preferensi keamanan diperbarui di state lokal.' })
+    toast({ variant: 'destructive', title: 'Pengaturan akun read-only', description: 'Perubahan profil dinonaktifkan: profil bersumber dari akun autentikasi.' })
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     handleSave()
   }
+
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">Memuat pengaturan akun...</div>
+  if (error) return <div className="p-6 text-sm text-destructive">{error}</div>
 
   return (
     <div className="space-y-6">

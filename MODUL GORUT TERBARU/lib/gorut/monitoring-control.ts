@@ -7,7 +7,7 @@ export type MonitoringStatusDistribution = {
   state: string
   label: string
   count: number
-  amount: number
+  amount: string
 }
 
 export type MonitoringProgressItem = {
@@ -17,19 +17,19 @@ export type MonitoringProgressItem = {
   kecamatan?: string
   ranting?: string
   munfiqCount: number
-  finalApprovedAmount: number
-  finalApprovedCount: number
-  pendingCount: number
-  returnedRejectedCount: number
-  targetBulanan?: number
-  progress: number
+  finalApprovedAmount: string | null
+  finalApprovedCount: number | null
+  pendingCount: number | null
+  returnedRejectedCount: number | null
+  targetBulanan?: string | null
+  progress: number | null
 }
 
 export type MonitoringReturnedRejectedTransaction = {
   id: string
   transactionCode: string
   currentState: string
-  totalAmount: number
+  totalAmount: string
   transactionDate: string
   kecamatan: string
   ranting: string
@@ -37,20 +37,20 @@ export type MonitoringReturnedRejectedTransaction = {
 }
 
 export type GorutMonitoringSnapshot = {
-  metrics: MonitoringMetric[]
-  api: { responseTime: number; uptime: number; errorRate: number }
-  database: { connectionPool: string; queryTime: number; replicationLag: number }
-  gateway: { status: 'online' | 'warning' | 'offline'; messagesSent24h: number; failedMessages: number; lastSyncMinutes: number }
-  recentEvents: MonitoringEvent[]
+  metrics: MonitoringMetric[] | null
+  api: { responseTime: number; uptime: number; errorRate: number } | null
+  database: { connectionPool: string; queryTime: number; replicationLag: number } | null
+  gateway: { status: 'online' | 'warning' | 'offline'; messagesSent24h: number; failedMessages: number; lastSyncMinutes: number } | null
+  recentEvents: MonitoringEvent[] | null
   statusDistribution: MonitoringStatusDistribution[]
   pendingByStage: Array<{ state: string; label: string; count: number }>
-  plpkPerformance: MonitoringProgressItem[]
-  upzisProgress: MonitoringProgressItem[]
-  rantingProgress: MonitoringProgressItem[]
+  plpkPerformance: MonitoringProgressItem[] | null
+  upzisProgress: MonitoringProgressItem[] | null
+  rantingProgress: MonitoringProgressItem[] | null
   finalApprovedTotals: {
-    totalAmount: number
+    totalAmount: string
     transactionCount: number
-    currentMonthAmount: number
+    currentMonthAmount: string
     currentMonthTransactionCount: number
   }
   returnedRejectedTransactions: MonitoringReturnedRejectedTransaction[]
@@ -58,17 +58,17 @@ export type GorutMonitoringSnapshot = {
 }
 
 const emptySnapshot: GorutMonitoringSnapshot = {
-  metrics: [],
-  api: { responseTime: 0, uptime: 0, errorRate: 0 },
-  database: { connectionPool: '0/50', queryTime: 0, replicationLag: 0 },
-  gateway: { status: 'warning', messagesSent24h: 0, failedMessages: 0, lastSyncMinutes: 0 },
-  recentEvents: [],
+  metrics: null,
+  api: null,
+  database: null,
+  gateway: null,
+  recentEvents: null,
   statusDistribution: [],
   pendingByStage: [],
-  plpkPerformance: [],
-  upzisProgress: [],
-  rantingProgress: [],
-  finalApprovedTotals: { totalAmount: 0, transactionCount: 0, currentMonthAmount: 0, currentMonthTransactionCount: 0 },
+  plpkPerformance: null,
+  upzisProgress: null,
+  rantingProgress: null,
+  finalApprovedTotals: { totalAmount: '0', transactionCount: 0, currentMonthAmount: '0', currentMonthTransactionCount: 0 },
   returnedRejectedTransactions: [],
   scope: { role: 'plpk' },
 }
@@ -87,8 +87,8 @@ async function readError(response: Response, fallback: string) {
   return new Error(body?.error ?? fallback)
 }
 
-export async function fetchGorutMonitoringSnapshot() {
-  const response = await fetch('/api/gorut/monitoring', { cache: 'no-store' })
+export async function fetchGorutMonitoringSnapshot(signal?: AbortSignal) {
+  const response = await fetch('/api/gorut/monitoring', { cache: 'no-store', signal })
   if (!response.ok) throw await readError(response, 'Gagal membaca monitoring GORUT.')
 
   monitoringCache = await response.json() as GorutMonitoringSnapshot
@@ -98,24 +98,28 @@ export async function fetchGorutMonitoringSnapshot() {
 
 export function useGorutMonitoringSnapshot() {
   const [snapshot, setSnapshot] = useState<GorutMonitoringSnapshot>(monitoringCache)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
+    const controller = new AbortController()
 
     const sync = () => {
       if (!cancelled) setSnapshot(monitoringCache)
     }
 
     window.addEventListener(GORUT_MONITORING_EVENT, sync)
-    void fetchGorutMonitoringSnapshot().catch(() => {
-      if (!cancelled) setSnapshot(monitoringCache)
-    })
+    void fetchGorutMonitoringSnapshot(controller.signal).catch((cause) => {
+      if ((cause as Error).name !== 'AbortError' && !cancelled) setError(cause instanceof Error ? cause.message : 'Gagal membaca monitoring.')
+    }).finally(() => { if (!cancelled) setLoading(false) })
 
     return () => {
       cancelled = true
+      controller.abort()
       window.removeEventListener(GORUT_MONITORING_EVENT, sync)
     }
   }, [])
 
-  return snapshot
+  return { snapshot, loading, error }
 }

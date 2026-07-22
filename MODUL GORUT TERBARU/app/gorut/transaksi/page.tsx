@@ -50,6 +50,7 @@ function PlpkTransaksiPage() {
   const [payload, setPayload] = useState<PlpkDashboardPayload | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [selectedMunfiqId, setSelectedMunfiqId] = useState('')
   const [amount, setAmount] = useState('')
   const [transactionDate, setTransactionDate] = useState(() => new Date().toISOString().slice(0, 10))
@@ -57,22 +58,28 @@ function PlpkTransaksiPage() {
   const [notes, setNotes] = useState('')
   const [confirmSubmit, setConfirmSubmit] = useState<{ type: 'new' } | { type: 'draft'; transaction: PlpkDashboardTransaction } | null>(null)
 
-  const loadPayload = useCallback(async () => {
+  const loadPayload = useCallback(async (signal?: AbortSignal) => {
     setIsLoading(true)
+    setError(null)
     try {
-      const response = await fetch('/api/gorut/plpk-dashboard', { cache: 'no-store' })
+      const response = await fetch('/api/gorut/plpk-dashboard', { cache: 'no-store', signal })
       const body = await response.json().catch(() => null)
       if (!response.ok) throw new Error(body?.error ?? 'Gagal membaca data PLPK.')
       setPayload(normalizePlpkDashboardRows(body as PlpkDashboardPayload))
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Data gagal dimuat', description: error instanceof Error ? error.message : 'Gagal membaca data PLPK.' })
+     } catch (error) {
+       if ((error as Error).name !== 'AbortError') {
+         setError(error instanceof Error ? error.message : 'Gagal membaca data PLPK.')
+         toast({ variant: 'destructive', title: 'Data gagal dimuat', description: error instanceof Error ? error.message : 'Gagal membaca data PLPK.' })
+       }
     } finally {
-      setIsLoading(false)
+      if (!signal?.aborted) setIsLoading(false)
     }
   }, [toast])
 
   useEffect(() => {
-    void loadPayload()
+    const controller = new AbortController()
+    void loadPayload(controller.signal)
+    return () => controller.abort()
   }, [loadPayload])
 
   const munfiqRows = payload?.munfiq ?? []
@@ -102,70 +109,12 @@ function PlpkTransaksiPage() {
     setConfirmSubmit(null)
   }
 
-  const handleSave = async (submit: boolean) => {
-    if (!selectedMunfiqId) {
-      toast({ variant: 'destructive', title: 'Munfiq belum dipilih', description: 'Pilih Munfiq yang akan disetorkan.' })
-      return
-    }
-
-    if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
-      toast({ variant: 'destructive', title: 'Nominal belum valid', description: 'Isi nominal setoran lebih dari 0.' })
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      const response = await fetch('/api/gorut/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionDate,
-          sourceChannel,
-          notes: notes.trim() || null,
-          submit,
-          items: [{
-            gorutMunfiqId: selectedMunfiqId,
-            amount: totalAmount,
-            periodLabel: formatPeriodLabel(transactionDate),
-            notes: notes.trim() || null,
-          }],
-        }),
-      })
-      const body = await response.json().catch(() => null)
-      if (!response.ok) throw new Error(body?.error ?? 'Gagal menyimpan setoran.')
-
-      toast({
-        title: submit ? 'Setoran dikirim' : 'Draft tersimpan',
-        description: submit ? 'Setoran masuk ke verifikasi Ranting.' : 'Draft setoran tersimpan dan dapat disubmit dari riwayat.',
-      })
-      setSelectedMunfiqId('')
-      setAmount('')
-      setNotes('')
-      await loadPayload()
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Setoran gagal disimpan', description: error instanceof Error ? error.message : 'Gagal menyimpan setoran.' })
-    } finally {
-      setIsSaving(false)
-    }
+  const handleSave = async (_submit: boolean) => {
+    toast({ variant: 'destructive', title: 'Aksi dinonaktifkan', description: 'Fitur input setoran dinonaktifkan pada batch ini.' })
   }
 
-  const handleSubmitDraft = async (transaction: PlpkDashboardTransaction) => {
-    setIsSaving(true)
-    try {
-      const response = await fetch('/api/gorut/transactions', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: transaction.id, action: 'submit', notes: 'Submit setoran dari web fallback PLPK.' }),
-      })
-      const body = await response.json().catch(() => null)
-      if (!response.ok) throw new Error(body?.error ?? 'Gagal submit draft.')
-      toast({ title: 'Draft disubmit', description: 'Setoran menunggu verifikasi sesuai alur operasional.' })
-      await loadPayload()
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Submit gagal', description: error instanceof Error ? error.message : 'Gagal submit draft.' })
-    } finally {
-      setIsSaving(false)
-    }
+  const handleSubmitDraft = async (_transaction: PlpkDashboardTransaction) => {
+    toast({ variant: 'destructive', title: 'Aksi dinonaktifkan', description: 'Fitur submit draft dinonaktifkan pada batch ini.' })
   }
 
   if (isLoading) {
@@ -188,6 +137,10 @@ function PlpkTransaksiPage() {
         </div>
       </div>
     )
+  }
+
+  if (error) {
+    return <EmptyState icon={FileClock} title="Gagal memuat transaksi" description={error} />
   }
 
   return (

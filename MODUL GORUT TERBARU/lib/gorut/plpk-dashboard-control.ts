@@ -7,7 +7,7 @@ export type PlpkDashboardTransaction = {
   transactionCode: string
   transactionDate: string
   currentState: string
-  totalAmount: number
+  totalAmount: string
   submittedAt?: string | null
   finalApprovedAt?: string | null
 }
@@ -28,10 +28,7 @@ export function normalizePlpkDashboardRows(payload: PlpkDashboardPayload): PlpkD
   return {
     ...payload,
     munfiq: payload.munfiq.map((item) => ({ ...item })),
-    transactions: payload.transactions.map((item) => ({
-      ...item,
-      totalAmount: Number(item.totalAmount),
-    })),
+    transactions: payload.transactions.map((item) => ({ ...item })),
   }
 }
 
@@ -50,7 +47,7 @@ export type PlpkDashboardPayload = {
   }
   summary: {
     totalMunfiq: number
-    setoranBulanIni: number
+    setoranBulanIni: string
     transaksiPending: number
     transaksiSelesai: number
   }

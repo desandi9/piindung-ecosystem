@@ -8,16 +8,16 @@ export type GorutReportGroup = {
   name: string
   kecamatan?: string
   ranting?: string
-  totalAmount: number
+  totalAmount: string
   transactionCount: number
-  munfiqCount: number
+  munfiqCount: number | null
 }
 
 export type GorutReportTransaction = {
   id: string
   transactionCode: string
   transactionDate: string
-  totalAmount: number
+  totalAmount: string
   upzis: string
   kecamatan: string
   ranting: string
@@ -28,7 +28,7 @@ export type GorutReportTransaction = {
 export type GorutRekapDanaItem = {
   id: string
   scopeLevel: string
-  totalAmount: number
+  totalAmount: string
   transactionCount: number
   periodStart: string
   periodEnd: string
@@ -39,11 +39,11 @@ export type GorutRekapDanaItem = {
 export type GorutLaporanSummary = {
   period: { month: string; label: string; start: string; end: string }
   headline: {
-    totalPenghimpunan: number
+    totalPenghimpunan: string
     totalTransaksiSelesai: number
     totalMunfiqBerkontribusi: number
   }
-  availableKecamatan: string[]
+  availableKecamatan: Array<{ id: string; name: string }>
   perUpzis: GorutReportGroup[]
   perRanting: GorutReportGroup[]
   perPlpk: GorutReportGroup[]
@@ -54,7 +54,7 @@ export type GorutLaporanSummary = {
 
 const emptySummary: GorutLaporanSummary = {
   period: { month: 'mei-2026', label: 'Mei 2026', start: '', end: '' },
-  headline: { totalPenghimpunan: 0, totalTransaksiSelesai: 0, totalMunfiqBerkontribusi: 0 },
+  headline: { totalPenghimpunan: '0', totalTransaksiSelesai: 0, totalMunfiqBerkontribusi: 0 },
   availableKecamatan: [],
   perUpzis: [],
   perRanting: [],
@@ -78,9 +78,10 @@ async function readError(response: Response, fallback: string) {
   return new Error(body?.error ?? fallback)
 }
 
-export async function fetchGorutLaporanSummary(month: string, kecamatan: string) {
-  const params = new URLSearchParams({ month, kecamatan })
-  const response = await fetch(`/api/gorut/reports?${params.toString()}`, { cache: 'no-store' })
+export async function fetchGorutLaporanSummary(month: string, kecamatan: string, signal?: AbortSignal) {
+  const params = new URLSearchParams({ month })
+  if (kecamatan !== 'semua') params.set('kecamatan', kecamatan)
+  const response = await fetch(`/api/gorut/reports?${params.toString()}`, { cache: 'no-store', signal })
   if (!response.ok) throw await readError(response, 'Gagal membaca laporan GORUT.')
 
   laporanCache = await response.json() as GorutLaporanSummary
@@ -90,42 +91,31 @@ export async function fetchGorutLaporanSummary(month: string, kecamatan: string)
 
 export function useGorutLaporanSummary(month: string, kecamatan: string) {
   const [summary, setSummary] = useState<GorutLaporanSummary>(laporanCache)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
+    const controller = new AbortController()
 
     const sync = () => {
       if (!cancelled) setSummary(laporanCache)
     }
 
     window.addEventListener(GORUT_LAPORAN_EVENT, sync)
-    void fetchGorutLaporanSummary(month, kecamatan).catch(() => {
-      if (!cancelled) setSummary(laporanCache)
-    })
+    void fetchGorutLaporanSummary(month, kecamatan, controller.signal).catch((cause) => {
+      if ((cause as Error).name !== 'AbortError' && !cancelled) setError(cause instanceof Error ? cause.message : 'Gagal membaca laporan.')
+    }).finally(() => { if (!cancelled) setLoading(false) })
 
     return () => {
       cancelled = true
+      controller.abort()
       window.removeEventListener(GORUT_LAPORAN_EVENT, sync)
     }
   }, [kecamatan, month])
 
-  return summary
+  return { summary, loading, error }
 }
 
-export async function generateGorutRekapDana(month: string) {
-  const response = await fetch('/api/gorut/reports', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'generate', month }),
-  })
-  if (!response.ok) throw await readError(response, 'Gagal generate Rekap Dana GORUT.')
-}
-
-export async function refreshGorutRekapDana(rekapDanaId: string) {
-  const response = await fetch('/api/gorut/reports', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'refresh', rekapDanaId }),
-  })
-  if (!response.ok) throw await readError(response, 'Gagal refresh Rekap Dana GORUT.')
-}
+export async function generateGorutRekapDana(_: string) { throw new Error('Generate Rekap Dana dinonaktifkan: laporan bersifat read-only pada batch ini.') }
+export async function refreshGorutRekapDana(_: string) { throw new Error('Refresh Rekap Dana dinonaktifkan: laporan bersifat read-only pada batch ini.') }

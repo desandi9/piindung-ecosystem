@@ -27,6 +27,7 @@ import {
   ReceiptText,
   ShieldAlert,
   WalletCards,
+  Loader2,
 } from 'lucide-react'
 import {
   EmptyState,
@@ -38,7 +39,7 @@ import {
 export function DashboardHome() {
   const { user } = useAuth()
   const { assignedKecamatan, isScopedUpzis } = useAssignedGorutKecamatan()
-  const dashboard = useGorutDashboard()
+  const { dashboard, loading, error } = useGorutDashboard()
   const [pinnedInsightIds, setPinnedInsightIds] = useState<string[]>([])
   const [dismissedCriticalInsight, setDismissedCriticalInsight] = useState(false)
   const [showIntro, setShowIntro] = useState(false)
@@ -134,6 +135,25 @@ export function DashboardHome() {
       showIntro ? 'translate-y-5 opacity-0 blur-[8px]' : 'translate-y-0 opacity-100 blur-0',
       'duration-[720ms]'
     )
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
+        <Loader2 className="size-8 animate-spin text-emerald-600" />
+        <p className="text-sm text-muted-foreground">Memuat dashboard...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        icon={ShieldAlert}
+        title="Gagal memuat dashboard"
+        description={error}
+      />
+    )
+  }
 
   return (
     <div className="min-w-0 space-y-10" role="main" aria-label="Dashboard GORUT">

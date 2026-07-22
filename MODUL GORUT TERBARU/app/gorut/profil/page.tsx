@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,18 +11,14 @@ import { Mail, Phone, ShieldCheck, Upload, UserCircle2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth, roleDisplayNames } from '@/lib/auth-context'
 import { useAssignedGorutKecamatan } from '@/lib/gorut/operational-scope'
-import { defaultAccountProfile, loadAccountProfile, saveAccountProfile, type AccountProfileState } from '@/lib/gorut/account-profile'
+import { useGorutAccountProfile } from '@/lib/gorut/account-profile'
 
 export default function ProfilPage() {
   const { toast } = useToast()
   const { user } = useAuth()
   const { scopedRoleLabel } = useAssignedGorutKecamatan()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [profile, setProfile] = useState<AccountProfileState>(defaultAccountProfile)
-
-  useEffect(() => {
-    setProfile(loadAccountProfile())
-  }, [])
+  const { profile, setProfile, loading, error } = useGorutAccountProfile()
 
   const handleUploadAvatar = () => fileInputRef.current?.click()
 
@@ -47,14 +43,16 @@ export default function ProfilPage() {
   }
 
   const handleSave = () => {
-    saveAccountProfile(profile)
-    toast({ variant: 'default', title: 'Profil tersimpan', description: 'Perubahan profil berhasil diperbarui di state lokal.' })
+    toast({ variant: 'destructive', title: 'Profil read-only', description: 'Perubahan profil dinonaktifkan: profil bersumber dari akun autentikasi.' })
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     handleSave()
   }
+
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">Memuat profil...</div>
+  if (error) return <div className="p-6 text-sm text-destructive">{error}</div>
 
   return (
     <div className="space-y-6">
