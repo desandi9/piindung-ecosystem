@@ -14,4 +14,3 @@ void test("validateMutationRequest", () => {
 void test("readJsonMutation", async () => {
   assert.equal((await readJsonMutation(request({ "content-type": "application/json" }, "{"))).failure?.status, 400)
 })
-
