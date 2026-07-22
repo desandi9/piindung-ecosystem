@@ -19,12 +19,30 @@ export type MonitoringMetric = {
   status: 'online' | 'warning' | 'offline'
 }
 
+export type MonitoringEventType = 'success' | 'warning' | 'error' | 'info'
+
 export type MonitoringEvent = {
   id: string
-  type: 'success' | 'warning' | 'error' | 'info'
+  type: MonitoringEventType
   message: string
   detail: string
   timestamp: string
+}
+
+export type SetoranKoinExportFormat = 'excel'
+
+export const SETORAN_KOIN_EXPORT_FORMATS: readonly SetoranKoinExportFormat[] = ['excel']
+
+export function getActivityMonitoringEventType(action: string): MonitoringEventType {
+  if (action === 'login' || action === 'validasi') return 'success'
+  if (action === 'settings') return 'info'
+  return 'warning'
+}
+
+export function getNotificationMonitoringEventType(priority: string): MonitoringEventType {
+  if (priority === 'critical') return 'error'
+  if (priority === 'warning') return 'warning'
+  return 'info'
 }
 
 export function getMonitoringSnapshot() {
@@ -75,14 +93,14 @@ export function getMonitoringSnapshot() {
   const recentEvents: MonitoringEvent[] = [
     ...activityLogData.slice(0, 4).map((item) => ({
       id: `activity-${item.id}`,
-      type: item.action === 'login' || item.action === 'validasi' ? 'success' : item.action === 'settings' ? 'info' : 'warning',
+      type: getActivityMonitoringEventType(item.action),
       message: `${item.userName} melakukan ${item.action}`,
       detail: item.detail,
       timestamp: item.timestamp,
     })),
     ...notificationData.slice(0, 4).map((item) => ({
       id: `notif-${item.id}`,
-      type: item.priority === 'critical' ? 'error' : item.priority === 'warning' ? 'warning' : 'info',
+      type: getNotificationMonitoringEventType(item.priority),
       message: item.title,
       detail: item.message,
       timestamp: item.timestamp,
