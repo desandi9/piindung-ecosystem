@@ -5,9 +5,13 @@ import type { SetoranKoin } from '@/lib/gorut/types'
 
 export type MetodePembayaran = 'scan' | 'manual'
 export type RiwayatStatus = 'pending' | 'valid' | 'invalid' | 'setoran'
+export type ValidasiWorkflowStage = 'ranting' | 'upzis' | 'pc'
+export type ValidasiWorkflowAction = 'approve' | 'return' | 'reject' | 'final_close'
 
 export type ValidasiRow = {
   id: string
+  transactionCode?: string
+  workflowStage?: ValidasiWorkflowStage
   munfiqNama: string
   kecamatan: string
   plpk: string
@@ -102,10 +106,67 @@ const validasiClient = createCollectionClient<ValidasiRow>({
   sort: (items) => [...items].sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime()),
 })
 
-export function useGorutValidasiRows() {
-  return validasiClient.useItems()
+const stageConfig: Record<ValidasiWorkflowStage, { label: string }> = {
+  ranting: { label: 'Ranting' },
+  upzis: { label: 'UPZIS' },
+  pc: { label: 'PC' },
+}
+
+export function isValidasiWorkflowStage(value: string): value is ValidasiWorkflowStage {
+  return value === 'ranting' || value === 'upzis' || value === 'pc'
+}
+
+export function isValidasiWorkflowAction(value: string): value is ValidasiWorkflowAction {
+  return value === 'approve' || value === 'return' || value === 'reject' || value === 'final_close'
+}
+
+export function getGorutVerificationPolicyError(row: Pick<ValidasiRow, 'validasi' | 'workflowStage'> | undefined, input: {
+  action: string
+  stage: string
+}) {
+  if (!isValidasiWorkflowStage(input.stage)) return 'Tahap validasi tidak valid.'
+  if (!isValidasiWorkflowAction(input.action)) return 'Aksi validasi tidak valid.'
+  if (!row) return 'Data validasi tidak ditemukan.'
+  if (row.workflowStage && row.workflowStage !== input.stage) return 'Data bukan bagian dari tahap validasi ini.'
+  if (row.validasi !== 'pending') return 'Data validasi sudah diproses.'
+  if (input.action === 'final_close' && input.stage !== 'pc') return 'Final close hanya tersedia pada tahap PC.'
+  if (input.action === 'approve' && input.stage === 'pc') return 'Tahap PC harus menggunakan final close.'
+  return undefined
+}
+
+export function useGorutValidasiRows(stage: ValidasiWorkflowStage = 'ranting') {
+  const rows = validasiClient.useItems()
+  return rows.filter((row) => !row.workflowStage || row.workflowStage === stage)
 }
 
 export async function writeGorutValidasiRows(items: ValidasiRow[]) {
   return validasiClient.writeItems(items)
+}
+
+export async function processGorutVerification(input: {
+  id: string
+  action: ValidasiWorkflowAction
+  stage: ValidasiWorkflowStage
+  notes?: string
+}) {
+  const current = validasiClient.readItemsSync()
+  const row = current.find((item) => item.id === input.id)
+  const policyError = getGorutVerificationPolicyError(row, input)
+  if (policyError) throw new Error(policyError)
+  if (!row) throw new Error('Data validasi tidak ditemukan.')
+
+  const now = new Date().toISOString()
+  const nextStatus = input.action === 'return' || input.action === 'reject' ? 'invalid' : 'valid'
+  const label = input.action === 'return' ? 'Validasi dikembalikan' : input.action === 'reject' ? 'Validasi ditolak' : input.action === 'final_close' ? 'Validasi ditutup final' : 'Validasi disetujui'
+  const nextRow: ValidasiRow = {
+    ...row,
+    validasi: nextStatus,
+    workflowStage: input.stage,
+    validator: stageConfig[input.stage].label,
+    catatanAdmin: input.notes,
+    notes: input.notes,
+    riwayat: [...row.riwayat, { id: `${row.id}-${now}`, tanggal: now, aksi: label, oleh: `Admin ${stageConfig[input.stage].label}`, status: nextStatus }],
+    riwayatAdminTimeline: [...row.riwayatAdminTimeline, { id: `${row.id}-${now}-timeline`, tanggal: now, label, status: nextStatus }],
+  }
+  return validasiClient.writeItems(current.map((item) => item.id === row.id ? nextRow : item))
 }

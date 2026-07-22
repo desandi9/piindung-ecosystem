@@ -32,7 +32,7 @@ import { formatRupiah } from '@/lib/gorut/data'
 import { exportReportToPdf, exportRowsToSpreadsheet } from '@/lib/gorut/export'
 import { gocapPeriods } from '@/lib/gorut/penghimpunan-dummy'
 import { useGorutMunfiqPlpkRows } from '@/lib/gorut/penghimpunan-control'
-import type { PlpkDashboardPayload, PlpkDashboardTransaction } from '@/lib/gorut/plpk-dashboard-control'
+import { isPlpkOperationalRole, normalizePlpkDashboardRows, type PlpkDashboardPayload, type PlpkDashboardTransaction } from '@/lib/gorut/plpk-dashboard-control'
 import { getGorutTransactionStateClassName, getGorutTransactionStateLabel } from '@/lib/gorut/workflow-status'
 
 function formatDate(value: string) {
@@ -63,7 +63,7 @@ function PlpkTransaksiPage() {
       const response = await fetch('/api/gorut/plpk-dashboard', { cache: 'no-store' })
       const body = await response.json().catch(() => null)
       if (!response.ok) throw new Error(body?.error ?? 'Gagal membaca data PLPK.')
-      setPayload(body as PlpkDashboardPayload)
+      setPayload(normalizePlpkDashboardRows(body as PlpkDashboardPayload))
     } catch (error) {
       toast({ variant: 'destructive', title: 'Data gagal dimuat', description: error instanceof Error ? error.message : 'Gagal membaca data PLPK.' })
     } finally {
@@ -527,7 +527,14 @@ function OperationalTransaksiPage() {
 export default function TransaksiPage() {
   const { user, isLoading } = useAuth()
 
-  if (!isLoading && user?.role === 'plpk') {
+  const resolvedUserRole =
+    isPlpkOperationalRole(user?.role)
+      ? 'plpk'
+      : (user?.role === 'admin_kordes' || user?.role === 'admin_upzis')
+      ? 'operational'
+      : user?.role
+
+  if (!isLoading && resolvedUserRole === 'plpk') {
     return <PlpkTransaksiPage />
   }
 

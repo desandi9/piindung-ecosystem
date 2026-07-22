@@ -29,10 +29,11 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { formatRupiah, formatDateShort } from '@/lib/gorut/data'
-import { exportReportToPdf, exportRowsToSpreadsheet } from '@/lib/gorut/export'
+import { SETORAN_KOIN_EXPORT_FORMATS, type SetoranKoinExportFormat } from '@/lib/gorut/analytics'
+import { exportRowsToSpreadsheet } from '@/lib/gorut/export'
 import { useGorutMunfiqItems } from '@/lib/gorut/munfiq-control'
 import type { SetoranKoin } from '@/lib/gorut/types'
-import { CheckCircle2, Download, FileSpreadsheet, FileText, Printer, Search, XCircle, X, Clock, Coins, MapPin, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, Download, FileSpreadsheet, Printer, Search, XCircle, X, Clock, Coins, MapPin, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { EmptyState, MetricCard, PageSectionHeader } from '@/components/ui/ds-patterns'
@@ -326,30 +327,9 @@ export default function SetoranKoinPage() {
     })
   }
 
-  // ---------- Export mock ----------
-  const exportData = (ids?: string[], format?: 'pdf' | 'excel') => {
+  const exportData = (format: SetoranKoinExportFormat, ids?: string[]) => {
     const count = ids?.length ?? filteredRows.length
     const exportRows = rows.filter((row) => !ids || ids.includes(row.id))
-
-    if (format === 'pdf') {
-      exportReportToPdf({
-        title: 'Laporan Penghimpunan GORUT',
-        subtitle: `${count} data penghimpunan ${ids?.length ? 'terpilih' : 'sesuai filter'}`,
-        summary: [
-          { label: 'Jumlah Penghimpunan', value: String(count) },
-          { label: 'Total Nominal', value: formatRupiah(exportRows.reduce((acc, row) => acc + row.nominal, 0)) },
-          { label: 'Pending', value: String(exportRows.filter((row) => row.validasi === 'pending').length) },
-          { label: 'Valid', value: String(exportRows.filter((row) => row.validasi === 'valid').length) },
-        ],
-        tables: [{
-          title: 'Daftar Penghimpunan',
-          columns: ['ID', 'Kode Munfiq', 'Munfiq', 'Kecamatan', 'PLPK', 'Tanggal', 'Nominal', 'Metode', 'Status', 'Validator'],
-          rows: exportRows.map((row) => [row.id, munfiqCodeByName.get(`${row.munfiqNama}:${row.kecamatan}`) ?? '-', row.munfiqNama, row.kecamatan, row.plpk, formatDateShort(row.tanggal), formatRupiah(row.nominal), toMetodeLabel(row.metode), row.validasi, row.validator ?? '-']),
-        }],
-        notes: ['Gunakan Print to PDF pada dialog browser untuk menyimpan file.'],
-      })
-      return
-    }
 
     if (format === 'excel') {
       exportRowsToSpreadsheet({
@@ -376,8 +356,8 @@ export default function SetoranKoinPage() {
 
     toast({
       variant: 'default',
-      title: `Export ${format === 'pdf' ? 'PDF' : 'Excel'} siap`,
-      description: `${format === 'pdf' ? 'Laporan siap dicetak' : 'File Excel berhasil dibuat'} untuk ${count} data penghimpunan.`,
+      title: 'Export Excel siap',
+      description: `File Excel berhasil dibuat untuk ${count} data penghimpunan.`,
     })
   }
 
@@ -458,7 +438,7 @@ export default function SetoranKoinPage() {
             variant="ghost"
             onClick={(e) => {
               e.stopPropagation()
-              exportData([r.id], 'excel')
+              exportData('excel', [r.id])
             }}
             aria-label="Cetak"
             title="Export Excel"
@@ -635,14 +615,12 @@ export default function SetoranKoinPage() {
                 <Button variant="outline" size="sm" className="min-h-[44px]" onClick={resetFilters}>
                   Reset
                 </Button>
-                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => exportData(undefined, 'pdf')}>
-                  <FileText className="mr-2 size-4" />
-                  PDF
-                </Button>
-                <Button variant="outline" size="sm" className="min-h-[44px]" onClick={() => exportData(undefined, 'excel')}>
-                  <FileSpreadsheet className="mr-2 size-4" />
-                  Excel
-                </Button>
+                {SETORAN_KOIN_EXPORT_FORMATS.map((format) => (
+                  <Button key={format} variant="outline" size="sm" className="min-h-[44px]" onClick={() => exportData(format)}>
+                    <FileSpreadsheet className="mr-2 size-4" />
+                    Excel
+                  </Button>
+                ))}
               </div>
               <p className="hidden text-xs text-muted-foreground lg:block">Pilih baris tabel untuk bulk action.</p>
             </div>
@@ -676,7 +654,7 @@ export default function SetoranKoinPage() {
                 icon: Download,
                 variant: 'secondary',
                 show: (count) => count > 0,
-                onClick: (selectedIds) => exportData(selectedIds, 'excel'),
+                onClick: (selectedIds) => exportData('excel', selectedIds),
               },
             ]}
             onRowClick={(rowId) => {
@@ -790,10 +768,10 @@ export default function SetoranKoinPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => exportData([selectedRow.id], 'pdf')}
+                          onClick={() => exportData('excel', [selectedRow.id])}
                         >
-                           <FileText className="size-4 mr-2" />
-                           Cetak PDF
+                           <FileSpreadsheet className="size-4 mr-2" />
+                           Export Excel
                          </Button>
                       </div>
                     </div>

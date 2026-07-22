@@ -44,6 +44,7 @@ interface EnhancedTableProps {
   emptyMessage?: string
   emptyTitle?: string
   emptyDescription?: string
+  emptyAction?: ReactNode
 }
 
 export function EnhancedTable({
@@ -56,6 +57,7 @@ export function EnhancedTable({
   emptyMessage,
   emptyTitle = 'No data available',
   emptyDescription = 'Try adjusting your filters',
+  emptyAction,
 }: EnhancedTableProps) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [sortColumn, setSortColumn] = useState<string | null>(null)
@@ -99,6 +101,7 @@ export function EnhancedTable({
           <AlertCircle className="mb-3 size-10 text-muted-foreground/50" />
           <p className="font-medium text-foreground">{emptyTitle || emptyMessage}</p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground sm:text-xs">{emptyDescription}</p>
+          {emptyAction && <div className="mt-4">{emptyAction}</div>}
         </div>
       </div>
     )
