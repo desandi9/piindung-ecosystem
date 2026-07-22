@@ -7,6 +7,7 @@ import { randomUUID } from "crypto"
 import type { NextRequest } from "next/server"
 import { verificationUrl } from "@/lib/member-identity"
 import { validatePasswordInput, type ProfilePatch } from "./account-profile"
+import { createSystemNotification } from "./portal-notifications-server"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
@@ -78,14 +79,8 @@ export async function updateCurrentAccount(actorId: string, patch: ProfilePatch)
         ["avatar", "self_profile_avatar_changed"],
       ] as const) {
         if (before[field] !== after[field]) {
-          await writeAudit(
-            tx,
-            actorId,
-            action,
-            field,
-            field === "avatar" ? Boolean(before[field]) : before[field],
-            field === "avatar" ? Boolean(after[field]) : after[field],
-          )
+          await writeAudit(tx, actorId, action, field, field === "avatar" ? Boolean(before[field]) : before[field], field === "avatar" ? Boolean(after[field]) : after[field])
+          if (field === "email") await createSystemNotification(tx, { title: "Informasi akun diperbarui", body: "Alamat email akun Anda telah diperbarui.", category: "security", severity: "info", targetUserId: actorId, actionPath: "/profil" })
         }
       }
       return after
@@ -114,6 +109,7 @@ export async function changeCurrentPassword(actorId: string, currentPassword: st
       data: { passwordHash },
     })
     await writeAudit(tx, actorId, "self_password_changed")
+    await createSystemNotification(tx, { title: "Password diperbarui", body: "Password akun Anda telah diperbarui.", category: "security", severity: "success", targetUserId: actorId, actionPath: "/profil" })
   })
 }
 

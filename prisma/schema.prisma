@@ -20,6 +20,50 @@ model User {
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  createdNotifications PortalNotification[] @relation("PortalNotificationCreator")
+  targetedNotifications PortalNotification[] @relation("PortalNotificationTarget")
+  notificationReceipts PortalNotificationReceipt[]
+}
+
+model PortalNotification {
+  id           String   @id @default(cuid())
+  title        String
+  body         String
+  category     String
+  severity     String
+  audience     String
+  actionPath   String?
+  creatorId    String?
+  targetUserId String?
+  targetRole   String?
+  expiresAt    DateTime?
+  publishedAt  DateTime?
+  withdrawnAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  creator      User?    @relation("PortalNotificationCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  targetUser   User?    @relation("PortalNotificationTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  receipts     PortalNotificationReceipt[]
+
+  @@index([publishedAt, withdrawnAt])
+  @@index([audience, publishedAt])
+  @@index([createdAt])
+  @@index([targetUserId])
+  @@index([targetRole])
+  @@index([expiresAt])
+  @@index([creatorId])
+}
+
+model PortalNotificationReceipt {
+  notificationId String
+  userId         String
+  readAt         DateTime?
+  notification   PortalNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@id([notificationId, userId])
+  @@index([notificationId])
+  @@index([userId])
 }
 
 model AppRecord {

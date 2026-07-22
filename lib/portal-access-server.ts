@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import { getPrismaClient } from "@/lib/prisma"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 import { roleHasPortalPermission, registeredModules, isRegisteredModuleKey, type PortalPermission, type RegisteredModuleKey } from "@/lib/portal-access"
+import { createSystemNotification } from "@/lib/portal-notifications-server"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 const GRANTS_SCOPE = "portal-module-grants"
@@ -11,7 +12,7 @@ const AUDIT_SCOPE = "portal-access-audit"
 
 type CurrentUser = { id: string; name: string; role: string; status: string }
 type Grant = { userId: string; moduleKey: RegisteredModuleKey; enabled: boolean; updatedAt?: string; actorId?: string }
-type GrantStoreClient = Pick<Prisma.TransactionClient, "appRecord">
+type GrantStoreClient = Pick<Prisma.TransactionClient, "appRecord" | "portalNotification">
 
 function parseGrantsArray(data: unknown): Grant[] {
   if (!data || typeof data !== "object") return []
@@ -36,7 +37,7 @@ export async function resolveCurrentPortalAccess() {
   const grants = await getModuleGrantsForUserIds([user.id]).then((byUser) => byUser.get(user.id) ?? [])
   const canEnter = (moduleKey: RegisteredModuleKey) => user.role === "super_admin_pc" || grants.some((grant) => grant.moduleKey === moduleKey && grant.enabled)
   const permissions = [
-    "dashboard.view", "member_area.view", "profile.view", "help.view", "notifications.view", "users.manage", "access.manage", "articles.manage", "homepage.manage", "products.manage", "impact.manage", "gallery.manage", "downloads.manage", "help_content.manage", "contact.manage", "branding.manage", "settings.manage", "audit.view",
+    "dashboard.view", "member_area.view", "profile.view", "help.view", "notifications.view", "users.manage", "access.manage", "articles.manage", "homepage.manage", "products.manage", "impact.manage", "gallery.manage", "downloads.manage", "help_content.manage", "contact.manage", "branding.manage", "settings.manage", "audit.view", "notifications.manage",
   ].filter((permission) => roleHasPortalPermission(user.role, permission as PortalPermission))
 
   return { kind: "authorized" as const, user: user as CurrentUser, permissions, modules: registeredModules.filter((module) => canEnter(module.key)), grants }
@@ -44,9 +45,10 @@ export async function resolveCurrentPortalAccess() {
 
 export async function requirePortalPermission(permission: PortalPermission) {
   const access = await resolveCurrentPortalAccess()
-  if (access.kind === "unauthenticated") return { response: Response.json({ error: "Sesi tidak ditemukan." }, { status: 401 }) }
-  if (access.kind === "inactive") return { response: Response.json({ error: "Akun tidak aktif." }, { status: 403 }) }
-  if (!access.permissions.includes(permission)) return { response: Response.json({ error: "Akses tidak diizinkan." }, { status: 403 }) }
+  const headers = { "Cache-Control": "private, no-store" }
+  if (access.kind === "unauthenticated") return { response: Response.json({ error: "Sesi tidak ditemukan." }, { status: 401, headers }) }
+  if (access.kind === "inactive") return { response: Response.json({ error: "Akun tidak aktif." }, { status: 403, headers }) }
+  if (!access.permissions.includes(permission)) return { response: Response.json({ error: "Akses tidak diizinkan." }, { status: 403, headers }) }
   return { access }
 }
 
@@ -55,6 +57,7 @@ async function setModuleGrantWithClient(client: GrantStoreClient, userId: string
   const existing = parseGrantsArray(existingRecord?.data)
   const previous = existing.find((grant) => grant.moduleKey === moduleKey)
   const before = previous?.enabled ?? false
+  if (before === enabled) return { updatedAt: new Date() }
   const timestamp = new Date().toISOString()
   const grants = [...existing.filter((grant) => grant.moduleKey !== moduleKey), { userId, moduleKey, enabled, actorId, updatedAt: timestamp }]
 
@@ -72,6 +75,7 @@ async function setModuleGrantWithClient(client: GrantStoreClient, userId: string
       data: { actorId, targetUserId: userId, action: enabled ? "module_entry_enabled" : "module_entry_disabled", moduleKey, before: { enabled: before }, after: { enabled }, timestamp },
     },
   })
+  await createSystemNotification(client, { title: "Akses modul diperbarui", body: `Akses modul ${moduleKey.toUpperCase()} Anda telah ${enabled ? "diaktifkan" : "dinonaktifkan"}.`, category: "access", severity: enabled ? "success" : "warning", targetUserId: userId, actionPath: "/member-area" })
   return updated
 }
 

@@ -46,7 +46,8 @@ void test("portal-access: Super Admin permissions", () => {
     "downloads.manage",
     "help_content.manage",
     "contact.manage",
-    "branding.manage"
+    "branding.manage",
+    "notifications.manage"
   ]
 
   for (const permission of expectedPermissions) {
@@ -82,7 +83,8 @@ void test("portal-access: Other roles permissions", () => {
     "downloads.manage",
     "help_content.manage",
     "contact.manage",
-    "branding.manage"
+    "branding.manage",
+    "notifications.manage"
   ]
 
   for (const role of otherRoles) {
@@ -139,6 +141,11 @@ void test("portal-access: Member Area route policy", () => {
   assert.equal(canAccessMemberAreaRoute("admin_upzis", "/member-area"), true)
   assert.equal(canAccessMemberAreaRoute("admin_kordes", "/member-area"), true)
   assert.equal(canAccessMemberAreaRoute("unknown_role", "/member-area"), false)
+  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/notifikasi"), true)
+  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/notifikasi"), false)
+  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/audit"), true)
+  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/audit"), false)
+  assert.equal(canAccessMemberAreaRoute("admin_upzis", "/member-area/aktivitas"), true)
 
   // /member-area/konten/artikel routes allow Super Admin and Admin PC
   assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/konten/artikel"), true)

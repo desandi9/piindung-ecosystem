@@ -7,6 +7,7 @@ import { isRegisteredModuleKey, registeredModules, type RegisteredModuleKey } fr
 import { canChangeCentralUser, isAppRole, isUserStatus, normalizeEmail, type UserStatus } from "@/lib/portal-user-management"
 import { generateMemberId } from "@/lib/member-identity"
 import type { AppRole } from "@/types/auth"
+import { createSystemNotification } from "@/lib/portal-notifications-server"
 
 export const userAuditScope = "portal-user-audit"
 const userSelect = { id: true, memberId: true, name: true, email: true, phone: true, role: true, status: true, avatar: true, createdAt: true, updatedAt: true } as const
@@ -109,6 +110,8 @@ export async function updateCentralUser(actorId: string, targetId: string, input
       if (target.role !== updated.role) changes.push(["user_role_changed", "role"])
       if (target.status !== updated.status) changes.push([updated.status === "Aktif" ? "user_activated" : "user_deactivated", "status"])
       for (const [action, field] of changes) await writeUserAuditWithClient(tx, actorId, targetId, action, { [field]: target[field as keyof DbUser] }, { [field]: updated[field as keyof DbUser] })
+      if (target.role !== updated.role) await createSystemNotification(tx, { title: "Peran akun diperbarui", body: "Peran akun Anda telah diperbarui oleh administrator.", category: "account", severity: "info", targetUserId: targetId, actionPath: "/member-area" })
+      if (target.status !== updated.status) await createSystemNotification(tx, { title: "Status akun diperbarui", body: `Akun Anda telah ${updated.status === "Aktif" ? "diaktifkan" : "dinonaktifkan"} oleh administrator.`, category: "account", severity: updated.status === "Aktif" ? "success" : "warning", targetUserId: targetId, actionPath: "/member-area" })
       for (const module of input.modules) await setModuleGrant(targetId, module.key, module.enabled, actorId, tx)
       return { before: target, after: updated }
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })

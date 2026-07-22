@@ -3,11 +3,12 @@ import { deleteRecord, getRecord, updateRecord } from "@/lib/record-store-server
 import { protectHomepageContentMutation, requireHomepageContentManager } from "@/lib/homepage-content-api"
 import { requireArticleManager } from "@/lib/article-content-api"
 import { requireSiteContactManager } from "@/lib/site-contact-server"
+import { isProtectedInternalRecordScope } from "@/lib/protected-internal-scopes"
 
 export async function GET(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
-    if (scope === "portal-module-grants" || scope === "portal-access-audit" || scope === "portal-user-audit") {
+    if (isProtectedInternalRecordScope(scope)) {
       return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
     }
     if (scope === "gallery-content") {
@@ -45,7 +46,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
 export async function PATCH(request: Request, { params }: { params: Promise<{ scope: string; key: string }> | { scope: string; key: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
-    if (scope === "portal-module-grants" || scope === "portal-access-audit" || scope === "portal-user-audit") {
+    if (isProtectedInternalRecordScope(scope)) {
       return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
     }
     if (scope === "gallery-content") {
@@ -83,7 +84,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sc
 export async function DELETE(_: Request, { params }: { params: Promise<{ scope: string; key: string }> | { key: string; scope: string } }) {
   try {
     const { scope, key } = await Promise.resolve(params)
-    if (scope === "portal-module-grants" || scope === "portal-access-audit" || scope === "portal-user-audit") {
+    if (isProtectedInternalRecordScope(scope)) {
       return NextResponse.json({ error: "Gunakan endpoint portal access khusus." }, { status: 403 })
     }
     if (scope === "gallery-content") {
