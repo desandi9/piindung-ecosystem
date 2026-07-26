@@ -57,12 +57,12 @@ export function cardContainerVariants(stagger = 0.12, delayChildren = 0.12, redu
 }
 
 /** Product / visual impact cards — opacity + y + subtle scale */
-export function visualCardReveal(duration = 0.85, reduced = false): Variants {
+export function visualCardReveal(duration = 0.85, reduced = false, distance = 28, scaleFrom = 0.985): Variants {
   if (reduced) {
     return { hidden: { opacity: 1, y: 0, scale: 1 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0 } } }
   }
   return {
-    hidden: { opacity: 0, y: 28, scale: 0.985 },
+    hidden: { opacity: 0, y: distance, scale: scaleFrom },
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration, ease: calmEase } },
   }
 }
@@ -78,8 +78,8 @@ export function textCardReveal(duration = 0.88, reduced = false): Variants {
   }
 }
 
-export const calmCardHover = { y: -4, scale: 1.01 }
-export const calmCardHoverTransition = { duration: 0.32, ease: calmEase }
+export const calmCardHover = { y: -6, scale: 1.012 }
+export const calmCardHoverTransition = { duration: 0.38, ease: calmEase }
 export const calmCardTap = { scale: 0.992 }
 export const calmCardTapTransition = { duration: 0.16, ease: calmEase }
 
@@ -94,15 +94,19 @@ export function LandingReveal({
   delay = 0,
   direction = "up",
   amount = 0.26,
+  distance: distanceProp = 22,
+  duration = 0.78,
 }: {
   children: React.ReactNode
   className?: string
   delay?: number
   direction?: "up" | "left" | "right" | "none"
   amount?: number
+  distance?: number
+  duration?: number
 }) {
   const reduced = useReducedMotion()
-  const distance = reduced ? 0 : 22
+  const distance = reduced ? 0 : distanceProp
   const initial =
     direction === "left"
       ? { opacity: 0, x: distance }
@@ -117,7 +121,7 @@ export function LandingReveal({
       initial={initial}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={{ once: true, amount, margin: "0px 0px -10% 0px" }}
-      transition={{ duration: reduced ? 0 : 0.78, delay: reduced ? 0 : delay, ease: calmEase }}
+      transition={{ duration: reduced ? 0 : duration, delay: reduced ? 0 : delay, ease: calmEase }}
       className={className}
     >
       {children}
@@ -155,6 +159,18 @@ export function LandingCardGrid({
   )
 }
 
+/** Per-card reveal used across /produk, /artikel, and /bantuan — each card
+ * triggers individually on viewport entry; delay cycles per grid column. */
+export function perCardReveal(reduced: boolean, columns = 1): Variants {
+  if (reduced) {
+    return { hidden: { opacity: 1, y: 0, scale: 1 }, visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0 } } }
+  }
+  return {
+    hidden: { opacity: 0, y: 48, scale: 0.96 },
+    visible: (i: number) => ({ opacity: 1, y: 0, scale: 1, transition: { duration: 0.7, ease: calmEase, delay: (i % columns) * 0.12 } }),
+  }
+}
+
 export function LandingCard({
   children,
   className,
@@ -162,6 +178,11 @@ export function LandingCard({
   variant = "visual",
   interactive = false,
   as: Tag = "div",
+  distance,
+  scaleFrom,
+  variants,
+  revealIndex,
+  revealColumns = 1,
 }: {
   children: React.ReactNode
   className?: string
@@ -170,16 +191,36 @@ export function LandingCard({
   /** Only clickable cards get hover lift + tap + pointer cursor */
   interactive?: boolean
   as?: "div" | "article"
+  distance?: number
+  scaleFrom?: number
+  /** Full override of the reveal variants — takes precedence over variant/distance/scaleFrom */
+  variants?: Variants
+  /** When set, the card reveals itself on viewport entry (no parent
+   * orchestration needed) using perCardReveal with this index. */
+  revealIndex?: number
+  /** Grid column count for the self-reveal stagger cycle. */
+  revealColumns?: number
 }) {
   const reduced = useReducedMotion()
   const canHover = useCanHoverFine()
   const Component = Tag === "article" ? motion.article : motion.div
-  const reveal = variant === "text" ? textCardReveal(duration, !!reduced) : visualCardReveal(duration, !!reduced)
+  const selfReveal = revealIndex !== undefined
+  const reveal = selfReveal
+    ? perCardReveal(!!reduced, revealColumns)
+    : variants ??
+      (variant === "text"
+        ? textCardReveal(duration, !!reduced)
+        : visualCardReveal(duration, !!reduced, distance ?? 28, scaleFrom ?? 0.985))
   const allowMotionHover = interactive && !reduced && canHover
 
   return (
     <Component
       variants={reveal}
+      custom={selfReveal ? revealIndex : undefined}
+      initial={selfReveal ? "hidden" : undefined}
+      whileInView={selfReveal ? "visible" : undefined}
+      viewport={selfReveal ? { once: true, amount: 0.2 } : undefined}
+      style={selfReveal ? { animation: "none" } : undefined}
       whileHover={allowMotionHover ? calmCardHover : undefined}
       whileTap={allowMotionHover ? calmCardTap : undefined}
       transition={calmCardHoverTransition}

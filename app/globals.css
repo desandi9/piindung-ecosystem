@@ -333,6 +333,223 @@ html[data-animations="off"] *::after {
   }
 }
 
+@keyframes heroDashboardFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(3px, -10px, 0);
+  }
+}
+
+@keyframes heroGradientBlobOne {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: .72; }
+  50% { transform: translate3d(28px, -22px, 0) scale(1.08); opacity: .9; }
+}
+
+@keyframes heroGradientBlobTwo {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.04); opacity: .64; }
+  50% { transform: translate3d(-24px, 30px, 0) scale(.97); opacity: .82; }
+}
+
+@keyframes heroGradientBlobThree {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(.96); opacity: .52; }
+  50% { transform: translate3d(18px, 24px, 0) scale(1.06); opacity: .72; }
+}
+
+.hero-gradient-blob {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(90px);
+  will-change: transform, opacity;
+}
+
+.hero-gradient-blob-one {
+  right: 17%;
+  top: 32%;
+  width: clamp(240px, 30vw, 420px);
+  height: clamp(240px, 30vw, 420px);
+  background: radial-gradient(circle, rgba(16,185,129,.26) 0%, rgba(110,231,183,.12) 45%, transparent 72%);
+  animation: heroGradientBlobOne 12s ease-in-out infinite;
+}
+
+.hero-gradient-blob-two {
+  right: 3%;
+  top: 9%;
+  width: clamp(220px, 27vw, 360px);
+  height: clamp(220px, 27vw, 360px);
+  background: radial-gradient(circle, rgba(94,234,212,.2) 0%, rgba(125,211,252,.1) 48%, transparent 72%);
+  animation: heroGradientBlobTwo 15s ease-in-out -3s infinite;
+}
+
+.hero-gradient-blob-three {
+  right: 39%;
+  bottom: 4%;
+  width: clamp(160px, 20vw, 280px);
+  height: clamp(160px, 20vw, 280px);
+  background: radial-gradient(circle, rgba(110,231,183,.18) 0%, transparent 70%);
+  animation: heroGradientBlobThree 9s ease-in-out -5s infinite;
+}
+
+/* Softer sibling of .hero-gradient-blob for inner-page heroes (produk, dampak,
+   bantuan) — same drifting glow, roughly half the intensity of the landing hero. */
+@keyframes heroSoftBlobA {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: .72; }
+  50% { transform: translate3d(40px, -30px, 0) scale(1.12); opacity: 1; }
+}
+
+@keyframes heroSoftBlobB {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.06); opacity: .66; }
+  50% { transform: translate3d(-36px, 38px, 0) scale(.93); opacity: .96; }
+}
+
+@keyframes heroSoftBlobC {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(.95); opacity: .6; }
+  50% { transform: translate3d(28px, 30px, 0) scale(1.1); opacity: .9; }
+}
+
+.hero-soft-blob {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  will-change: transform, opacity;
+}
+
+.hero-soft-blob-one {
+  left: 8%;
+  top: 12%;
+  width: clamp(320px, 38vw, 560px);
+  height: clamp(320px, 38vw, 560px);
+  background: radial-gradient(circle, rgba(16,185,129,.32) 0%, rgba(110,231,183,.16) 45%, transparent 72%);
+  animation: heroSoftBlobA 13s ease-in-out infinite;
+}
+
+.hero-soft-blob-two {
+  right: 5%;
+  top: 8%;
+  width: clamp(280px, 34vw, 480px);
+  height: clamp(280px, 34vw, 480px);
+  background: radial-gradient(circle, rgba(94,234,212,.28) 0%, rgba(125,211,252,.15) 48%, transparent 72%);
+  animation: heroSoftBlobB 16s ease-in-out -4s infinite;
+}
+
+.hero-soft-blob-three {
+  left: 34%;
+  bottom: -10%;
+  width: clamp(260px, 30vw, 420px);
+  height: clamp(260px, 30vw, 420px);
+  background: radial-gradient(circle, rgba(110,231,183,.24) 0%, transparent 70%);
+  animation: heroSoftBlobC 11s ease-in-out -6s infinite;
+}
+
+@keyframes heroPatternDrift {
+  0%, 100% { transform: scale(1.06) translate3d(0, 0, 0); }
+  50% { transform: scale(1.12) translate3d(-1.5%, 1%, 0); }
+}
+
+.hero-pattern-drift {
+  animation: heroPatternDrift 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.dashboard-float-wrapper {
+  animation: heroDashboardFloat 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.dashboard-tilt-wrapper {
+  transition: box-shadow .45s ease;
+}
+
+@keyframes heroFloatBadge {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+
+.hero-float-badge {
+  animation: heroFloatBadge 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-float-badge-bottom {
+  animation-duration: 7s;
+  animation-delay: -2.5s;
+}
+
+@media (max-width: 1023px) {
+  .hero-gradient-blob-one { right: 8%; top: 47%; width: clamp(180px, 36vw, 300px); height: clamp(180px, 36vw, 300px); }
+  .hero-gradient-blob-two { right: -10%; top: 30%; width: clamp(160px, 32vw, 260px); height: clamp(160px, 32vw, 260px); }
+  .hero-gradient-blob-three { right: 48%; bottom: 4%; width: clamp(120px, 24vw, 200px); height: clamp(120px, 24vw, 200px); }
+  .dashboard-float-wrapper { animation-name: heroDashboardFloatTablet; }
+}
+
+@keyframes heroDashboardFloatTablet {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(2px, -6px, 0); }
+}
+
+@media (max-width: 639px) {
+  .hero-gradient-blob { filter: blur(65px); opacity: .55; }
+  .dashboard-float-wrapper { animation-name: heroDashboardFloatMobile; animation-duration: 8s; }
+}
+
+@keyframes heroDashboardFloatMobile {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(1px, -5px, 0); }
+}
+
+@keyframes orbitDrift {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(8deg) scale(1.04); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes orbitDriftReverse {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-10deg) scale(0.97); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes orbitGlowPulse {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.12); }
+}
+
+.orbit-ring-a {
+  animation: orbitDrift 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+.orbit-ring-b {
+  animation: orbitDriftReverse 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.orbit-glow-pulse {
+  animation: orbitGlowPulse 7s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.orbit-glow-pulse-slow {
+  animation: orbitGlowPulse 10s ease-in-out infinite -3s;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-gradient-blob,
+  .hero-soft-blob,
+  .hero-pattern-drift,
+  .dashboard-float-wrapper,
+  .hero-float-badge,
+  .orbit-ring-a,
+  .orbit-ring-b,
+  .orbit-glow-pulse,
+  .orbit-glow-pulse-slow { animation: none !important; }
+  .dashboard-tilt-wrapper { transition: none; }
+}
+
 .landing-shell {
   --landing-navy: #08213b;
   --landing-green: #07965d;

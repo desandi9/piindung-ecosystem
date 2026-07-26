@@ -1,4 +1,5 @@
 import { ArticlePreview } from "@/components/piindung/article-preview"
+import { CursorGlow } from "@/components/piindung/cursor-glow"
 import { HelpCenterPreview } from "@/components/piindung/help-center-preview"
 import { HowItWorks } from "@/components/piindung/how-it-works"
 import { ImpactPreview } from "@/components/piindung/impact-preview"
@@ -16,6 +17,7 @@ export default function Home() {
     <div className="landing-shell bg-[#f7faf8] dark:bg-[#07131f]">
       <main className="min-h-screen overflow-x-hidden bg-[#f7faf8] text-slate-950 dark:bg-[#07131f] dark:text-white">
         <PublicThemeDefault />
+        <CursorGlow />
         <LandingScrollProgress />
         <PublicNavbar />
         <HeroSection />

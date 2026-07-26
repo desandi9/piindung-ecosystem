@@ -59,7 +59,11 @@ export function PublicNavbar() {
 
   const dark = mounted && resolvedTheme === "dark"
   const current = activeItem(pathname)
-  const logo = dark ? branding.logos.navbarDark : branding.logos.navbarLight
+  // /artikel (index only — detail pages have a light header) opens with a dark
+  // gradient hero — use the white logo while the navbar is transparent on top
+  // of it; revert once it gains its light backdrop.
+  const onDarkHero = pathname === "/artikel" && !scrolled && !open
+  const logo = dark || onDarkHero ? branding.logos.navbarDark : branding.logos.navbarLight
   const toggleTheme = () => setTheme((dark ? "light" : "dark") as ColorMode)
 
   return (
@@ -74,7 +78,7 @@ export function PublicNavbar() {
             : "border-transparent bg-transparent",
         )}
       >
-        <div className="mx-auto flex h-[78px] max-w-[1040px] items-center px-5 sm:px-8 lg:h-[86px] lg:px-0">
+        <div className="mx-auto flex h-[72px] max-w-[1440px] items-center px-5 sm:px-8 lg:h-[78px] lg:px-16 xl:px-20">
           <Link href="/" aria-label="Beranda PIINDUNG" className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0aaa6e]">
             <Image
               src={logo.path}
@@ -82,18 +86,18 @@ export function PublicNavbar() {
               width={logo.width}
               height={logo.height}
               priority
-              className="h-auto w-[190px] object-contain sm:w-[225px]"
+              className="h-auto w-[170px] object-contain sm:w-[200px]"
             />
           </Link>
 
-          <div className="ml-auto hidden items-center gap-6 lg:flex">
-            <nav aria-label="Navigasi utama" className="flex items-center gap-1 rounded-full border border-[#e1ebe6] bg-white/82 p-1 shadow-[0_5px_18px_rgba(8,33,59,.04)] backdrop-blur dark:border-white/10 dark:bg-white/5">
+          <div className="ml-auto hidden items-center gap-3 lg:flex">
+            <nav aria-label="Navigasi utama" className="flex items-center gap-0.5 rounded-full border border-[#e1ebe6] bg-white/82 p-1 shadow-[0_5px_18px_rgba(8,33,59,.04)] backdrop-blur dark:border-white/10 dark:bg-white/5">
               {navItems.map((item) => (
                 <Link
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "relative rounded-full px-5 py-2.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0aaa6e]",
+                    "relative rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0aaa6e]",
                     current === item.id ? "text-[#078b5d]" : "text-[#657184] hover:text-[#08213b] dark:text-slate-300 dark:hover:text-white",
                   )}
                 >
@@ -102,8 +106,8 @@ export function PublicNavbar() {
                 </Link>
               ))}
             </nav>
-            <button type="button" onClick={toggleTheme} className="grid h-11 w-11 place-items-center rounded-2xl border border-[#e1ebe6] bg-white/70 text-[#08213b] shadow-sm transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white" aria-label={dark ? "Ganti ke mode terang" : "Ganti ke mode gelap"}>
-              {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+            <button type="button" onClick={toggleTheme} className="grid h-10 w-10 place-items-center rounded-xl border border-[#e1ebe6] bg-white/70 text-[#08213b] shadow-sm transition hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white" aria-label={dark ? "Ganti ke mode terang" : "Ganti ke mode gelap"}>
+              {dark ? <Sun className="h-[17px] w-[17px]" /> : <Moon className="h-[17px] w-[17px]" />}
             </button>
           </div>
 
