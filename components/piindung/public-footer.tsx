@@ -14,6 +14,7 @@ const mainNav = [
   { label: "Dampak", href: "/dampak" },
   { label: "Artikel", href: "/artikel" },
   { label: "Pusat Bantuan", href: "/bantuan" },
+  { label: "Masuk Dashboard", href: "/login" },
 ]
 
 function getSocialIcon(platform: string) {
