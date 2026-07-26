@@ -39,19 +39,14 @@ export function HeroSection() {
               Masuk ke Sistem <span className="grid h-6 w-6 place-items-center rounded-full bg-[#e5f7ef] text-[#08a969] dark:bg-emerald-400/10"><LogIn className="h-3 w-3" /></span>
             </Link>
           </div>
-
-          <div className="mt-7 flex items-center gap-3">
-            <span className="flex -space-x-1.5"><i className="grid h-7 w-7 place-items-center rounded-full border-2 border-[#f8fbf9] bg-[#08213b] text-[8px] not-italic text-white dark:border-[#07131f]">PC</i><i className="grid h-7 w-7 place-items-center rounded-full border-2 border-[#f8fbf9] bg-[#07965d] text-[8px] not-italic text-white dark:border-[#07131f]">UP</i><i className="grid h-7 w-7 place-items-center rounded-full border-2 border-[#f8fbf9] bg-[#6d9a55] text-[8px] not-italic text-white dark:border-[#07131f]">PL</i></span>
-            <span className="text-[10px] leading-4 text-[#748192] dark:text-slate-400"><strong className="block text-[11px] text-[#08213b] dark:text-white">Dibangun untuk kolaborasi</strong>PC, UPZIS, PLPK, dan seluruh pengurus</span>
-          </div>
         </motion.div>
 
-        <motion.div initial={reduced ? false : { opacity: 0, x: 28, scale: .97 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: reduced ? 0 : .8, delay: reduced ? 0 : .12 }} className="relative mt-12 hidden h-[510px] lg:block">
+        <motion.div initial={reduced ? false : { opacity: 0, x: 28, scale: .97 }} animate={{ opacity: 1, x: 0, scale: 1 }} transition={{ duration: reduced ? 0 : .8, delay: reduced ? 0 : .12 }} className="relative mt-8 hidden h-[540px] lg:block">
           <div className="absolute left-1/2 top-1/2 h-[470px] w-[470px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#9fd7c4]/40" />
           <div className="absolute left-1/2 top-1/2 h-[330px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[#9fd7c4]/45" />
 
-          <div className="absolute left-6 top-[70px] w-[690px] overflow-hidden rounded-[24px] border border-white/90 bg-white shadow-[0_32px_85px_rgba(11,55,40,.20)] [transform:rotate(.8deg)] dark:border-white/10 dark:bg-[#0e2030]">
-            <div className="flex h-[58px] items-center gap-4 border-b border-[#edf2ef] px-5 dark:border-white/10"><span className="rounded-md bg-[#6bcfa5] px-2.5 py-1.5 text-[8px] font-bold text-white">PIINDUNG</span><span className="ml-auto h-6 w-40 rounded-full bg-[#f0f4f2] dark:bg-white/5" /><span className="grid h-7 w-7 place-items-center rounded-full bg-[#08213b] text-[9px] text-white">A</span></div>
+          <div className="absolute left-0 top-[52px] w-[720px] overflow-hidden rounded-[24px] border border-white/90 bg-white shadow-[0_32px_85px_rgba(11,55,40,.20)] [transform:perspective(1200px)_rotateX(1deg)_rotateY(-2deg)_rotateZ(.8deg)] transition-transform duration-700 hover:[transform:perspective(1200px)_rotateX(0deg)_rotateY(0deg)_rotateZ(0deg)_translateY(-4px)] dark:border-white/10 dark:bg-[#0e2030]">
+            <div className="flex h-[58px] items-center gap-4 border-b border-[#edf2ef] px-5 dark:border-white/10"><span className="flex items-center gap-2 text-[9px] font-bold text-[#53677a]"><i className="h-5 w-5 rounded-md bg-[#6bcfa5]" />PIINDUNG</span><span className="ml-auto h-6 w-40 rounded-full bg-[#f0f4f2] dark:bg-white/5" /><span className="grid h-7 w-7 place-items-center rounded-full bg-[#08213b] text-[9px] text-white">A</span></div>
             <div className="flex h-[330px]">
               <aside className="w-[55px] border-r border-[#edf2ef] p-3 dark:border-white/10"><i className="block h-7 rounded-lg bg-[#e5f7ef]" />{Array.from({ length: 4 }).map((_, index) => <i key={index} className="mt-4 block h-3 rounded bg-[#eef3f0] dark:bg-white/5" />)}</aside>
               <div className="flex-1 p-5">
