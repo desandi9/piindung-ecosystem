@@ -122,16 +122,14 @@ export default function ImpactPage() {
 
         {!loading && !error && content && !isEmpty && (
           <>
-            <section className="relative overflow-hidden px-4 pb-16 pt-32 sm:px-6 sm:pb-20 sm:pt-36 lg:px-8 lg:pb-24 lg:pt-40">
+            <section className="relative overflow-hidden px-5 pb-20 pt-36 sm:px-8 sm:pt-40 lg:pb-24 lg:pt-44">
               <div className="pointer-events-none absolute left-[8%] top-20 h-56 w-56 rounded-full bg-[#15945b]/10 blur-[90px]" aria-hidden="true" />
               <div className="pointer-events-none absolute right-[10%] top-32 h-64 w-64 rounded-full bg-sky-200/30 blur-[100px] dark:bg-sky-500/10" aria-hidden="true" />
-              <div className="relative mx-auto max-w-7xl grid gap-12 lg:grid-cols-2 lg:items-center">
+              <div className="relative mx-auto max-w-[1040px] grid gap-12 lg:grid-cols-[1.15fr_.85fr] lg:items-center">
                 <div className="max-w-[720px] text-left animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both motion-reduce:animate-none">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15945b]">{content.hero.eyebrow}</p>
-                  <h1 className="mt-5 text-4xl font-bold leading-[1.08] tracking-tight text-[#0b1f33] dark:text-white sm:text-5xl lg:text-[56px]">
-                    {content.hero.title}<br /><span className="text-[#15945b]">{content.hero.highlightedText}</span>
-                  </h1>
-                  <p className="mt-7 text-base leading-8 text-[#566473] dark:text-slate-300 sm:text-lg lg:text-xl">{content.hero.description}</p>
+                  <div className="flex items-start justify-between gap-6"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#07965d]">Dampak Digitalisasi</p><span className="hidden text-[92px] font-bold leading-none tracking-[-.08em] text-[#08213b]/[.05] sm:block dark:text-white/[.05]">02</span></div>
+                  <h1 className="mt-5 text-[clamp(3rem,5.6vw,5rem)] font-bold leading-[.94] tracking-[-.065em] text-[#08213b] dark:text-white">Teknologi yang memperkuat <span className="text-[#07965d]">amanah pelayanan.</span></h1>
+                  <p className="mt-7 text-base leading-8 text-[#6c7a89] dark:text-slate-300 sm:text-lg">PIINDUNG dirancang bukan untuk menggantikan peran pengurus, tetapi untuk membuat energi pelayanan tersalurkan pada hal yang paling bermakna.</p>
                 </div>
                 {content.hero.image && (
                   <div className="relative w-full h-[300px] sm:h-[400px] rounded-3xl overflow-hidden shadow-md border border-[#dde7e2] dark:border-white/10">
