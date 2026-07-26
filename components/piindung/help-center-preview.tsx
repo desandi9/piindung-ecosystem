@@ -1,38 +1,54 @@
 "use client"
 
 import Link from "next/link"
-import { motion, useReducedMotion } from "motion/react"
-import { ArrowRight } from "lucide-react"
-import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
-import { Poppins } from "next/font/google"
-
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "600", "700"] })
+import { ArrowRight, BookOpen } from "lucide-react"
+import { LandingReveal } from "@/components/piindung/landing-motion"
 
 export function HelpCenterPreview() {
-  const reduced = useReducedMotion()
-
   return (
-    <section id="bantuan" className={`scroll-mt-24 min-h-[320px] text-white sm:min-h-[340px] ${poppins.className}`} aria-labelledby="help-heading">
-      <div
-        className="relative isolate flex min-h-[320px] items-center overflow-hidden sm:min-h-[340px]"
-        style={{
-          backgroundImage: "url('/BACKGROUND.png')",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center center",
-        }}
-      >
-        <motion.div variants={reduced ? { hidden: {}, visible: {} } : staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_auto] lg:gap-8 lg:px-8 lg:py-20">
-          <motion.div variants={reduced ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : staggerItem} className="max-w-[520px]">
-            <h2 id="help-heading" className="text-[2.5rem] font-bold leading-[1.1] tracking-normal sm:text-5xl lg:text-[60px]">Butuh Bantuan?</h2>
-            <p className="mt-[20px] text-[17px] font-normal leading-[1.5] text-white/92 sm:text-lg lg:text-[20px]">Temukan panduan penggunaan, jawaban atas<br className="hidden lg:block"/>pertanyaan umum, serta informasi bantuan untuk<br className="hidden lg:block"/>setiap produk PIINDUNG.</p>
-          </motion.div>
-          <motion.div variants={reduced ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : staggerItem} className="flex flex-col gap-[15px] sm:flex-row lg:justify-end">
-            <Link href="/bantuan" className="inline-flex h-[56px] items-center justify-center gap-[12px] rounded-2xl bg-white px-8 text-[15px] font-semibold text-[#071426] shadow-sm transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#071426]">Pusat Bantuan <ArrowRight className="h-[18px] w-[18px]" aria-hidden="true" /></Link>
-            <Link href="/kontak" className="inline-flex h-[56px] items-center justify-center gap-[12px] rounded-2xl border border-white bg-transparent px-8 text-[15px] font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#071426]">Hubungi Kami <ArrowRight className="h-[18px] w-[18px]" aria-hidden="true" /></Link>
-          </motion.div>
-        </motion.div>
-      </div>
+    <section
+      id="bantuan"
+      className="scroll-mt-24 bg-[#f7faf8] py-10 dark:bg-[#07131f] sm:py-12"
+      aria-labelledby="help-heading"
+    >
+      <LandingReveal className="relative mx-auto max-w-[1180px] overflow-hidden rounded-[28px] bg-[linear-gradient(118deg,#0a6b47_0%,#0b4f3a_42%,#08213b_100%)] px-6 py-10 text-white shadow-[0_16px_40px_rgba(4,24,18,0.18)] sm:px-10 sm:py-12 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10 lg:px-12 lg:py-12">
+        <div className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-emerald-300/10" aria-hidden="true" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-28 w-28 rounded-full bg-sky-300/10" aria-hidden="true" />
+
+        <div className="relative max-w-[620px]">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl border border-white/25 bg-white/10 text-white">
+            <BookOpen className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">
+            Pusat Bantuan
+          </p>
+          <h2
+            id="help-heading"
+            className="mt-3 text-[clamp(1.9rem,3.4vw,2.75rem)] font-bold leading-[1.08] tracking-[-0.045em] text-white"
+          >
+            Butuh panduan? Kami siap membantu.
+          </h2>
+          <p className="mt-4 max-w-[540px] text-[15px] leading-7 text-white/90">
+            Temukan panduan penggunaan, jawaban atas pertanyaan umum, dan informasi bantuan untuk setiap produk PIINDUNG.
+          </p>
+        </div>
+
+        <div className="relative mt-8 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col xl:flex-row">
+          <Link
+            href="/bantuan"
+            className="inline-flex h-[48px] items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-semibold text-[#071426] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b4f3a]"
+          >
+            Buka Pusat Bantuan
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <Link
+            href="/kontak"
+            className="inline-flex h-[48px] items-center justify-center gap-2 rounded-2xl border-2 border-white bg-transparent px-6 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b4f3a]"
+          >
+            Hubungi Kami
+          </Link>
+        </div>
+      </LandingReveal>
     </section>
   )
 }

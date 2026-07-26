@@ -1,16 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Poppins } from "next/font/google"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, BarChart3, Building, Calendar, HandHeart, MapPin, Package, Shield, Users, RefreshCcw, Eye, EyeOff } from "lucide-react"
-import { PublicFooter } from "@/components/piindung/public-footer"
-import { PublicNavbar } from "@/components/piindung/public-navbar"
-import { PublicThemeDefault } from "@/components/piindung/public-theme-default"
+import { PublicPageShell } from "@/components/piindung/public-page-shell"
 import type { ImpactContent, ImpactIconKey } from "@/lib/impact-content"
-
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
 
 function getIcon(key: ImpactIconKey) {
   if (key === "hand-heart") return HandHeart
@@ -83,14 +78,11 @@ export default function ImpactPage() {
   const regularStories = content?.stories.filter(x => !x.featured) ?? []
 
   return (
-    <div className={poppins.className}>
-      <main className="min-h-screen overflow-x-hidden bg-[#f7faf8] text-slate-950 dark:bg-slate-950 dark:text-white">
-        <PublicThemeDefault />
-        <PublicNavbar />
-
+    <PublicPageShell>
         {loading && (
           <div className="mx-auto max-w-7xl px-4 py-32 sm:px-6 lg:px-8 space-y-12">
             <div className="space-y-4 text-center">
+              <h1 className="sr-only">Dampak Digitalisasi PIINDUNG</h1>
               <div className="mx-auto h-4 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
               <div className="mx-auto h-10 w-96 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
               <div className="mx-auto h-20 max-w-2xl animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
@@ -105,6 +97,7 @@ export default function ImpactPage() {
 
         {!loading && error && (
           <div className="mx-auto max-w-md px-4 py-32 text-center space-y-6">
+            <h1 className="sr-only">Dampak Digitalisasi PIINDUNG</h1>
             <div className="rounded-full bg-red-100 p-4 w-16 h-16 flex items-center justify-center mx-auto text-red-600 dark:bg-red-900/30 dark:text-red-400">
               <RefreshCcw className="h-8 w-8" />
             </div>
@@ -118,6 +111,7 @@ export default function ImpactPage() {
 
         {!loading && !error && isEmpty && (
           <div className="mx-auto max-w-md px-4 py-32 text-center space-y-4">
+            <h1 className="sr-only">Dampak Digitalisasi PIINDUNG</h1>
             <div className="rounded-full bg-slate-100 p-4 w-16 h-16 flex items-center justify-center mx-auto text-slate-400 dark:bg-slate-900 dark:text-slate-500">
               <Users className="h-8 w-8" />
             </div>
@@ -322,8 +316,6 @@ export default function ImpactPage() {
             )}
           </>
         )}
-      </main>
-      <PublicFooter />
-    </div>
+    </PublicPageShell>
   )
 }

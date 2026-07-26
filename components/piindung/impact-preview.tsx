@@ -1,72 +1,17 @@
 "use client"
 
-import { motion, useReducedMotion } from "motion/react"
-import { ClipboardCheck, FileText, GitBranch, MonitorCheck } from "lucide-react"
-import { fadeUp, staggerContainer, staggerItem } from "@/lib/motion"
-import { Card, CardContent } from "@/components/ui/card"
+import { ClipboardCheck, FileText, GitBranch, MonitorCheck, Sparkles } from "lucide-react"
+import { LandingCard, LandingCardGrid, LandingReveal } from "@/components/piindung/landing-motion"
 
 const impacts = [
-  {
-    title: "Data Lebih Terpusat",
-    description: "Informasi dari berbagai proses dapat dikelola dalam satu ekosistem.",
-    icon: GitBranch,
-  },
-  {
-    title: "Proses Lebih Efisien",
-    description: "Mengurangi proses berulang dan mempercepat alur kerja pengurus.",
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Monitoring Lebih Mudah",
-    description: "Pengurus dapat melihat perkembangan kegiatan dan operasional secara lebih ringkas.",
-    icon: MonitorCheck,
-  },
-  {
-    title: "Laporan Lebih Tertata",
-    description: "Data yang tercatat membantu proses rekap dan pertanggungjawaban organisasi.",
-    icon: FileText,
-  },
+  { title: "Data Lebih Terpusat", description: "Informasi dari berbagai proses dapat dikelola dalam satu ekosistem.", icon: GitBranch },
+  { title: "Proses Lebih Efisien", description: "Mengurangi proses berulang dan mempercepat alur kerja pengurus.", icon: ClipboardCheck },
+  { title: "Monitoring Lebih Mudah", description: "Pengurus dapat melihat perkembangan kegiatan dan operasional secara lebih ringkas.", icon: MonitorCheck },
+  { title: "Laporan Lebih Tertata", description: "Data yang tercatat membantu proses rekap dan pertanggungjawaban organisasi.", icon: FileText },
 ]
 
 export function ImpactPreview() {
-  const reduced = useReducedMotion()
-  const reveal = reduced ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : fadeUp
-
   return (
-    <section id="dampak" className="scroll-mt-24 border-y border-slate-200/80 bg-[#f8fbff] py-16 dark:border-white/10 dark:bg-slate-900/60 sm:py-20" aria-labelledby="impact-heading">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
-          <motion.div variants={reveal} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }}>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#15945b]">DAMPAK DIGITALISASI</p>
-            <h2 id="impact-heading" className="mt-4 text-3xl font-bold tracking-tight text-[#0b1f33] dark:text-white sm:text-4xl">
-              Teknologi yang Membantu Pelayanan Lebih Tertib.
-            </h2>
-            <p className="mt-5 text-base leading-8 text-[#566473] dark:text-slate-300 sm:text-lg">
-              PIINDUNG dikembangkan untuk membantu pengurus bekerja lebih terarah, mengurangi proses berulang, dan menyediakan informasi yang lebih mudah dipahami.
-            </p>
-          </motion.div>
-
-          <motion.div variants={reduced ? { hidden: {}, visible: {} } : staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} className="grid gap-5 sm:grid-cols-2">
-            {impacts.map((impact, index) => {
-              const Icon = impact.icon
-
-              return (
-                <motion.div key={impact.title} variants={reduced ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : staggerItem} className="h-full">
-                <Card className="group h-full gap-0 rounded-[22px] border border-[#dde7e2] bg-white py-0 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-slate-950">
-                  <CardContent className="p-6">
-                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#15945b]/10 text-[#15945b] transition-transform duration-500 group-hover:scale-110 dark:bg-emerald-300/10 dark:text-emerald-300">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-[#0b1f33] dark:text-white">{impact.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-[#566473] dark:text-slate-300">{impact.description}</p>
-                  </CardContent>
-                </Card>
-                </motion.div>
-              )
-            })}
-          </motion.div>
-        </div>
-      </div>
-    </section>
+    <section id="dampak" className="scroll-mt-24 bg-[#f7faf8] py-24 dark:bg-[#07131f] sm:py-32" aria-labelledby="impact-heading"><div className="mx-auto grid max-w-[1180px] gap-14 px-6 sm:px-10 lg:grid-cols-[.72fr_1.28fr] lg:gap-20"><LandingReveal className="lg:sticky lg:top-32 lg:self-start"><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#07965d]">Dampak Digitalisasi</p><h2 id="impact-heading" className="mt-4 text-[clamp(2.25rem,4vw,3.55rem)] font-bold leading-[1.06] tracking-[-0.055em] text-[#0b2239] dark:text-white">Kerja lebih tertib. Dampak lebih terasa.</h2><p className="mt-6 text-[15px] leading-8 text-[#64748b] dark:text-[#a5b4c5]">Ketika informasi tersusun dan proses terhubung, pengurus dapat memberi lebih banyak perhatian pada hal yang paling penting: pelayanan kepada umat.</p><div className="mt-8 flex gap-3 rounded-2xl border border-[#d9e5df] bg-white p-5 shadow-sm dark:border-[#213a49] dark:bg-[#0d1e2d]"><Sparkles className="mt-1 h-5 w-5 shrink-0 text-[#07965d]" /><p className="text-sm leading-7 text-[#0b2239] dark:text-slate-200">Teknologi hadir untuk memperkuat amanah, bukan menggantikan nilai kemanusiaan di dalamnya.</p></div></LandingReveal><LandingCardGrid className="grid gap-4 sm:grid-cols-2" stagger={0.08}>{impacts.map((impact, index) => { const Icon = impact.icon; return <LandingCard key={impact.title} as="article" className={`min-h-[240px] rounded-[20px] border border-[#d9e5df] bg-white p-7 shadow-[0_10px_28px_rgba(7,38,28,.06)] dark:border-[#213a49] dark:bg-[#0d1e2d] ${index % 2 ? "sm:translate-y-8" : ""}`}><div className="flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#e6f7ef] text-[#07965d] dark:bg-emerald-400/10 dark:text-emerald-300"><Icon className="h-5 w-5" /></span><span className="text-4xl font-bold text-[#0b2239]/[.06] dark:text-white/[.06]">{String(index + 1).padStart(2, "0")}</span></div><h3 className="mt-8 text-xl font-bold tracking-[-0.03em] text-[#0b2239] dark:text-white">{impact.title}</h3><p className="mt-3 text-sm leading-7 text-[#64748b] dark:text-[#a5b4c5]">{impact.description}</p></LandingCard>})}</LandingCardGrid></div></section>
   )
 }

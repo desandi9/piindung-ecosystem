@@ -4,8 +4,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Search } from "lucide-react"
 import { useMemo, useState } from "react"
+import { motion, useReducedMotion } from "motion/react"
 import { usePublicProducts } from "@/lib/public-products"
 import { cn } from "@/lib/utils"
+import { softSpring } from "@/lib/motion"
 
 const displayCategories = ["Tata Kelola", "Penghimpunan", "Penyaluran & Pelayanan", "Informasi & Media"] as const
 
@@ -23,12 +25,28 @@ type Product = {
 }
 
 const categories: Category[] = ["Semua", ...displayCategories]
+
 function ProductCard({ product, index }: { product: Product; index: number }) {
+  const reduced = useReducedMotion()
+
   const card = (
-    <article className="group relative flex h-full min-h-[286px] flex-col rounded-[24px] border border-[#dde7e2] bg-white p-7 shadow-sm transition duration-300 fill-mode-both animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 hover:border-[#15945b]/35 hover:shadow-xl hover:shadow-slate-900/5 motion-reduce:animate-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-white/10 dark:bg-slate-900" style={{ animationDelay: `${index * 80}ms` }}>
+    <motion.article
+      initial={reduced ? undefined : { opacity: 0, y: 18 }}
+      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.12 }}
+      whileHover={reduced ? undefined : { y: -5, scale: 1.01 }}
+      transition={reduced ? undefined : { duration: 0.55, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
+      className="group relative flex h-full min-h-[286px] flex-col rounded-[24px] border border-[#dde7e2] bg-white p-7 shadow-sm dark:border-white/10 dark:bg-slate-900"
+    >
       <div className="flex items-start justify-between gap-5">
         <div className="flex h-[68px] min-w-0 items-center justify-start">
-          {product.logo ? <Image src={product.logo} alt={`Logo ${product.name}`} width={112} height={112} className="max-h-16 w-auto max-w-[150px] object-contain" /> : <span className="rounded-2xl border border-dashed border-[#dde7e2] px-3 py-2 text-center text-xs font-medium leading-4 text-[#7b8792] dark:border-white/10 dark:text-slate-400">Logo belum tersedia</span>}
+          {product.logo ? (
+            <motion.div whileHover={reduced ? undefined : { scale: 1.05 }} transition={softSpring}>
+              <Image src={product.logo} alt={`Logo ${product.name}`} width={112} height={112} className="max-h-16 w-auto max-w-[150px] object-contain" />
+            </motion.div>
+          ) : (
+            <span className="rounded-2xl border border-dashed border-[#dde7e2] px-3 py-2 text-center text-xs font-medium leading-4 text-[#7b8792] dark:border-white/10 dark:text-slate-400">Logo belum tersedia</span>
+          )}
         </div>
         <span className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold", product.featured ? "bg-[#e6f7ee] text-[#15945b]" : "bg-amber-50 text-amber-700 dark:bg-amber-300/10 dark:text-amber-200")}>{product.status}</span>
       </div>
@@ -36,8 +54,12 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         <h3 className="text-2xl font-bold tracking-tight text-[#0b1f33] dark:text-white">{product.name}</h3>
         <p className="mt-4 text-sm leading-7 text-[#566473] dark:text-slate-300">{product.description}</p>
       </div>
-      {product.href ? <span className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-semibold text-[#15945b] transition group-hover:text-[#0b1f33] dark:group-hover:text-emerald-300">Buka Produk <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" aria-hidden="true" /></span> : null}
-    </article>
+      {product.href ? (
+        <span className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-semibold text-[#15945b] transition group-hover:text-[#0b1f33] dark:group-hover:text-emerald-300">
+          Buka Produk <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-[3px]" aria-hidden="true" />
+        </span>
+      ) : null}
+    </motion.article>
   )
 
   return product.href ? <Link href={product.href} className="block h-full rounded-[24px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#15945b] focus-visible:ring-offset-4">{card}</Link> : <div className="h-full">{card}</div>

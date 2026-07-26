@@ -3,9 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { motion, useReducedMotion } from "motion/react"
-import { Facebook, Globe2, Instagram, Mail, MapPin, Music2, Phone, Youtube, Twitter, Linkedin } from "lucide-react"
-import { fadeUp } from "@/lib/motion"
+import { Facebook, Globe2, Instagram, Linkedin, Mail, MapPin, Music2, Phone, Twitter, Youtube } from "lucide-react"
+import { LandingReveal } from "@/components/piindung/landing-motion"
 import { whatsappHref, type SiteContactContent } from "@/lib/site-contact"
 import { DEFAULT_SITE_BRANDING, type SiteBranding } from "@/lib/site-branding"
 
@@ -30,79 +29,35 @@ function getSocialIcon(platform: string) {
 export function PublicFooter() {
   const [contact, setContact] = useState<SiteContactContent | null>(null)
   const [branding, setBranding] = useState<SiteBranding>(DEFAULT_SITE_BRANDING)
-  const reduced = useReducedMotion()
 
-  const load = async () => {
-    try {
-      const [resContact, resBranding] = await Promise.all([
-        fetch("/api/site-contact", { cache: "no-store" }),
-        fetch("/api/site-branding", { cache: "no-store" })
-      ])
-      const dataContact = await resContact.json().catch(() => ({}))
-      const dataBranding = await resBranding.json().catch(() => ({}))
-      if (resContact.ok && dataContact.contact) setContact(dataContact.contact)
-      if (resBranding.ok && dataBranding.branding) setBranding(dataBranding.branding)
-    } catch {}
-  }
-
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void Promise.all([
+      fetch("/api/site-contact", { cache: "no-store" }).then((res) => res.json()).catch(() => ({})),
+      fetch("/api/site-branding", { cache: "no-store" }).then((res) => res.json()).catch(() => ({})),
+    ]).then(([dataContact, dataBranding]) => {
+      if (dataContact.contact) setContact(dataContact.contact)
+      if (dataBranding.branding) setBranding(dataBranding.branding)
+    })
+  }, [])
 
   return (
-    <footer
-      className="relative isolate overflow-hidden text-white"
-      aria-labelledby="public-footer-heading"
-      style={{
-        backgroundImage: "linear-gradient(rgba(3,15,38,0.34), rgba(3,15,38,0.34)), url('/BACKGROUND.png')",
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center bottom",
-      }}
-    >
-      <motion.div variants={reduced ? { hidden: { opacity: 1 }, visible: { opacity: 1 } } : fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.18 }} className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+    <footer className="border-t border-[#d9e5df] bg-white text-[#0b2239] dark:border-[#213a49] dark:bg-[#0d1e2d] dark:text-white" aria-labelledby="public-footer-heading">
+      <LandingReveal className="mx-auto max-w-[1180px] px-6 py-14 sm:px-10 lg:py-16">
         <h2 id="public-footer-heading" className="sr-only">Footer PIINDUNG</h2>
-        <div className="grid gap-10 border-b border-white/15 pb-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+        <div className="grid gap-12 border-b border-[#d9e5df] pb-12 dark:border-[#213a49] lg:grid-cols-[1.2fr_.8fr] lg:gap-16">
           <div>
-            <Image src={branding.logos.footerDark.path} alt={branding.identity.logoAltText} width={branding.logos.footerDark.width} height={branding.logos.footerDark.height} className="h-10 w-auto" />
-            <p className="mt-5 max-w-xs text-sm leading-7 text-white/70">{contact?.footer.description ?? "Ekosistem digital NU Care–LAZISNU Garut untuk mendukung layanan, pengelolaan, dan tata kelola organisasi."}</p>
+            <Image src={branding.logos.footerDark.path} alt={branding.identity.logoAltText} width={branding.logos.footerDark.width} height={branding.logos.footerDark.height} className="h-10 w-auto brightness-0 dark:brightness-100" />
+            <p className="mt-5 max-w-md text-sm leading-7 text-[#64748b] dark:text-[#a5b4c5]">{contact?.footer.description ?? "Ekosistem digital NU Care–LAZISNU Garut untuk mendukung layanan, pengelolaan, dan tata kelola organisasi."}</p>
           </div>
-          <nav aria-label="Navigasi footer">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-white">Navigasi</h3>
-            <ul className="mt-5 space-y-3 text-sm text-white/70">
-              {mainNav.map((item) => <li key={item.label}><Link href={item.href} className="rounded-md transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">{item.label}</Link></li>)}
-            </ul>
-          </nav>
-          {(!contact || contact.footer.showContact || contact.footer.showAddress) && (
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-white">Hubungi Kami</h3>
-              <ul className="mt-5 space-y-3 text-sm leading-6 text-white/70">
-                {(!contact || contact.footer.showAddress) && <li className="flex items-start gap-3"><MapPin className="mt-1 h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" /><span>{contact?.organization.address ?? "PCNU Kabupaten Garut"}</span></li>}
-                {(!contact || contact.footer.showContact) && (
-                  <>
-                    <li className="flex items-center gap-3"><Phone className="h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" /><a href={contact ? whatsappHref(contact.contact.whatsappNumber, contact.contact.whatsappMessage) : "#"} className="transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">{contact?.contact.phoneDisplay ?? "085600335066"}</a></li>
-                    <li className="flex items-center gap-3"><Mail className="h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" /><a href={contact ? `mailto:${contact.contact.email}` : "#"} className="transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">{contact?.contact.email ?? "info@lazisnu.garut"}</a></li>
-                  </>
-                )}
-                <li className="flex items-center gap-3"><Globe2 className="h-4 w-4 shrink-0 text-emerald-300" aria-hidden="true" /><Link href="/" className="transition hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">PIINDUNG</Link></li>
-              </ul>
-            </div>
-          )}
-          {(!contact || contact.footer.showSocialLinks) && contact?.socialLinks && contact.socialLinks.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-white">Ikuti Kami</h3>
-              <div className="mt-5 flex gap-3">
-                {contact.socialLinks.map((link) => {
-                  const Icon = getSocialIcon(link.platform)
-                  return <a key={link.id} href={link.url} target="_blank" rel="noreferrer" aria-label={link.label} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"><Icon className="h-4 w-4" aria-hidden="true" /></a>
-                })}
-              </div>
-            </div>
-          )}
+          <div className="grid gap-10 sm:grid-cols-2">
+            <nav aria-label="Navigasi footer"><h3 className="text-sm font-semibold text-[#0b2239] dark:text-white">Navigasi</h3><ul className="mt-5 space-y-3 text-sm text-[#64748b] dark:text-[#a5b4c5]">{mainNav.map((item) => <li key={item.label}><Link href={item.href} className="transition hover:text-[#07965d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d]">{item.label}</Link></li>)}</ul></nav>
+            {(!contact || contact.footer.showContact || contact.footer.showAddress) && (
+              <div><h3 className="text-sm font-semibold text-[#0b2239] dark:text-white">Dukungan</h3><ul className="mt-5 space-y-3 text-sm leading-6 text-[#64748b] dark:text-[#a5b4c5]">{(!contact || contact.footer.showAddress) && <li className="flex items-start gap-3"><MapPin className="mt-1 h-4 w-4 shrink-0 text-[#07965d]" /><span>{contact?.organization.address ?? "PCNU Kabupaten Garut"}</span></li>}{(!contact || contact.footer.showContact) && (<><li className="flex items-center gap-3"><Phone className="h-4 w-4 shrink-0 text-[#07965d]" /><a href={contact ? whatsappHref(contact.contact.whatsappNumber, contact.contact.whatsappMessage) : "#"} className="transition hover:text-[#07965d]">{contact?.contact.phoneDisplay ?? "085600335066"}</a></li><li className="flex items-center gap-3"><Mail className="h-4 w-4 shrink-0 text-[#07965d]" /><a href={contact ? `mailto:${contact.contact.email}` : "#"} className="transition hover:text-[#07965d]">{contact?.contact.email ?? "info@lazisnu.garut"}</a></li></>)}{(!contact || contact.footer.showSocialLinks) && contact?.socialLinks && contact.socialLinks.length > 0 ? <li className="flex gap-2 pt-2">{contact.socialLinks.map((link) => { const Icon = getSocialIcon(link.platform); return <a key={link.id} href={link.url} target="_blank" rel="noreferrer" aria-label={link.label} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#d9e5df] text-[#0b2239] transition hover:border-[#07965d] hover:text-[#07965d] dark:border-[#213a49] dark:text-white"><Icon className="h-4 w-4" /></a>})}</li> : null}</ul></div>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 pt-5 text-sm text-white/55 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 {contact?.footer.copyrightText ?? "PIINDUNG — NU Care–LAZISNU Garut."} {contact?.footer.secondaryText}</p>
-          <div className="flex gap-5"><span>Kebijakan Privasi</span><span>Syarat &amp; Ketentuan</span></div>
-        </div>
-      </motion.div>
+        <div className="flex flex-col gap-3 pt-6 text-xs text-[#64748b] dark:text-[#a5b4c5] sm:flex-row sm:items-center sm:justify-between"><p>© 2026 {contact?.footer.copyrightText ?? "PIINDUNG. NU Care–LAZISNU Kabupaten Garut."}</p><p>{contact?.footer.secondaryText ?? "Teknologi untuk pelayanan yang lebih unggul."}</p></div>
+      </LandingReveal>
     </footer>
   )
 }

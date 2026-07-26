@@ -3,16 +3,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, ChevronDown, CircleHelp, CreditCard, KeyRound, Search, Settings, Shield, Users, Wrench } from "lucide-react"
-import { Poppins } from "next/font/google"
 import { useEffect, useMemo, useState } from "react"
-import { PublicFooter } from "@/components/piindung/public-footer"
-import { PublicNavbar } from "@/components/piindung/public-navbar"
-import { PublicThemeDefault } from "@/components/piindung/public-theme-default"
+import { PublicPageShell } from "@/components/piindung/public-page-shell"
 import { usePublicProducts } from "@/lib/public-products"
 import { cn } from "@/lib/utils"
 import type { PublicHelpContent, HelpQuestion, HelpCategory } from "@/lib/help-content"
-
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
 
 function iconFor(key: string) {
   if (key === "users") return Users
@@ -62,10 +57,7 @@ export default function HelpPage() {
   const resetSearch = () => setQuery("")
 
   return (
-    <div className={poppins.className}>
-      <main className="min-h-screen overflow-x-hidden bg-[#f7faf8] text-slate-950 dark:bg-slate-950 dark:text-white">
-        <PublicThemeDefault />
-        <PublicNavbar />
+    <PublicPageShell>
         <section className="relative overflow-hidden px-4 pb-12 pt-32 text-center sm:px-6 sm:pb-16 sm:pt-36 lg:px-8 lg:pt-40">
           <div className="pointer-events-none absolute left-[10%] top-16 h-72 w-72 rounded-full bg-[#15945b]/15 blur-[110px]" aria-hidden="true" />
           <div className="pointer-events-none absolute right-[8%] top-24 h-80 w-80 rounded-full bg-sky-300/25 blur-[120px] dark:bg-sky-500/10" aria-hidden="true" />
@@ -99,9 +91,7 @@ export default function HelpPage() {
 
         {help && <SupportCta support={help.support} />}
         {!help && !loading && !error && <section className="mx-auto max-w-xl px-4 py-16 text-center"><div className="rounded-[24px] border border-[#dde7e2] bg-white px-6 py-10 shadow-sm dark:border-white/10 dark:bg-slate-900"><h2 className="text-2xl font-bold text-[#0b1f33] dark:text-white">Konten bantuan belum tersedia</h2><p className="mt-3 leading-7 text-[#566473] dark:text-slate-300">Tidak ada FAQ published yang dapat ditampilkan saat ini.</p></div></section>}
-        <PublicFooter />
-      </main>
-    </div>
+    </PublicPageShell>
   )
 }
 
@@ -114,5 +104,21 @@ function FaqSection({ categories, openFaq, setOpenFaq }: { categories: HelpCateg
 }
 
 function SupportCta({ support }: { support: PublicHelpContent["support"] }) {
-  return <section className="relative isolate overflow-hidden px-4 py-16 text-white sm:px-6 sm:py-20 lg:px-8" aria-labelledby="help-cta-heading" style={{ backgroundImage: "url('/BACKGROUND.png')", backgroundSize: "cover", backgroundPosition: "center" }}><div className="absolute inset-0 -z-10 bg-[#071426]/55" aria-hidden="true" /><div className="relative mx-auto grid max-w-7xl items-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both motion-reduce:animate-none lg:grid-cols-[1fr_auto] lg:gap-12"><div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">BANTUAN PIINDUNG</p><h2 id="help-cta-heading" className="mt-4 text-3xl font-bold leading-tight sm:text-4xl">{support.title}</h2><p className="mt-5 max-w-xl text-base leading-8 text-white/80 sm:text-lg">{support.description}</p></div><div className="flex flex-col gap-3 sm:flex-row lg:justify-end"><Link href={support.href} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-[#071426] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#071426]">{support.buttonLabel} <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link><Link href="/" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/70 bg-white/5 px-5 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-4 focus-visible:ring-offset-[#071426]">Kembali ke Beranda <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link></div></div></section>
+  return (
+    <section className="px-4 py-10 sm:px-6 sm:py-12 lg:px-8" aria-labelledby="help-cta-heading">
+      <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-[linear-gradient(118deg,#0a6b47_0%,#0b4f3a_42%,#08213b_100%)] px-6 py-10 text-white shadow-[0_16px_40px_rgba(4,24,18,0.18)] sm:px-10 sm:py-12 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10 lg:px-12">
+        <div className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-emerald-300/10" aria-hidden="true" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-28 w-28 rounded-full bg-sky-300/10" aria-hidden="true" />
+        <div className="relative max-w-2xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">Bantuan PIINDUNG</p>
+          <h2 id="help-cta-heading" className="mt-3 text-[clamp(1.9rem,3.4vw,2.75rem)] font-bold leading-[1.08] tracking-[-0.045em] text-white">{support.title}</h2>
+          <p className="mt-4 max-w-xl text-[15px] leading-7 text-white/90 sm:text-base">{support.description}</p>
+        </div>
+        <div className="relative mt-8 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col xl:flex-row">
+          <Link href={support.href} className="inline-flex h-[48px] items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-semibold text-[#071426] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b4f3a]">{support.buttonLabel} <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          <Link href="/" className="inline-flex h-[48px] items-center justify-center gap-2 rounded-2xl border-2 border-white bg-transparent px-6 text-sm font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b4f3a]">Kembali ke Beranda <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+        </div>
+      </div>
+    </section>
+  )
 }
