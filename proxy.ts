@@ -160,7 +160,7 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/api/")) {
     if (isAuthApiPath(pathname)) return NextResponse.next()
 
-    if (request.method === "GET" && (pathname === "/api/homepage-content/public" || pathname === "/api/help-content" || pathname === "/api/site-contact" || pathname === "/api/download-content" || pathname.startsWith("/api/download-content/files/"))) return NextResponse.next()
+    if (request.method === "GET" && (pathname === "/api/homepage-content/public" || pathname === "/api/help-content" || pathname === "/api/site-contact" || pathname === "/api/public-products" || pathname === "/api/site-branding" || pathname === "/api/download-content" || pathname.startsWith("/api/download-content/files/"))) return NextResponse.next()
 
     const recordScope = extractRecordScope(pathname)
     if (request.method === "GET" && recordScope && publicReadableRecordScopes.has(recordScope)) {

@@ -45,7 +45,7 @@ function validateProductFields(data: Partial<PublicProduct>) {
   if (data.shortName !== undefined && (typeof data.shortName !== "string" || data.shortName.length > 40)) return "Nama pendek tidak valid."
   if (data.description !== undefined && (typeof data.description !== "string" || !data.description.trim() || data.description.length > 300)) return "Deskripsi tidak valid."
   if (data.iconUrl !== undefined && typeof data.iconUrl !== "string") return "URL Icon tidak valid."
-  if (data.category !== undefined && !VALID_CATEGORIES.includes(data.category as PublicProductCategory)) return "Kategori tidak valid."
+  if (data.category !== undefined && !(VALID_CATEGORIES as readonly string[]).includes(data.category)) return "Kategori tidak valid."
   if (data.status !== undefined && !VALID_STATUSES.includes(data.status as PublicProductStatus)) return "Status tidak valid."
   if (data.publicHref !== undefined && !validatePublicRoute(data.publicHref)) return "URL publik tidak diizinkan atau tidak valid."
   if (data.visible !== undefined && typeof data.visible !== "boolean") return "Visibility harus berupa boolean."

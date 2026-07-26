@@ -26,7 +26,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ scope: str
       const access = await requireSiteContactManager()
       if (access.response) return access.response
     }
-    const allowedScopes = ["system-settings", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
+    const allowedScopes = ["system-settings", "maintenance-mode", "homepage-content", "article-migration-map", "article-legacy-archive", "faq-manager", "media-library", "contact-social"]
     if (scope === "download-content" || scope === "download-center") {
       return NextResponse.json({ error: "Gunakan endpoint download khusus." }, { status: 403 })
     }
