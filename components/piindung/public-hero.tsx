@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
-import { ArrowRight, Check, LogIn, Play } from "lucide-react"
+import { ArrowRight, Check, LogIn } from "lucide-react"
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react"
 import { motionEase } from "@/lib/motion"
 
@@ -43,8 +43,7 @@ export function HeroSection() {
           <p className="mt-7 max-w-[585px] text-[15px] leading-8 text-[#64748b] dark:text-[#a5b4c5] sm:text-[17px]">PIINDUNG menghubungkan informasi, program, penghimpunan, penyaluran, pelaporan, dan layanan NU Care–LAZISNU Garut dalam satu ekosistem digital.</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="/produk" className="group inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#07965d] to-[#0eae70] px-6 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(7,150,93,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-4">Jelajahi Produk <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
-            <Link href="#cara-kerja" className="group inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-[#d9e5df] bg-white/80 px-6 text-sm font-semibold text-[#0b2239] shadow-sm transition hover:-translate-y-0.5 dark:border-white/15 dark:bg-white/5 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-4"><span className="grid h-5 w-5 place-items-center rounded-full border border-[#15945b] text-[#15945b]"><Play className="ml-px h-3 w-3 fill-current" /></span>Lihat Cara Kerja</Link>
-            <Link href="/login" className="group inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-[#07965d]/30 bg-[#e6f7ef] px-6 text-sm font-semibold text-[#08784d] transition hover:-translate-y-0.5 hover:border-[#07965d]/55 hover:bg-[#d9f3e7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-4 dark:border-emerald-300/20 dark:bg-emerald-400/10 dark:text-emerald-200"><LogIn className="h-4 w-4" />Masuk Dashboard</Link>
+            <Link href="/login" className="group inline-flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-[#d9e5df] bg-white/80 px-6 text-sm font-semibold text-[#0b2239] shadow-sm transition hover:-translate-y-0.5 dark:border-white/15 dark:bg-white/5 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-4"><span className="grid h-5 w-5 place-items-center rounded-full border border-[#15945b] text-[#15945b]"><LogIn className="h-3 w-3" /></span>Masuk ke Sistem</Link>
           </div>
           <div className="mt-7 flex items-center gap-3 text-xs text-[#64748b] dark:text-[#a5b4c5]"><span className="flex -space-x-2"><i className="grid h-8 w-8 place-items-center rounded-full border-2 border-[#f7faf8] bg-[#08213b] text-[9px] not-italic text-white dark:border-[#07131f]">PC</i><i className="grid h-8 w-8 place-items-center rounded-full border-2 border-[#f7faf8] bg-[#07965d] text-[9px] not-italic text-white dark:border-[#07131f]">UP</i><i className="grid h-8 w-8 place-items-center rounded-full border-2 border-[#f7faf8] bg-[#5e8d46] text-[9px] not-italic text-white dark:border-[#07131f]">PL</i></span><span><strong className="block text-[#0b2239] dark:text-white">Dibangun untuk kolaborasi</strong>PC, UPZIS, PLPK, dan seluruh pengurus</span></div>
         </motion.div>
