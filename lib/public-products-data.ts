@@ -1,4 +1,4 @@
-export type PublicProductCategory = "Tata Kelola" | "Penghimpunan" | "Penyaluran & Pelayanan" | "Informasi & Media"
+export type PublicProductCategory = "Tata Kelola" | "Penghimpunan" | "Penyaluran & Pelayanan" | "Informasi & Media" | "Layanan Kesehatan" | "Dokumentasi & Arsip"
 export type PublicProductStatus = "Aktif" | "Segera Hadir"
 export type PublicProductId = "gorut" | "etasyaruf" | "mobisnu" | "arsip" | "lazisnu-pos"
 
@@ -50,9 +50,9 @@ export const DEFAULT_PUBLIC_PRODUCTS: PublicProduct[] = [
     id: "mobisnu",
     name: "Mobisnu",
     shortName: "",
-    description: "Layanan berbasis mobile untuk mendukung informasi, komunikasi, dan akses layanan organisasi.",
+    description: "Layanan mobil kesehatan dan ambulans NU untuk pelayanan keliling kepada umat, dengan respons cepat dan mudah diakses.",
     iconUrl: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/icon%20mobisnu.PNG-PTAlyAtc2gSG1E6t9lumYCrjcxZbQs.png",
-    category: "Informasi & Media",
+    category: "Layanan Kesehatan",
     status: "Segera Hadir",
     publicHref: "",
     visible: true,
@@ -63,9 +63,9 @@ export const DEFAULT_PUBLIC_PRODUCTS: PublicProduct[] = [
     id: "arsip",
     name: "Arsip Digital",
     shortName: "Arsip",
-    description: "Pusat penyimpanan dokumen organisasi agar arsip lebih tertata, mudah dicari, dan aman.",
+    description: "Pengelolaan arsip digital agar dokumen organisasi lebih rapi, aman, dan mudah dicari kapan saja.",
     iconUrl: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/icon%20arsip.PNG-ICoMCGSDzrJxP8skMbkxCesujkv4Rc.png",
-    category: "Tata Kelola",
+    category: "Dokumentasi & Arsip",
     status: "Segera Hadir",
     publicHref: "",
     visible: true,
