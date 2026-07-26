@@ -9,3 +9,14 @@ node_modules
 .env*.local
 .DS_Store
 /lib/generated/prisma
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Local tooling state
+.claude/
+
+# Design reference assets (not served)
+/design-references/
