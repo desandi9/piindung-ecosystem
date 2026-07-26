@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 import { getPrismaClient } from "@/lib/prisma"
 import { getRecord, listRecords } from "@/lib/record-store-server"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
-import { DEFAULT_HELP_FAQ_CATEGORIES } from "@/lib/faq-manager"
+import { DEFAULT_HELP_FAQ_CATEGORIES } from "@/lib/faq-manager-data"
 import { DEFAULT_PUBLIC_PRODUCTS, type PublicProductId } from "@/lib/public-products-data"
 
 export const HELP_CONTENT_SCOPE = "help-content"
