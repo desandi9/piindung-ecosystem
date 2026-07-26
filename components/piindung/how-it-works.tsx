@@ -1,5 +1,10 @@
 "use client"
 
+import { useRef } from "react"
+import { useReducedMotion } from "motion/react"
+import { useGSAP } from "@gsap/react"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { Boxes, FileCheck2, Inbox, Send, ShieldCheck } from "lucide-react"
 import { LandingReveal } from "@/components/piindung/landing-motion"
 
