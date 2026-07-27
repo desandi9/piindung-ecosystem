@@ -18,6 +18,7 @@ const profileSelect = {
   phone: true,
   role: true,
   status: true,
+  address: true,
   avatar: true,
   createdAt: true,
   updatedAt: true,
@@ -76,6 +77,7 @@ export async function updateCurrentAccount(actorId: string, patch: ProfilePatch)
         ["name", "self_profile_name_changed"],
         ["email", "self_profile_email_changed"],
         ["phone", "self_profile_phone_changed"],
+        ["address", "self_profile_address_changed"],
         ["avatar", "self_profile_avatar_changed"],
       ] as const) {
         if (before[field] !== after[field]) {

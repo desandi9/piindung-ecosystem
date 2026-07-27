@@ -19,10 +19,10 @@ export async function issueUniqueMemberId() {
 export async function currentMemberIdentity() {
   const access = await resolveCurrentPortalAccess()
   if (access.kind !== "authorized") return access
-  const user = await getPrismaClient().user.findUnique({ where: { id: access.user.id }, select: { memberId: true, name: true, role: true, status: true, avatar: true } })
+  const user = await getPrismaClient().user.findUnique({ where: { id: access.user.id }, select: { memberId: true, name: true, phone: true, email: true, role: true, status: true, address: true, avatar: true, createdAt: true } })
   if (!user) return { kind: "unauthenticated" as const }
   const memberId = user.memberId
-  return { kind: "authorized" as const, identity: { memberId, name: user.name, role: roleDisplayNames[user.role as AppRole], status: user.status, avatar: user.avatar, organization: organizationLabel, verificationUrl: verificationUrl(memberId), qrUrl: `/api/public/verify/${encodeURIComponent(memberId)}/qr` } }
+  return { kind: "authorized" as const, identity: { memberId, name: user.name, phone: user.phone, email: user.email ?? "", role: roleDisplayNames[user.role as AppRole], status: user.status, address: user.address ?? "", avatar: user.avatar, organization: organizationLabel, joinedAt: user.createdAt.toISOString(), verificationUrl: verificationUrl(memberId), qrUrl: `/api/public/verify/${encodeURIComponent(memberId)}/qr` } }
 }
 
 export async function findPublicMember(memberId: string) {

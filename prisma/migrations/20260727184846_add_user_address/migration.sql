@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "AppRecord" ALTER COLUMN "updatedAt" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "address" TEXT,
+ALTER COLUMN "role" DROP DEFAULT,
+ALTER COLUMN "updatedAt" DROP DEFAULT;
