@@ -51,6 +51,10 @@ function getScopeData(record: { data: Record<string, unknown> }) {
   return record.data as StoredScope
 }
 
+function resolveScopeId(scope: StoredScope | null, userId: string) {
+  return isNonEmptyString(scope?.id) ? scope.id.trim() : `user-scope-${userId}`
+}
+
 export async function POST(request: Request) {
   try {
     const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value
@@ -111,7 +115,7 @@ export async function POST(request: Request) {
         await deleteRecord(SCOPE_NAME, existingRecord.key)
         return NextResponse.json({ scope: null })
       }
-      const scope = { id: existingScope?.id ?? `user-scope-${userId}`, userId, role }
+      const scope = { id: resolveScopeId(existingScope, userId), userId, role }
       const saved = existingRecord ? await updateRecord(SCOPE_NAME, existingRecord.key, scope) : await createRecord(SCOPE_NAME, scope.id, scope)
       return NextResponse.json({ scope: saved?.data ?? scope })
     }
@@ -121,7 +125,7 @@ export async function POST(request: Request) {
     if (role === "admin_kordes" && (typeof wilayahLabel !== "string" || !wilayahLabel.trim())) return invalid("Desa/Kelurahan atau Unit wajib diisi.")
 
     const scope = {
-      id: existingScope?.id ?? `user-scope-${userId}`,
+      id: resolveScopeId(existingScope, userId),
       userId,
       role,
       gorutKecamatan: kecamatan.trim(),
