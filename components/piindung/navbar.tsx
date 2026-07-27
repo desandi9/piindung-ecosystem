@@ -7,7 +7,7 @@ import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useTheme } from "next-themes"
 import { getResolvedLogoUrl, useStoredSystemSettings } from "@/lib/system-settings"
-import { 
+import {
   Moon,
   Sun,
   Menu,
@@ -26,7 +26,7 @@ import { useAuth, roleDisplayNames } from "@/lib/auth-context"
 import { primaryNavigation } from "@/lib/portal-navigation"
 import { NotificationBell } from "@/components/notification-bell"
 
-const navItems = primaryNavigation
+const navItems = primaryNavigation.filter((item) => item.id !== "member-area")
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -44,25 +44,23 @@ export function Navbar() {
   const isDarkMode = mounted ? resolvedTheme === "dark" || document.documentElement.classList.contains("dark") : false
 
   return (
-    <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm transition-colors duration-300">
-      <div className="container mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
-          <Link href="/dashboard" className="shrink-0">
+    <header className="sticky top-0 z-50 transition-colors duration-300">
+      <div className="mx-auto max-w-[1360px] px-3 pt-3 sm:px-5 lg:px-8">
+        <div className="flex h-14 items-center justify-between gap-3 rounded-full border border-[#dfe9e4]/90 bg-white/85 px-3 shadow-[0_10px_28px_rgba(8,33,59,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[#0d1e2d]/88 sm:h-16 sm:px-4 lg:h-[68px] lg:px-5">
+          <Link href="/dashboard" className="shrink-0 pl-1">
             <Image
               src={getResolvedLogoUrl(settings.logoUrl, isDarkMode ? "dark" : "light")}
               alt={settings.websiteTitle}
               width={180}
               height={50}
-              className="h-10 w-auto lg:h-12"
+              className="h-9 w-auto lg:h-11"
               style={{ width: "auto" }}
               priority
             />
           </Link>
 
-          {/* Right Side - Navigation, Notification, Dark Mode Toggle */}
-          <div className="ml-auto flex items-center gap-2 lg:gap-3">
-            <nav className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:gap-3">
+            <nav className="hidden items-center gap-1 rounded-full bg-[#f4f8f6]/80 p-1 dark:bg-white/5 md:flex">
               {navItems.map((item) => {
                 const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname === item.href || pathname.startsWith(`${item.href}/`)
                 return (
@@ -70,35 +68,30 @@ export function Navbar() {
                     key={item.label}
                     href={item.href}
                     className={cn(
-                      "text-sm font-medium transition-all duration-300 ease-out relative py-2 group whitespace-nowrap",
+                      "rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200 ease-out whitespace-nowrap lg:px-4",
                       isActive
-                        ? "text-[#2e8b57]"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-[#e6f7ef] text-[#07965d] shadow-sm dark:bg-emerald-500/15 dark:text-emerald-300"
+                        : "text-[#6c7a89] hover:bg-white hover:text-[#08213b] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white",
                     )}
                   >
                     {item.label}
-                    {isActive ? (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2e8b57] rounded-full" />
-                    ) : (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2e8b57] rounded-full origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 opacity-50" />
-                    )}
                   </Link>
                 )
               })}
             </nav>
-            {/* Mobile Menu Sheet */}
+
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <button 
-                  className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-all duration-200 ease-out"
+                <button
+                  className="rounded-full p-2 text-[#6c7a89] transition-all duration-200 hover:bg-[#e6f7ef] hover:text-[#07965d] md:hidden dark:text-slate-300 dark:hover:bg-white/10"
                   aria-label="Buka menu"
                 >
                   <Menu className="h-5 w-5" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] border-r border-border p-6 flex flex-col justify-between">
+              <SheetContent side="left" className="flex w-[300px] flex-col justify-between border-r border-[#dfe9e4] p-6 dark:border-white/10">
                 <div className="flex-1">
-                  <SheetHeader className="p-0 mb-6">
+                  <SheetHeader className="mb-6 p-0">
                     <SheetTitle className="text-left text-lg font-bold text-foreground">
                       <Image
                         src={getResolvedLogoUrl(settings.logoUrl, isDarkMode ? "dark" : "light")}
@@ -110,8 +103,8 @@ export function Navbar() {
                       />
                     </SheetTitle>
                   </SheetHeader>
-                  
-                  <nav className="flex flex-col gap-2 mt-4">
+
+                  <nav className="mt-4 flex flex-col gap-1.5">
                     {navItems.map((item) => {
                       const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname === item.href || pathname.startsWith(`${item.href}/`)
                       return (
@@ -120,10 +113,10 @@ export function Navbar() {
                           href={item.href}
                           onClick={() => setIsMobileMenuOpen(false)}
                           className={cn(
-                            "text-sm font-medium transition-all duration-200 ease-out py-3 px-4 rounded-xl flex items-center gap-3",
-                            isActive 
-                              ? "text-[#2e8b57] bg-[#2e8b57]/10" 
-                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                            "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                            isActive
+                              ? "bg-[#e6f7ef] text-[#07965d] dark:bg-emerald-500/15 dark:text-emerald-300"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground",
                           )}
                         >
                           {item.label}
@@ -132,17 +125,17 @@ export function Navbar() {
                     })}
                   </nav>
                 </div>
-                
-                <div className="border-t border-border pt-4">
+
+                <div className="border-t border-[#dfe9e4] pt-4 dark:border-white/10">
                   <div className="flex items-center gap-3 px-2 py-1">
-                    <Avatar className="w-10 h-10 shadow-sm bg-gradient-to-br from-[#0f3460] to-[#1a4a7a]">
+                    <Avatar className="h-10 w-10 bg-gradient-to-br from-[#08213b] to-[#1a4a7a] shadow-sm">
                       <AvatarImage src={user?.avatar || undefined} alt={user?.name || "User"} className="object-cover" />
                       <AvatarFallback className="bg-transparent text-white">
                         <User className="h-5 w-5 text-white" />
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold text-foreground truncate max-w-[150px]">{user?.name || "User"}</p>
+                      <p className="max-w-[150px] truncate text-sm font-semibold text-foreground">{user?.name || "User"}</p>
                       <p className="text-xs text-muted-foreground">
                         {user ? roleDisplayNames[user.role] : "Loading..."}
                       </p>
@@ -152,13 +145,11 @@ export function Navbar() {
               </SheetContent>
             </Sheet>
 
-            {/* Notification Bell */}
             <NotificationBell />
 
-            {/* Dark Mode Toggle - Separate from dropdown */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 text-muted-foreground hover:text-foreground transition-all duration-200 ease-out rounded-xl hover:bg-accent"
+              className="rounded-full p-2 text-[#6c7a89] transition-all duration-200 hover:bg-[#e6f7ef] hover:text-[#07965d] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-emerald-300"
               aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
               {mounted && isDarkMode ? (
@@ -169,7 +160,6 @@ export function Navbar() {
             </button>
           </div>
         </div>
-
       </div>
     </header>
   )

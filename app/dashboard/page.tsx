@@ -36,12 +36,23 @@ export default function DashboardPage() {
     })
   }, [user])
 
-  if (isLoading || !user) return <div className="min-h-screen bg-[#f7faf8] dark:bg-slate-950" />
+  if (isLoading || !user) {
+    return <div className="min-h-screen bg-[#f8fbf9] dark:bg-[#07131f]" />
+  }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7faf8] dark:bg-slate-950">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#f8fbf9] text-[#08213b] dark:bg-[#07131f] dark:text-white">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(8,33,59,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(8,33,59,.035)_1px,transparent_1px)] [background-size:56px_56px] dark:opacity-20" />
+        <div className="hero-soft-blob hero-soft-blob-one" />
+        <div className="hero-soft-blob hero-soft-blob-two" />
+        <div className="hero-soft-blob hero-soft-blob-three" />
+      </div>
       <Navbar />
-      <main className="container mx-auto flex-1 px-4 py-8 lg:max-w-6xl lg:px-8" aria-label="Konten utama dashboard PIINDUNG">
+      <main
+        className="relative mx-auto w-full max-w-[1360px] flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-12"
+        aria-label="Konten utama dashboard PIINDUNG"
+      >
         <PortalHubDashboard
           user={user}
           modules={modules}
