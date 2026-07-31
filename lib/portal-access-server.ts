@@ -75,7 +75,7 @@ async function setModuleGrantWithClient(client: GrantStoreClient, userId: string
       data: { actorId, targetUserId: userId, action: enabled ? "module_entry_enabled" : "module_entry_disabled", moduleKey, before: { enabled: before }, after: { enabled }, timestamp },
     },
   })
-  await createSystemNotification(client, { title: "Akses modul diperbarui", body: `Akses modul ${moduleKey.toUpperCase()} Anda telah ${enabled ? "diaktifkan" : "dinonaktifkan"}.`, category: "access", severity: enabled ? "success" : "warning", targetUserId: userId, actionPath: "/member-area" })
+  await createSystemNotification(client, { title: "Akses modul diperbarui", body: `Akses modul ${moduleKey.toUpperCase()} Anda telah ${enabled ? "diaktifkan" : "dinonaktifkan"}.`, category: "access", severity: enabled ? "success" : "warning", targetUserId: userId, actionPath: "/dashboard" })
   return updated
 }
 

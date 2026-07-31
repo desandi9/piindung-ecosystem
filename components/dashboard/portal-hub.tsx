@@ -13,7 +13,6 @@ import {
   IdCard,
   LayoutGrid,
   Settings2,
-  ShieldCheck,
   UserRoundCog,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -21,6 +20,7 @@ import { motionEase } from "@/lib/motion"
 import { roleDisplayNames } from "@/features/auth"
 import { canAccessAdminDashboard } from "@/features/auth/route-access"
 import type { AuthUser } from "@/types/auth"
+import { usePublicProducts } from "@/lib/public-products"
 import { cn } from "@/lib/utils"
 
 export type PortalHubModule = { key: string; name: string; route: string; description: string }
@@ -64,10 +64,30 @@ type EcosystemApp = {
   description: string
   logo: string | null
   accent: string
+  capabilities: string[]
 } & (
   | { status: "available"; route: string; cta: string }
   | { status: "coming-soon" }
 )
+
+const ECOSYSTEM_PRODUCT_IDS = ["gorut", "etasyaruf", "mobisnu", "arsip"] as const
+
+const PRODUCT_ACCENTS: Record<string, string> = {
+  gorut: "from-emerald-500/15 to-teal-500/10",
+  etasyaruf: "from-teal-500/15 to-emerald-500/10",
+  mobisnu: "from-emerald-400/15 to-teal-400/10",
+  arsip: "from-teal-400/15 to-emerald-500/10",
+}
+
+const PRODUCT_CAPABILITIES: Record<string, string[]> = {
+  gorut: ["Munfiq", "Setoran", "Laporan"],
+  etasyaruf: ["Penyaluran", "Program", "Monitoring"],
+  mobisnu: ["Layanan keliling", "Ambulans", "Respons cepat"],
+  arsip: ["Dokumen", "Pencarian", "Keamanan"],
+}
+
+const GORUT_DASHBOARD_DESCRIPTION =
+  "Digitalisasi Kotak Infaq NU untuk pengelolaan Munfiq, transaksi, setoran, validasi, dan laporan."
 
 function useReveal(delay = 0): Variants {
   const reduced = useReducedMotion()
@@ -92,47 +112,51 @@ function useCardStagger(): { container: Variants; item: Variants } {
   }
 }
 
-function resolveEcosystemApps(modules: PortalHubModule[]): EcosystemApp[] {
-  const gorut = modules.find((module) => module.key === "gorut")
+function resolveEcosystemApps(
+  products: ReturnType<typeof usePublicProducts>,
+  modules: PortalHubModule[],
+): EcosystemApp[] {
+  const gorutModule = modules.find((module) => module.key === "gorut")
+  const byId = new Map(products.map((product) => [product.id, product]))
 
-  return [
-    gorut
-      ? {
-          id: "gorut",
-          name: "GORUT",
-          description: "Kelola Munfiq, transaksi, setoran, validasi, monitoring, dan laporan.",
-          logo: "/gorut-logo-icon.png",
-          accent: "from-emerald-500/15 to-teal-500/10",
-          status: "available",
-          route: gorut.route || "/gorut",
+  return ECOSYSTEM_PRODUCT_IDS.flatMap((id): EcosystemApp[] => {
+    const product = byId.get(id)
+    if (!product || !product.visible) return []
+
+    const base = {
+      id: product.id,
+      name: product.name,
+      description: id === "gorut" ? GORUT_DASHBOARD_DESCRIPTION : product.description,
+      logo: product.iconUrl || null,
+      accent: PRODUCT_ACCENTS[id] ?? "from-emerald-500/15 to-teal-500/10",
+      capabilities: PRODUCT_CAPABILITIES[id] ?? [],
+    }
+
+    if (id === "gorut") {
+      if (!gorutModule) return [{ ...base, status: "coming-soon" as const }]
+      return [
+        {
+          ...base,
+          status: "available" as const,
+          route: gorutModule.route || product.publicHref || "/gorut",
           cta: "Masuk GORUT",
-        }
-      : null,
-    {
-      id: "e-tasyaruf",
-      name: "E-Tasyaruf",
-      description: "Digitalisasi penyaluran dan pentasyarufan dana secara tepat sasaran.",
-      logo: "/ICON PENTASYARUFAN.png",
-      accent: "from-teal-500/15 to-emerald-500/10",
-      status: "coming-soon" as const,
-    },
-    {
-      id: "mobisnu",
-      name: "Mobisnu",
-      description: "Aplikasi mobile layanan warga untuk akses cepat dalam genggaman.",
-      logo: "/icon mobisnu.PNG",
-      accent: "from-emerald-400/15 to-teal-400/10",
-      status: "coming-soon" as const,
-    },
-    {
-      id: "arsip-digital",
-      name: "Arsip Digital",
-      description: "Penyimpanan dan pengelolaan dokumen organisasi secara terpusat.",
-      logo: "/icon arsip.PNG",
-      accent: "from-teal-400/15 to-emerald-500/10",
-      status: "coming-soon" as const,
-    },
-  ].filter(Boolean) as EcosystemApp[]
+        },
+      ]
+    }
+
+    if (product.status === "Aktif" && product.publicHref) {
+      return [
+        {
+          ...base,
+          status: "available" as const,
+          route: product.publicHref,
+          cta: `Masuk ${product.shortName || product.name}`,
+        },
+      ]
+    }
+
+    return [{ ...base, status: "coming-soon" as const }]
+  })
 }
 
 function WelcomeBanner({
@@ -189,7 +213,7 @@ function WelcomeBanner({
             </Link>
             {hasIdentityAccess ? (
               <Link
-                href="/member-area/identitas"
+                href="/profil/identitas"
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#dce8e2] bg-white/90 px-5 text-sm font-semibold text-[#08213b] shadow-sm transition hover:border-[#07965d]/40 hover:bg-[#e7f7ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-emerald-500/10"
               >
                 <IdCard className="h-4 w-4" aria-hidden="true" />
@@ -331,7 +355,7 @@ function EcosystemSection({ apps }: { apps: EcosystemApp[] }) {
             Ekosistem PIINDUNG
           </h2>
           <p className="mt-0.5 text-sm text-[#6c7a89] dark:text-slate-400">
-            Layanan digital dalam satu ekosistem terpadu.
+            Akses produk dan layanan digital PIINDUNG sesuai kebutuhan organisasi.
           </p>
         </div>
       </motion.div>
@@ -341,7 +365,7 @@ function EcosystemSection({ apps }: { apps: EcosystemApp[] }) {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.15, margin: "0px 0px -8% 0px" }}
-        className="relative grid gap-5 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4"
+        className="relative grid gap-5 sm:grid-cols-2 xl:grid-cols-4"
       >
         {apps.map((app) => (
           <EcosystemCard key={app.id} app={app} variants={stagger.item} reduced={!!reduced} />
@@ -465,6 +489,24 @@ function EcosystemCard({ app, variants, reduced }: { app: EcosystemApp; variants
           {app.description}
         </p>
 
+        {app.capabilities.length > 0 && (
+          <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Kemampuan">
+            {app.capabilities.slice(0, 3).map((cap) => (
+              <li
+                key={cap}
+                className={cn(
+                  "rounded-lg px-2 py-1 text-[11px] font-medium",
+                  available
+                    ? "bg-[#e7f7ef]/80 text-[#07965d] dark:bg-emerald-500/10 dark:text-emerald-200"
+                    : "bg-[#f1f4f7] text-[#9aabb8] dark:bg-white/[0.06] dark:text-slate-500",
+                )}
+              >
+                {cap}
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="mt-auto pt-5">
           {app.status === "available" ? (
             <Link
@@ -497,8 +539,8 @@ function EmptyState({
   icon: React.ElementType
   title: string
   description: string
-  actionHref: string
-  actionLabel: string
+  actionHref?: string
+  actionLabel?: string
 }) {
   return (
     <div className="flex h-full flex-col items-start gap-3 rounded-[20px] border border-dashed border-[#dce8e2] bg-[#f8fbf9]/70 p-5 text-sm dark:border-white/10 dark:bg-white/5">
@@ -509,13 +551,15 @@ function EmptyState({
         <p className="font-semibold text-[#08213b] dark:text-white">{title}</p>
         <p className="leading-6 text-[#6c7a89] dark:text-slate-300">{description}</p>
       </div>
-      <Link
-        href={actionHref}
-        className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-[#07965d] hover:text-[#067a4c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:text-emerald-300"
-      >
-        {actionLabel}
-        <ArrowRight className="h-4 w-4" aria-hidden="true" />
-      </Link>
+      {actionHref && actionLabel && (
+        <Link
+          href={actionHref}
+          className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-[#07965d] hover:text-[#067a4c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:text-emerald-300"
+        >
+          {actionLabel}
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      )}
     </div>
   )
 }
@@ -582,9 +626,7 @@ function ActivityCard({ activities }: { activities: PortalHubActivity[] }) {
           </h2>
           <p className="mt-1 text-xs text-[#6c7a89] dark:text-slate-400">Tiga aktivitas terbaru pada akun Anda.</p>
         </div>
-        <Link href="/member-area/aktivitas" className="text-xs font-semibold text-[#07965d] hover:text-[#067a4c] dark:text-emerald-300">
-          Lihat semua
-        </Link>
+
       </div>
       {items.length ? (
         <ul className="space-y-3">
@@ -601,8 +643,7 @@ function ActivityCard({ activities }: { activities: PortalHubActivity[] }) {
           icon={ClipboardList}
           title="Belum ada aktivitas terbaru"
           description="Aktivitas akun akan tampil di sini setelah Anda melakukan tindakan pada portal."
-          actionHref="/member-area/aktivitas"
-          actionLabel="Lihat riwayat aktivitas"
+
         />
       )}
     </section>
@@ -610,24 +651,21 @@ function ActivityCard({ activities }: { activities: PortalHubActivity[] }) {
 }
 
 function QuickAccess({
-  hasAccessManage,
   hasContent,
   hasAdmin,
 }: {
-  hasAccessManage: boolean
   hasContent: boolean
   hasAdmin: boolean
 }) {
   const reduced = useReducedMotion()
   const reveal = useReveal(0.1)
   const shortcuts: Array<{ href: string; title: string; icon: React.ElementType }> = [
-    { href: "/member-area/identitas", title: "Identitas Digital", icon: IdCard },
+    { href: "/profil/identitas", title: "Identitas Digital", icon: IdCard },
     { href: "/pengaturan-profil", title: "Pengaturan Profil", icon: UserRoundCog },
-    { href: "/bantuan", title: "Pusat Bantuan", icon: CircleHelp },
+    { href: "/dashboard/bantuan", title: "Pusat Bantuan", icon: CircleHelp },
   ]
-  if (hasContent) shortcuts.push({ href: "/member-area/konten/beranda", title: "Kelola Website", icon: FilePenLine })
+  if (hasContent) shortcuts.push({ href: "/dashboard/landing-page", title: "Kelola Landing Page", icon: FilePenLine })
   if (hasAdmin) shortcuts.push({ href: "/admin", title: "Administrasi Sistem", icon: Settings2 })
-  if (hasAccessManage) shortcuts.push({ href: "/member-area/hak-akses", title: "Hak Akses", icon: ShieldCheck })
 
   return (
     <motion.section
@@ -705,11 +743,11 @@ export function PortalHubDashboard({
   permissions: string[]
   sessionVerified: boolean
 }) {
-  const hasAccessManage = permissions.includes("access.manage")
   const hasIdentityAccess = permissions.includes("member_area.view")
   const hasContent = CONTENT_PERMISSIONS.some((permission) => permissions.includes(permission))
   const hasAdmin = ADMIN_PERMISSIONS.some((permission) => permissions.includes(permission)) || canAccessAdminDashboard(user.role)
-  const apps = resolveEcosystemApps(modules)
+  const products = usePublicProducts()
+  const apps = resolveEcosystemApps(products, modules)
 
   return (
     <div className="space-y-8 sm:space-y-9">
@@ -719,7 +757,7 @@ export function PortalHubDashboard({
         <NotificationsCard notifications={notifications} />
         <ActivityCard activities={activities} />
       </CardsStaggerGroup>
-      <QuickAccess hasAccessManage={hasAccessManage} hasContent={hasContent} hasAdmin={hasAdmin} />
+      <QuickAccess hasContent={hasContent} hasAdmin={hasAdmin} />
     </div>
   )
 }

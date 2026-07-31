@@ -82,7 +82,7 @@ export async function createCentralUser(actorId: string, input: { name: string; 
       return await getPrismaClient().$transaction(async (tx) => {
         const user = await tx.user.create({ data: { memberId: generateMemberId(), name: input.name.trim(), email: normalizeEmail(input.email), phone: input.phone, passwordHash, role: input.role, status: input.status, avatar: input.avatar?.trim() || null }, select: userSelect })
         await writeUserAuditWithClient(tx, actorId, user.id, "user_created", {}, { name: user.name, email: user.email, role: user.role, status: user.status })
-        for (const module of input.modules) await setModuleGrant(user.id, module.key, module.enabled, actorId, tx)
+        for (const mod of input.modules) await setModuleGrant(user.id, mod.key, mod.enabled, actorId, tx)
         return user
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
     } catch (error) {
@@ -110,9 +110,9 @@ export async function updateCentralUser(actorId: string, targetId: string, input
       if (target.role !== updated.role) changes.push(["user_role_changed", "role"])
       if (target.status !== updated.status) changes.push([updated.status === "Aktif" ? "user_activated" : "user_deactivated", "status"])
       for (const [action, field] of changes) await writeUserAuditWithClient(tx, actorId, targetId, action, { [field]: target[field as keyof DbUser] }, { [field]: updated[field as keyof DbUser] })
-      if (target.role !== updated.role) await createSystemNotification(tx, { title: "Peran akun diperbarui", body: "Peran akun Anda telah diperbarui oleh administrator.", category: "account", severity: "info", targetUserId: targetId, actionPath: "/member-area" })
-      if (target.status !== updated.status) await createSystemNotification(tx, { title: "Status akun diperbarui", body: `Akun Anda telah ${updated.status === "Aktif" ? "diaktifkan" : "dinonaktifkan"} oleh administrator.`, category: "account", severity: updated.status === "Aktif" ? "success" : "warning", targetUserId: targetId, actionPath: "/member-area" })
-      for (const module of input.modules) await setModuleGrant(targetId, module.key, module.enabled, actorId, tx)
+      if (target.role !== updated.role) await createSystemNotification(tx, { title: "Peran akun diperbarui", body: "Peran akun Anda telah diperbarui oleh administrator.", category: "account", severity: "info", targetUserId: targetId, actionPath: "/dashboard" })
+      if (target.status !== updated.status) await createSystemNotification(tx, { title: "Status akun diperbarui", body: `Akun Anda telah ${updated.status === "Aktif" ? "diaktifkan" : "dinonaktifkan"} oleh administrator.`, category: "account", severity: updated.status === "Aktif" ? "success" : "warning", targetUserId: targetId, actionPath: "/dashboard" })
+      for (const mod of input.modules) await setModuleGrant(targetId, mod.key, mod.enabled, actorId, tx)
       return { before: target, after: updated }
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
   } catch (error) {

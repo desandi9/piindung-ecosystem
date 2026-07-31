@@ -62,17 +62,8 @@ export function hasEffectiveModuleEntry(role: string, active: boolean, moduleKey
   return role === "super_admin_pc" || grantEnabled
 }
 
-export function canAccessMemberAreaRoute(role: string, pathname: string) {
+export function canAccessLandingPageRoute(role: string, pathname: string) {
   if (!(role in capabilities)) return false
-  if (pathname === "/member-area" || pathname === "/member-area/identitas" || pathname === "/member-area/aktivitas") return roleHasPortalPermission(role, "member_area.view")
-
-  if (pathname === "/member-area/notifikasi") return roleHasPortalPermission(role, "notifications.manage")
-  if (pathname === "/member-area/audit") return roleHasPortalPermission(role, "audit.view")
-
-  if (pathname === "/member-area/konten" || pathname.startsWith("/member-area/konten/artikel")) return roleHasPortalPermission(role, "articles.manage") || role === "super_admin_pc"
-  if (pathname.startsWith("/member-area/konten/beranda") || pathname.startsWith("/member-area/konten/produk") || pathname.startsWith("/member-area/konten/dampak") || pathname.startsWith("/member-area/konten/bantuan") || pathname.startsWith("/member-area/konten/galeri") || pathname.startsWith("/member-area/konten/download") || pathname.startsWith("/member-area/konten/media") || pathname.startsWith("/member-area/konten/kontak")) return role === "super_admin_pc"
-
-  if (pathname === "/member-area/hak-akses") return roleHasPortalPermission(role, "access.manage")
-  if (pathname === "/member-area/pengguna") return roleHasPortalPermission(role, "users.manage")
-  return false
+  if (pathname === "/dashboard/landing-page" || pathname.startsWith("/dashboard/landing-page/artikel")) return roleHasPortalPermission(role, "articles.manage") || role === "super_admin_pc"
+  return pathname.startsWith("/dashboard/landing-page/beranda") || pathname.startsWith("/dashboard/landing-page/produk") || pathname.startsWith("/dashboard/landing-page/dampak") || pathname.startsWith("/dashboard/landing-page/bantuan") || pathname.startsWith("/dashboard/landing-page/galeri") || pathname.startsWith("/dashboard/landing-page/download") || pathname.startsWith("/dashboard/landing-page/media") || pathname.startsWith("/dashboard/landing-page/kontak") || pathname.startsWith("/dashboard/landing-page/pengaturan") ? role === "super_admin_pc" : false
 }
