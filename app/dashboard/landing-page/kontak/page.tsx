@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
-export default function MediaManagerPage() {
+export default function LandingPageContactRedirect() {
   redirect("/dashboard/landing-page/pengaturan")
 }
