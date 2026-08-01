@@ -25,6 +25,19 @@ function extractRecordScope(pathname: string) {
   return segments[2] ?? null
 }
 
+const gorutV2Prefix = "/gorut-v2"
+
+/** Role yang boleh membuka seluruh /gorut-v2/**. Sengaja daftar tertutup, bukan turunan izin /gorut lama. */
+const gorutV2AllowedRoles = new Set(["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"])
+
+function isGorutV2Path(pathname: string) {
+  return pathname === gorutV2Prefix || pathname.startsWith(`${gorutV2Prefix}/`)
+}
+
+function canAccessGorutV2Path(role: string | null | undefined) {
+  return typeof role === "string" && gorutV2AllowedRoles.has(role)
+}
+
 function canAccessGorutPath(role: string | null | undefined, pathname: string) {
   const normalizedPath = pathname === "/gorut" ? "/gorut/dashboard" : pathname
 
@@ -198,7 +211,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
-  if (pathname.startsWith("/gorut")) {
+  // /gorut-v2 dijaga terpisah: daftar prefix canAccessGorutPath hanya mengenal /gorut/**,
+  // sehingga tanpa cabang ini seluruh /gorut-v2 selalu jatuh ke penolakan.
+  if (isGorutV2Path(pathname)) {
+    if (!canAccessGorutV2Path(session.role)) {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+  } else if (pathname.startsWith("/gorut")) {
     if (!canAccessGorutPath(session.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url))
     }
