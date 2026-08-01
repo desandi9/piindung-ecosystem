@@ -138,7 +138,7 @@ function resolveEcosystemApps(
         {
           ...base,
           status: "available" as const,
-          route: gorutModule.route || product.publicHref || "/gorut",
+          route: "/gorut-v2/dashboard",
           cta: "Masuk GORUT",
         },
       ]
