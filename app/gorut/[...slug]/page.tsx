@@ -44,7 +44,7 @@ export default async function GorutDynamicRoutePage({ params }: { params: Promis
     notFound()
   }
 
-  const module = await loadModule()
-  const Component = module.default
+  const loadedModule = await loadModule()
+  const Component = loadedModule.default
   return <Component />
 }
