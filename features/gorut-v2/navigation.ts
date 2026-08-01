@@ -1,8 +1,8 @@
 import type { GorutNavigationItem } from './types';
 
 export const mainNavigation: GorutNavigationItem[] = [
-  { label: 'Dashboard', href: '/gorut-v2/dashboard', icon: 'LayoutDashboard', isActive: true, isAvailable: true },
-  { label: 'Munfiq', icon: 'Users', isAvailable: false },
+  { label: 'Dashboard', href: '/gorut-v2/dashboard', icon: 'LayoutDashboard', isAvailable: true },
+  { label: 'Munfiq', href: '/gorut-v2/munfiq', icon: 'Users', isAvailable: true },
   { label: 'Transaksi', icon: 'ReceiptText', isAvailable: false },
   { label: 'Kalender', icon: 'CalendarDays', isAvailable: false },
   { label: 'Monitoring', icon: 'Activity', isAvailable: false },
@@ -28,8 +28,8 @@ export const bottomNavigation: GorutNavigationItem[] = [
 ];
 
 export const mobileNavigation: GorutNavigationItem[] = [
-  { label: 'Beranda', href: '/gorut-v2/dashboard', icon: 'LayoutDashboard', isActive: true, isAvailable: true },
-  { label: 'Munfiq', icon: 'Users', isAvailable: false },
+  { label: 'Beranda', href: '/gorut-v2/dashboard', icon: 'LayoutDashboard', isAvailable: true },
+  { label: 'Munfiq', href: '/gorut-v2/munfiq', icon: 'Users', isAvailable: true },
   { label: 'Transaksi', icon: 'ReceiptText', isAvailable: false },
   { label: 'Setoran', icon: 'WalletCards', isAvailable: false },
   { label: 'Lainnya', icon: 'MoreHorizontal', isAvailable: false },

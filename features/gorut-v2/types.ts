@@ -12,6 +12,29 @@ export type GorutNavigationItem = {
   isAvailable?: boolean;
 };
 
+export type GorutMunfiqStatus = "active" | "inactive" | "unpaid" | "new";
+
+export interface GorutMunfiq {
+  id: string;
+  memberId: string;
+  name: string;
+  phone: string;
+  email?: string;
+  address: string;
+  kecamatan: string;
+  village: string;
+  upzis: string;
+  plpkId: string;
+  plpkName: string;
+  status: GorutMunfiqStatus;
+  joinedAt: string;
+  lastDepositAt?: string;
+  lastDepositAmount?: number;
+  totalCollected: number;
+  transactionCount: number;
+  notes?: string;
+}
+
 export type GorutMetric = {
   id: string;
   label: string;
