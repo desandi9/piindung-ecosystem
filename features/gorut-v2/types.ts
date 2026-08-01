@@ -40,15 +40,16 @@ export interface GorutMunfiq {
 }
 
 export type CollectionStatus =
+  | 'draft'
   | 'scheduled'
   | 'collecting'
   | 'collected'
+  | 'f009-ready'
   | 'waiting-handover'
-  | 'handed-to-kordes'
-  | 'handed-to-upzis';
+  | 'handed-to-kordes';
 
 /** Hasil kunjungan PLPK ke satu Munfiq. Hanya "collected" yang punya nominal. */
-export type CollectionVisitStatus = 'collected' | 'not-around' | 'not-ready' | 'declined';
+export type CollectionVisitStatus = 'collected' | 'not-around' | 'not-ready' | 'declined' | 'damaged-lost';
 
 export interface CollectionEntry {
   id: string;
@@ -56,6 +57,9 @@ export interface CollectionEntry {
   munfiqName: string;
   memberId: string;
   phone: string;
+  address?: string;
+  isActive?: boolean;
+  canCount?: number;
   amount: number;
   visitStatus: CollectionVisitStatus;
   collectedAt: string;
@@ -71,12 +75,22 @@ export interface CollectionBatch {
   plpkName: string;
   village: string;
   kecamatan: string;
+  kordesName: string;
   entries: CollectionEntry[];
+  activeCanCount: number;
+  collectedCanCount: number;
+  uncollectedCanCount: number;
+  grossAmount: number;
   totalCollected: number;
   eligibleMunfiqCount: number;
   totalPlpkFee: number;
+  netAmount: number;
+  formCode: 'F.009';
+  documentNumber: string;
+  documentStatus: 'Draft' | 'Siap';
   status: CollectionStatus;
-  handoverDestination?: 'kordes' | 'upzis';
+  handoverDestination?: 'kordes';
+  handedToKordesAt?: string;
   createdAt: string;
 }
 

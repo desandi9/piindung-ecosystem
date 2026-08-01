@@ -12,12 +12,12 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, Di
 import { CollectionEntryRow, parseAmount, type CollectionEntryDraft } from './collection-entry-row';
 import { CollectionReview } from './collection-review';
 
-const stepTitles = { 1: 'Informasi Penghimpunan', 2: 'Pilih Munfiq', 3: 'Masukkan Hasil Koin', 4: 'Periksa dan Simpan' };
+const stepTitles = { 1: 'Informasi Penjemputan', 2: 'Daftar Munfiq', 3: 'Hasil Penjemputan', 4: 'Periksa Hasil' };
 const stepDescriptions = {
-  1: 'Tentukan periode, petugas PLPK, dan wilayah yang dikunjungi bulan ini.',
-  2: 'Pilih Munfiq yang dikunjungi pada penghimpunan ini.',
-  3: 'Catat nominal koin setiap Munfiq. Upah PLPK dihitung otomatis.',
-  4: 'Pastikan seluruh catatan sudah benar sebelum disimpan.',
+  1: 'Tentukan periode, PLPK, Kordes, wilayah, dan tanggal penjemputan.',
+  2: 'Pilih Munfiq aktif dalam wilayah kerja PLPK.',
+  3: 'Catat status kunjungan dan nominal koin setiap Munfiq.',
+  4: 'Pastikan data F.009 sudah siap sebelum disimpan.',
 };
 
 /** PLPK terikat pada satu kecamatan, jadi kecamatan ikut terisi saat PLPK dipilih. */
@@ -34,10 +34,10 @@ const plpkDirectory = [
 
 const periodChoices = collectionPeriodOptions.slice(1);
 
-type WizardInfo = { period: string; plpkId: string; kecamatan: string; village: string; collectedAt: string };
+type WizardInfo = { period: string; plpkId: string; kecamatan: string; village: string; kordesName: string; collectedAt: string };
 type InfoKey = keyof WizardInfo;
 
-const emptyInfo: WizardInfo = { period: periodChoices[0] ?? '', plpkId: '', kecamatan: '', village: '', collectedAt: '' };
+const emptyInfo: WizardInfo = { period: periodChoices[0] ?? '', plpkId: '', kecamatan: '', village: '', kordesName: '', collectedAt: '' };
 
 function draftFromEntry(entry: CollectionEntry): CollectionEntryDraft {
   return {
@@ -45,6 +45,9 @@ function draftFromEntry(entry: CollectionEntry): CollectionEntryDraft {
     munfiqName: entry.munfiqName,
     memberId: entry.memberId,
     phone: entry.phone,
+    address: entry.address,
+    isActive: entry.isActive,
+    canCount: entry.canCount ?? 1,
     amount: entry.visitStatus === 'collected' && entry.amount ? String(entry.amount) : '',
     visitStatus: entry.visitStatus,
     notes: entry.notes ?? '',
@@ -68,7 +71,7 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
     setAmountErrors({});
     setQuery('');
     if (batch) {
-      setInfo({ period: batch.period, plpkId: batch.plpkId, kecamatan: batch.kecamatan, village: batch.village, collectedAt: batch.entries[0]?.collectedAt ?? batch.createdAt });
+      setInfo({ period: batch.period, plpkId: batch.plpkId, kecamatan: batch.kecamatan, village: batch.village, kordesName: batch.kordesName, collectedAt: batch.entries[0]?.collectedAt ?? batch.createdAt });
       setSelectedIds(batch.entries.map((entry) => entry.munfiqId));
       setDrafts(Object.fromEntries(batch.entries.map((entry) => [entry.munfiqId, draftFromEntry(entry)])));
       setStep(1);
@@ -89,14 +92,14 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
 
   /** Munfiq yang boleh dipilih adalah yang berada di wilayah kerja PLPK. */
   const areaMunfiq = useMemo(() => {
-    if (!info.kecamatan) return [];
-    return gorutMunfiqData.filter((munfiq) => munfiq.kecamatan === info.kecamatan);
-  }, [info.kecamatan]);
+    if (!info.kecamatan || !info.village || !info.plpkId) return [];
+    return gorutMunfiqData.filter((munfiq) => munfiq.kecamatan === info.kecamatan && munfiq.village === info.village && munfiq.plpkId === info.plpkId);
+  }, [info.kecamatan, info.plpkId, info.village]);
 
   const visibleMunfiq = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return areaMunfiq;
-    return areaMunfiq.filter((munfiq) => munfiq.name.toLowerCase().includes(needle) || munfiq.memberId.toLowerCase().includes(needle) || munfiq.phone.includes(needle) || munfiq.village.toLowerCase().includes(needle));
+    const filtered = !needle ? areaMunfiq : areaMunfiq.filter((munfiq) => munfiq.name.toLowerCase().includes(needle) || munfiq.memberId.toLowerCase().includes(needle) || munfiq.phone.includes(needle) || munfiq.village.toLowerCase().includes(needle));
+    return filtered;
   }, [areaMunfiq, query]);
 
   const selectedDrafts = useMemo(() => selectedIds.map((id) => drafts[id]).filter(Boolean), [drafts, selectedIds]);
@@ -123,7 +126,7 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
       if (previous[munfiqId]) return previous;
       const munfiq = gorutMunfiqData.find((item) => item.id === munfiqId);
       if (!munfiq) return previous;
-      return { ...previous, [munfiqId]: { munfiqId, munfiqName: munfiq.name, memberId: munfiq.memberId, phone: munfiq.phone, amount: '', visitStatus: 'collected', notes: '' } };
+      return { ...previous, [munfiqId]: { munfiqId, munfiqName: munfiq.name, memberId: munfiq.memberId, phone: munfiq.phone, address: munfiq.address, isActive: munfiq.status === 'active', canCount: 1, amount: '', visitStatus: 'collected', notes: '' } };
     });
   };
 
@@ -133,10 +136,11 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
     if (!info.plpkId) next.plpkId = 'Petugas PLPK belum dipilih.';
     if (!info.kecamatan) next.kecamatan = 'Kecamatan belum dipilih.';
     if (!info.village) next.village = 'Desa belum dipilih.';
-    if (!info.collectedAt) next.collectedAt = 'Tanggal pengambilan belum diisi.';
+    if (!info.kordesName) next.kordesName = 'Nama Kordes belum diisi.';
+    if (!info.collectedAt) next.collectedAt = 'Tanggal penjemputan belum diisi.';
     setInfoErrors(next);
     if (Object.keys(next).length) {
-      const order: InfoKey[] = ['period', 'plpkId', 'kecamatan', 'village', 'collectedAt'];
+      const order: InfoKey[] = ['period', 'plpkId', 'kecamatan', 'village', 'kordesName', 'collectedAt'];
       const firstKey = order.find((key) => next[key]);
       requestAnimationFrame(() => document.getElementById(`wiz-${firstKey}`)?.focus());
       return false;
@@ -157,7 +161,10 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
   const validateAmounts = (requireComplete: boolean) => {
     const next: Record<string, string> = {};
     selectedDrafts.forEach((draft) => {
-      if (draft.visitStatus !== 'collected') return;
+      if (draft.visitStatus !== 'collected') {
+        if (!draft.notes.trim()) next[draft.munfiqId] = 'Catatan wajib diisi untuk status selain Terjemput.';
+        return;
+      }
       const parsed = parseAmount(draft.amount);
       if (parsed === null) {
         if (requireComplete) next[draft.munfiqId] = 'Nominal belum diisi. Isi nominal atau ubah hasil kunjungan.';
@@ -183,6 +190,9 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
         munfiqName: draft.munfiqName,
         memberId: draft.memberId,
         phone: draft.phone,
+        address: draft.address,
+        isActive: draft.isActive,
+        canCount: draft.canCount ?? 1,
         amount: parsed,
         visitStatus: draft.visitStatus,
         collectedAt: info.collectedAt,
@@ -199,10 +209,15 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
       plpkName: plpk?.name ?? '',
       village: info.village,
       kecamatan: info.kecamatan,
+      kordesName: info.kordesName,
       entries,
       ...summarizeEntries(entries),
+      formCode: 'F.009',
+      documentNumber: batch?.documentNumber ?? `F009/GORUT/${info.plpkId}/VIII/2026/${String(Date.now()).slice(-3)}`,
+      documentStatus: status === 'collected' ? 'Siap' : 'Draft',
       status,
       handoverDestination: batch?.handoverDestination,
+      handedToKordesAt: batch?.handedToKordesAt,
       createdAt: batch?.createdAt ?? info.collectedAt,
     };
   };
@@ -280,7 +295,11 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
                     </select>
                   </WizField>
 
-                  <WizField id="wiz-collectedAt" label="Tanggal Pengambilan" required error={infoErrors.collectedAt} wide>
+                  <WizField id="wiz-kordesName" label="Nama Kordes" required error={infoErrors.kordesName}>
+                    <input id="wiz-kordesName" className="mqw-input" value={info.kordesName} onChange={(event) => setInfoValue('kordesName', event.target.value)} placeholder="Nama Kordes penerima" />
+                  </WizField>
+
+                  <WizField id="wiz-collectedAt" label="Tanggal Penjemputan" required error={infoErrors.collectedAt}>
                     <input id="wiz-collectedAt" className="mqw-input" type="date" value={info.collectedAt} aria-invalid={Boolean(infoErrors.collectedAt)} aria-describedby={infoErrors.collectedAt ? 'wiz-collectedAt-error' : undefined} onChange={(event) => setInfoValue('collectedAt', event.target.value)} />
                   </WizField>
                 </div>
@@ -339,7 +358,7 @@ export function PengambilanWizard({ open, batch, onClose, onSave }: { open: bool
                 ))}
 
                 <dl className="mqw-totals">
-                  <div><dt>Total Koin</dt><dd>{formatRupiah(runningTotals.total)}</dd></div>
+                  <div><dt>Jumlah Kotor</dt><dd>{formatRupiah(runningTotals.total)}</dd></div>
                   <div><dt>Memenuhi Syarat</dt><dd>{formatNumber(runningTotals.eligible)} Munfiq</dd></div>
                   <div><dt>Total Upah PLPK</dt><dd className="is-fee">{formatRupiah(runningTotals.fee)}</dd></div>
                 </dl>

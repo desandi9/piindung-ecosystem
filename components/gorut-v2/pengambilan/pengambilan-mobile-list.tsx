@@ -10,10 +10,11 @@ import { collectionStatusLabels, formatPeriodLabel, isBatchEditable } from '@/fe
 type CardHandlers = {
   onDetail: (batch: CollectionBatch) => void;
   onEdit: (batch: CollectionBatch) => void;
+  onPreview: (batch: CollectionBatch) => void;
   onHandover: (batch: CollectionBatch) => void;
 };
 
-export function PengambilanMobileList({ batches, onDetail, onEdit, onHandover }: { batches: CollectionBatch[] } & CardHandlers) {
+export function PengambilanMobileList({ batches, onDetail, onEdit, onPreview, onHandover }: { batches: CollectionBatch[] } & CardHandlers) {
   return (
     <div className="gorut-collect-mobile-list">
       {batches.map((batch) => (
@@ -23,12 +24,12 @@ export function PengambilanMobileList({ batches, onDetail, onEdit, onHandover }:
               <strong>{formatPeriodLabel(batch.period)}</strong>
               <small>{batch.plpkName} · {batch.village}</small>
             </button>
-            <CardActions batch={batch} onDetail={onDetail} onEdit={onEdit} onHandover={onHandover} />
+            <CardActions batch={batch} onDetail={onDetail} onEdit={onEdit} onPreview={onPreview} onHandover={onHandover} />
           </div>
 
           <div className="gorut-munfiq-card-middle">
             <span className={`gorut-collect-status is-${batch.status}`}>{collectionStatusLabels[batch.status]}</span>
-            <span className="gorut-collect-amount">{formatRupiah(batch.totalCollected)}</span>
+            <span className="gorut-collect-amount">{formatRupiah(batch.netAmount)}</span>
           </div>
 
           <dl>
@@ -43,7 +44,7 @@ export function PengambilanMobileList({ batches, onDetail, onEdit, onHandover }:
   );
 }
 
-function CardActions({ batch, onDetail, onEdit, onHandover }: { batch: CollectionBatch } & CardHandlers) {
+function CardActions({ batch, onDetail, onEdit, onPreview, onHandover }: { batch: CollectionBatch } & CardHandlers) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { const close = (event: MouseEvent) => { if (!ref.current?.contains(event.target as Node)) setOpen(false); }; document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close); }, []);
@@ -56,7 +57,8 @@ function CardActions({ batch, onDetail, onEdit, onHandover }: { batch: Collectio
         <div className="gorut-dropdown-menu">
           <button type="button" onClick={() => run(() => onDetail(batch))}><Eye size={13} />Detail</button>
           {isBatchEditable(batch) ? <button type="button" onClick={() => run(() => onEdit(batch))}><PenLine size={13} />Edit Draft</button> : null}
-          <button type="button" onClick={() => run(() => onHandover(batch))}><PackageCheck size={13} />Serah Terima</button>
+          <button type="button" onClick={() => run(() => onPreview(batch))}><Eye size={13} />Lihat F.009</button>
+          <button type="button" onClick={() => run(() => onHandover(batch))}><PackageCheck size={13} />Diserahkan ke Kordes</button>
         </div>
       ) : null}
     </div>

@@ -5,7 +5,7 @@ import { formatDateShort, formatNumber, formatPhoneNumber, formatRupiah } from '
 import { collectionStatusLabels, collectionVisitStatusLabels, formatPeriodLabel, isBatchEditable, PLPK_FEE_AMOUNT, PLPK_FEE_THRESHOLD } from '@/features/gorut-v2/pengambilan-options';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
-export function PengambilanDetailDrawer({ open, batch, onClose, onEdit, onComplete, onHandover }: { open: boolean; batch: CollectionBatch | null; onClose: () => void; onEdit: () => void; onComplete: () => void; onHandover: () => void }) {
+export function PengambilanDetailDrawer({ open, batch, onClose, onEdit, onComplete, onPreview, onHandover }: { open: boolean; batch: CollectionBatch | null; onClose: () => void; onEdit: () => void; onComplete: () => void; onPreview: () => void; onHandover: () => void }) {
   if (!batch) return null;
 
   const notCollected = batch.entries.filter((entry) => entry.visitStatus !== 'collected');
@@ -31,15 +31,21 @@ export function PengambilanDetailDrawer({ open, batch, onClose, onEdit, onComple
               <div><dt>Kecamatan</dt><dd>{batch.kecamatan}</dd></div>
               <div><dt>Desa</dt><dd>{batch.village}</dd></div>
               <div><dt>Dibuat</dt><dd>{formatDateShort(batch.createdAt)}</dd></div>
-              <div><dt>Serah Terima</dt><dd>{batch.handoverDestination === 'kordes' ? 'Kordes' : batch.handoverDestination === 'upzis' ? 'UPZIS' : 'Belum diserahkan'}</dd></div>
+              <div><dt>Nama Kordes</dt><dd>{batch.kordesName}</dd></div>
+              <div><dt>Status F.009</dt><dd>{batch.documentStatus}</dd></div>
+              <div><dt>No. Dokumen</dt><dd>{batch.documentNumber}</dd></div>
+              <div><dt>Status Penyerahan</dt><dd>{batch.handoverDestination === 'kordes' ? 'Diserahkan ke Kordes' : 'Belum diserahkan'}</dd></div>
             </dl>
           </Section>
 
           <Section title="Ringkasan Penghimpunan">
             <div className="gorut-summary-grid">
-              <Metric label="Total Koin" value={formatRupiah(batch.totalCollected)} />
-              <Metric label="Memenuhi Syarat" value={`${formatNumber(batch.eligibleMunfiqCount)} Munfiq`} />
+              <Metric label="Kaleng Aktif" value={formatNumber(batch.activeCanCount)} />
+              <Metric label="Kaleng Terjemput" value={formatNumber(batch.collectedCanCount)} />
+              <Metric label="Kaleng Tidak Terjemput" value={formatNumber(batch.uncollectedCanCount)} />
+              <Metric label="Jumlah Kotor" value={formatRupiah(batch.grossAmount)} />
               <Metric label="Total Upah PLPK" value={formatRupiah(batch.totalPlpkFee)} />
+              <Metric label="Jumlah Bersih" value={formatRupiah(batch.netAmount)} />
             </div>
             <p className="gorut-drawer-notes-text" style={{ marginTop: 10 }}>
               Upah PLPK dihitung {formatRupiah(PLPK_FEE_AMOUNT)} untuk setiap Munfiq dengan nominal di atas {formatRupiah(PLPK_FEE_THRESHOLD)}.
@@ -75,8 +81,9 @@ export function PengambilanDetailDrawer({ open, batch, onClose, onEdit, onComple
 
         <SheetFooter className="gorut-drawer-footer">
           {isBatchEditable(batch) ? <button type="button" className="gorut-button gorut-secondary-button" onClick={onEdit}>Edit Draft</button> : null}
-          {canComplete ? <button type="button" className="gorut-button gorut-secondary-button" onClick={onComplete}>Selesaikan</button> : null}
-          <button type="button" className="gorut-button gorut-primary-button" onClick={onHandover}>Siapkan Serah Terima</button>
+          {canComplete ? <button type="button" className="gorut-button gorut-secondary-button" onClick={onComplete}>Selesaikan Penjemputan</button> : null}
+          <button type="button" className="gorut-button gorut-secondary-button" onClick={onPreview}>Lihat F.009</button>
+          <button type="button" className="gorut-button gorut-primary-button" onClick={onHandover}>Tandai Diserahkan ke Kordes</button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

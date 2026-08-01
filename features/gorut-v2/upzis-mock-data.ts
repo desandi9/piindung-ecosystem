@@ -37,13 +37,12 @@ function deriveStatus(batches: CollectionBatch[], hasMinutes: boolean): UpzisRec
   const anyUnfinished = batches.some((batch) => batch.status === 'scheduled' || batch.status === 'collecting');
   if (anyUnfinished) return 'incomplete';
 
-  const allHandedOver = batches.every((batch) => batch.status === 'handed-to-kordes' || batch.status === 'handed-to-upzis');
+  const allHandedOver = batches.every((batch) => batch.status === 'handed-to-kordes');
   if (!allHandedOver) return 'ready-to-recap';
 
   if (hasMinutes) return 'ready-to-deposit';
 
-  const anyToUpzis = batches.some((batch) => batch.status === 'handed-to-upzis');
-  return anyToUpzis ? 'waiting-minutes' : 'recapped';
+  return 'recapped';
 }
 
 function buildBreakdown(batches: CollectionBatch[]): UpzisPlpkBreakdown[] {

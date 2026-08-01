@@ -10,10 +10,11 @@ import { collectionStatusLabels, formatPeriodLabel, isBatchEditable } from '@/fe
 type RowHandlers = {
   onDetail: (batch: CollectionBatch) => void;
   onEdit: (batch: CollectionBatch) => void;
+  onPreview: (batch: CollectionBatch) => void;
   onHandover: (batch: CollectionBatch) => void;
 };
 
-export function PengambilanTable({ batches, onDetail, onEdit, onHandover }: { batches: CollectionBatch[] } & RowHandlers) {
+export function PengambilanTable({ batches, onDetail, onEdit, onPreview, onHandover }: { batches: CollectionBatch[] } & RowHandlers) {
   return (
     <div className="gorut-collect-table-wrap">
       <table>
@@ -22,11 +23,13 @@ export function PengambilanTable({ batches, onDetail, onEdit, onHandover }: { ba
             <th>Periode</th>
             <th>PLPK</th>
             <th>Wilayah</th>
-            <th>Jumlah Munfiq</th>
-            <th>Total Koin</th>
-            <th>Memenuhi Syarat</th>
+            <th>Kaleng Aktif</th>
+            <th>Kaleng Terjemput</th>
+            <th>Jumlah Kotor</th>
             <th>Upah PLPK</th>
-            <th>Status</th>
+            <th>Jumlah Bersih</th>
+            <th>Status F.009</th>
+            <th>Status Penyerahan</th>
             <th aria-label="Aksi" />
           </tr>
         </thead>
@@ -36,12 +39,14 @@ export function PengambilanTable({ batches, onDetail, onEdit, onHandover }: { ba
               <td><strong>{formatPeriodLabel(batch.period)}</strong><small>{batch.id.replace('batch-', 'PGB-')}</small></td>
               <td><strong>{batch.plpkName}</strong><small>{batch.plpkId}</small></td>
               <td><strong>{batch.kecamatan}</strong><small>{batch.village}</small></td>
-              <td>{formatNumber(batch.entries.length)} Munfiq</td>
-              <td><span className="gorut-collect-amount">{formatRupiah(batch.totalCollected)}</span></td>
-              <td>{formatNumber(batch.eligibleMunfiqCount)} Munfiq</td>
+              <td>{formatNumber(batch.activeCanCount)}</td>
+              <td>{formatNumber(batch.collectedCanCount)}</td>
+              <td><span className="gorut-collect-amount">{formatRupiah(batch.grossAmount)}</span></td>
               <td><span className="gorut-collect-fee">{formatRupiah(batch.totalPlpkFee)}</span></td>
+              <td><span className="gorut-collect-amount">{formatRupiah(batch.netAmount)}</span></td>
+              <td>{batch.documentStatus}</td>
               <td><span className={`gorut-collect-status is-${batch.status}`}>{collectionStatusLabels[batch.status]}</span></td>
-              <td><RowActions batch={batch} onDetail={onDetail} onEdit={onEdit} onHandover={onHandover} /></td>
+              <td><RowActions batch={batch} onDetail={onDetail} onEdit={onEdit} onPreview={onPreview} onHandover={onHandover} /></td>
             </tr>
           ))}
         </tbody>
@@ -50,7 +55,7 @@ export function PengambilanTable({ batches, onDetail, onEdit, onHandover }: { ba
   );
 }
 
-function RowActions({ batch, onDetail, onEdit, onHandover }: { batch: CollectionBatch } & RowHandlers) {
+function RowActions({ batch, onDetail, onEdit, onPreview, onHandover }: { batch: CollectionBatch } & RowHandlers) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => { const close = (event: MouseEvent) => { if (!ref.current?.contains(event.target as Node)) setOpen(false); }; document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close); }, []);
@@ -63,7 +68,8 @@ function RowActions({ batch, onDetail, onEdit, onHandover }: { batch: Collection
         <div className="gorut-dropdown-menu">
           <button type="button" onClick={() => run(() => onDetail(batch))}><Eye size={13} />Lihat Detail</button>
           {isBatchEditable(batch) ? <button type="button" onClick={() => run(() => onEdit(batch))}><PenLine size={13} />Edit Draft</button> : null}
-          <button type="button" onClick={() => run(() => onHandover(batch))}><PackageCheck size={13} />Siapkan Serah Terima</button>
+          <button type="button" onClick={() => run(() => onPreview(batch))}><Eye size={13} />Lihat F.009</button>
+          <button type="button" onClick={() => run(() => onHandover(batch))}><PackageCheck size={13} />Tandai Diserahkan ke Kordes</button>
         </div>
       ) : null}
     </div>

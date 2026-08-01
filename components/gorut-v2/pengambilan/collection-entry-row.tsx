@@ -14,6 +14,9 @@ export type CollectionEntryDraft = {
   munfiqName: string;
   memberId: string;
   phone: string;
+  address?: string;
+  isActive?: boolean;
+  canCount?: number;
   amount: string;
   visitStatus: CollectionVisitStatus;
   notes: string;
@@ -45,15 +48,15 @@ export function CollectionEntryRow({ draft, error, onChange }: { draft: Collecti
     : parsed === null
       ? { className: 'mqw-fee-flag is-empty', icon: <Info size={15} />, text: 'Nominal belum diisi' }
       : eligible
-        ? { className: 'mqw-fee-flag is-eligible', icon: <CircleCheckBig size={15} />, text: `Mendapat upah PLPK ${formatRupiah(PLPK_FEE_AMOUNT)}` }
-        : { className: 'mqw-fee-flag is-below', icon: <Info size={15} />, text: `Belum memenuhi batas ${formatRupiah(PLPK_FEE_THRESHOLD)}` };
+        ? { className: 'mqw-fee-flag is-eligible', icon: <CircleCheckBig size={15} />, text: `Menghasilkan upah PLPK ${formatRupiah(PLPK_FEE_AMOUNT)}` }
+        : { className: 'mqw-fee-flag is-below', icon: <Info size={15} />, text: `Belum memenuhi batas lebih dari ${formatRupiah(PLPK_FEE_THRESHOLD)}` };
 
   return (
     <article className="mqw-entry">
       <div className="mqw-entry-head">
         <div>
           <span className="mqw-entry-name">{draft.munfiqName}</span>
-          <span className="mqw-entry-meta">{draft.memberId} · {formatPhoneNumber(draft.phone)}</span>
+          <span className="mqw-entry-meta">{draft.memberId} · {formatPhoneNumber(draft.phone)}{draft.address ? ` · ${draft.address}` : ''}</span>
         </div>
       </div>
 
@@ -105,7 +108,7 @@ export function CollectionEntryRow({ draft, error, onChange }: { draft: Collecti
       <div className={flag.className}>{flag.icon}{flag.text}</div>
 
       <div className="mqw-field" style={{ marginTop: 14 }}>
-        <label className="mqw-label" htmlFor={notesId}><span>Catatan</span><span className="mqw-hint">Opsional</span></label>
+        <label className="mqw-label" htmlFor={notesId}><span>Catatan</span><span className="mqw-hint">Wajib jika tidak terjemput</span></label>
         <textarea id={notesId} className="mqw-input" rows={2} value={draft.notes} onChange={(event) => onChange({ ...draft, notes: event.target.value })} placeholder="Contoh: koin diambil di rumah tetangga." />
       </div>
     </article>

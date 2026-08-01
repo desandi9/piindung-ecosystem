@@ -5,19 +5,21 @@ export const PLPK_FEE_THRESHOLD = 7000;
 export const PLPK_FEE_AMOUNT = 2500;
 
 export const collectionStatusLabels: Record<CollectionStatus, string> = {
+  draft: 'Draft',
   scheduled: 'Dijadwalkan',
-  collecting: 'Sedang Diambil',
-  collected: 'Selesai Diambil',
-  'waiting-handover': 'Menunggu Serah Terima',
+  collecting: 'Dalam Penjemputan',
+  collected: 'Penjemputan Selesai',
+  'f009-ready': 'F.009 Siap',
+  'waiting-handover': 'Menunggu Penyerahan ke Kordes',
   'handed-to-kordes': 'Diserahkan ke Kordes',
-  'handed-to-upzis': 'Diserahkan ke UPZIS',
 };
 
 export const collectionVisitStatusLabels: Record<CollectionVisitStatus, string> = {
-  collected: 'Berhasil diambil',
+  collected: 'Terjemput',
   'not-around': 'Tidak ada di tempat',
   'not-ready': 'Belum tersedia',
-  declined: 'Menolak / berhenti',
+  declined: 'Menolak/Berhenti',
+  'damaged-lost': 'Kaleng rusak/hilang',
 };
 
 export const collectionPeriodOptions = ['Semua Periode', '2026-07', '2026-06', '2026-05', '2026-04', '2026-03'];
@@ -36,13 +38,26 @@ export function calculatePlpkFee(amount: number, visitStatus: CollectionVisitSta
 
 /** Turunkan seluruh angka batch dari entri-entrinya, supaya total tidak pernah lepas sinkron. */
 export function summarizeEntries(entries: CollectionEntry[]) {
+  const activeCanCount = entries.reduce((sum, entry) => sum + (entry.canCount ?? 1), 0);
   const collected = entries.filter((entry) => entry.visitStatus === 'collected');
-  const eligible = entries.filter((entry) => entry.eligibleForPlpkFee);
+  const collectedCanCount = collected.reduce((sum, entry) => sum + (entry.canCount ?? 1), 0);
+  const eligible = entries.filter((entry) => isEligibleForPlpkFee(entry.amount, entry.visitStatus));
+  const grossAmount = collected.reduce((sum, entry) => sum + entry.amount, 0);
+  const totalPlpkFee = eligible.reduce((sum, entry) => sum + calculatePlpkFee(entry.amount, entry.visitStatus), 0);
   return {
-    totalCollected: collected.reduce((sum, entry) => sum + entry.amount, 0),
+    activeCanCount,
+    collectedCanCount,
+    uncollectedCanCount: Math.max(0, activeCanCount - collectedCanCount),
+    grossAmount,
+    totalCollected: grossAmount,
     eligibleMunfiqCount: eligible.length,
-    totalPlpkFee: eligible.length * PLPK_FEE_AMOUNT,
+    totalPlpkFee,
+    netAmount: grossAmount - totalPlpkFee,
   };
+}
+
+export function documentStatusForBatch(status: CollectionStatus): 'Draft' | 'Siap' {
+  return status === 'collected' || status === 'f009-ready' || status === 'waiting-handover' || status === 'handed-to-kordes' ? 'Siap' : 'Draft';
 }
 
 export function formatPeriodLabel(period: string): string {
@@ -54,9 +69,9 @@ export function formatPeriodLabel(period: string): string {
 
 /** Batch masih bisa disunting selama belum diserahterimakan. */
 export function isBatchEditable(batch: CollectionBatch): boolean {
-  return batch.status === 'scheduled' || batch.status === 'collecting';
+  return batch.status === 'draft' || batch.status === 'scheduled' || batch.status === 'collecting';
 }
 
 export function isBatchHandedOver(batch: CollectionBatch): boolean {
-  return batch.status === 'handed-to-kordes' || batch.status === 'handed-to-upzis';
+  return batch.status === 'handed-to-kordes';
 }

@@ -18,8 +18,9 @@ export function CollectionReview({ info, entries }: { info: CollectionReviewInfo
   const collected = entries.filter((entry) => entry.visitStatus === 'collected');
   const totalCoin = collected.reduce((sum, entry) => sum + (parseAmount(entry.amount) ?? 0), 0);
   const eligible = collected.filter((entry) => (parseAmount(entry.amount) ?? 0) > PLPK_FEE_THRESHOLD);
-  const notEligible = entries.length - eligible.length;
+  const notCollected = entries.filter((entry) => entry.visitStatus !== 'collected');
   const totalFee = eligible.length * PLPK_FEE_AMOUNT;
+  const netAmount = totalCoin - totalFee;
 
   return (
     <>
@@ -30,18 +31,21 @@ export function CollectionReview({ info, entries }: { info: CollectionReviewInfo
           <div><dt>Petugas PLPK</dt><dd>{info.plpkName} ({info.plpkId})</dd></div>
           <div><dt>Kecamatan</dt><dd>{info.kecamatan}</dd></div>
           <div><dt>Desa</dt><dd>{info.village}</dd></div>
-          <div><dt>Tanggal Pengambilan</dt><dd>{info.collectedAt || '—'}</dd></div>
-          <div><dt>Jumlah Munfiq</dt><dd>{formatNumber(entries.length)} Munfiq</dd></div>
+          <div><dt>Tanggal Penjemputan</dt><dd>{info.collectedAt || '—'}</dd></div>
+          <div><dt>Jumlah Munfiq Dipilih</dt><dd>{formatNumber(entries.length)} Munfiq</dd></div>
         </dl>
       </section>
 
       <section className="mqw-summary">
         <div className="mqw-summary-head"><h3>Hasil Penghimpunan</h3></div>
         <dl className="mqw-summary-list">
-          <div><dt>Total Koin</dt><dd>{formatRupiah(totalCoin)}</dd></div>
-          <div><dt>Memenuhi Syarat Upah</dt><dd>{formatNumber(eligible.length)} Munfiq</dd></div>
-          <div><dt>Tidak Memenuhi Syarat</dt><dd>{formatNumber(notEligible)} Munfiq</dd></div>
+          <div><dt>Kaleng Aktif</dt><dd>{formatNumber(entries.length)}</dd></div>
+          <div><dt>Kaleng Terjemput</dt><dd>{formatNumber(collected.length)}</dd></div>
+          <div><dt>Kaleng Tidak Terjemput</dt><dd>{formatNumber(notCollected.length)}</dd></div>
+          <div><dt>Jumlah Kotor</dt><dd>{formatRupiah(totalCoin)}</dd></div>
+          <div><dt>Munfiq Menghasilkan Upah</dt><dd>{formatNumber(eligible.length)} Munfiq</dd></div>
           <div><dt>Total Upah PLPK</dt><dd>{formatRupiah(totalFee)}</dd></div>
+          <div><dt>Jumlah Bersih</dt><dd>{formatRupiah(netAmount)}</dd></div>
         </dl>
       </section>
 

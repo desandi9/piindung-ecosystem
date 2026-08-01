@@ -21,9 +21,10 @@ import { PengambilanMobileList } from './pengambilan-mobile-list';
 import { PengambilanDetailDrawer } from './pengambilan-detail-drawer';
 import { PengambilanWizard } from './pengambilan-wizard';
 import { PengambilanSkeleton } from './pengambilan-skeleton';
+import { F009Preview } from './f009-preview';
 
 const target = { current: 'Rp1,42 M', max: 'Rp2 M', percentage: 71 };
-const HANDOVER_NOTICE = 'Modul Setoran PLPK akan dibuat pada batch berikutnya.';
+
 
 export function PengambilanShell() {
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,7 @@ export function PengambilanShell() {
   const [detailBatch, setDetailBatch] = useState<CollectionBatch | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardBatch, setWizardBatch] = useState<CollectionBatch | null>(null);
+  const [previewBatch, setPreviewBatch] = useState<CollectionBatch | null>(null);
 
   const deferredFilters = useDeferredValue(filters);
 
@@ -84,7 +86,7 @@ export function PengambilanShell() {
     if (detailBatch?.id === batch.id) setDetailBatch(batch);
     setWizardOpen(false);
     setWizardBatch(null);
-    triggerNotice(mode === 'draft' ? 'Draft penghimpunan berhasil disimpan' : 'Penghimpunan koin berhasil diselesaikan');
+    triggerNotice(mode === 'draft' ? 'Draft penjemputan berhasil disimpan' : 'Penjemputan selesai. F.009 siap diserahkan ke Kordes.');
   };
 
   const openWizard = (batch: CollectionBatch | null) => {
@@ -94,10 +96,27 @@ export function PengambilanShell() {
   };
 
   const completeBatch = (batch: CollectionBatch) => {
-    const next: CollectionBatch = { ...batch, status: 'collected' };
+    const next: CollectionBatch = { ...batch, status: 'f009-ready', documentStatus: 'Siap' };
     setBatches((previous) => previous.map((item) => (item.id === batch.id ? next : item)));
     setDetailBatch(next);
-    triggerNotice('Penghimpunan koin ditandai selesai');
+    triggerNotice('Penjemputan selesai. F.009 siap.');
+  };
+
+  const handOverToKordes = (batch: CollectionBatch) => {
+    if (batch.documentStatus !== 'Siap' && batch.status !== 'collected' && batch.status !== 'f009-ready' && batch.status !== 'waiting-handover') {
+      triggerNotice('Selesaikan penjemputan terlebih dahulu agar F.009 siap.');
+      return;
+    }
+    const next: CollectionBatch = {
+      ...batch,
+      status: 'handed-to-kordes',
+      documentStatus: 'Siap',
+      handoverDestination: 'kordes',
+      handedToKordesAt: new Date().toISOString().slice(0, 10),
+    };
+    setBatches((previous) => previous.map((item) => (item.id === batch.id ? next : item)));
+    setDetailBatch(next);
+    triggerNotice('Batch ditandai diserahkan ke Kordes.');
   };
 
   return (
@@ -124,10 +143,10 @@ export function PengambilanShell() {
                 <div>
                   <p>PENGHIMPUNAN</p>
                   <h1>Penjemputan PLPK</h1>
-                  <span>Rekap penjemputan koin bulanan per petugas PLPK di wilayah desa.</span>
+                  <span>Catat hasil penjemputan koin bulanan dari Munfiq dan siapkan Lembar Penerimaan Koin NU.</span>
                 </div>
                 <button type="button" className="gorut-button gorut-primary-button" onClick={() => openWizard(null)}>
-                  <Plus size={14} />Mulai Penghimpunan
+                  <Plus size={14} />Mulai Penjemputan
                 </button>
               </section>
 
@@ -149,14 +168,16 @@ export function PengambilanShell() {
                       batches={currentBatches}
                       onDetail={setDetailBatch}
                       onEdit={openWizard}
-                      onHandover={() => triggerNotice(HANDOVER_NOTICE)}
+                      onPreview={setPreviewBatch}
+                      onHandover={handOverToKordes}
                     />
 
                     <PengambilanMobileList
                       batches={currentBatches}
                       onDetail={setDetailBatch}
                       onEdit={openWizard}
-                      onHandover={() => triggerNotice(HANDOVER_NOTICE)}
+                      onPreview={setPreviewBatch}
+                      onHandover={handOverToKordes}
                     />
 
                     <footer className="gorut-collect-pagination">
@@ -207,7 +228,8 @@ export function PengambilanShell() {
             onClose={() => setDetailBatch(null)}
             onEdit={() => { if (detailBatch) openWizard(detailBatch); }}
             onComplete={() => { if (detailBatch) completeBatch(detailBatch); }}
-            onHandover={() => triggerNotice(HANDOVER_NOTICE)}
+            onPreview={() => { if (detailBatch) setPreviewBatch(detailBatch); }}
+            onHandover={() => { if (detailBatch) handOverToKordes(detailBatch); }}
           />
 
           <PengambilanWizard
@@ -216,6 +238,8 @@ export function PengambilanShell() {
             onClose={() => { setWizardOpen(false); setWizardBatch(null); }}
             onSave={handleSave}
           />
+
+          <F009Preview batch={previewBatch} onClose={() => setPreviewBatch(null)} />
         </div>
       )}
     </div>
