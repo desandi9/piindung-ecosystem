@@ -10,6 +10,12 @@ import { SidebarTargetCard } from './sidebar-target-card';
 
 type GorutSidebarProps = { target: { current: string; max: string; percentage: number } };
 
+/** Induk aktif kalau pathname persis href-nya, atau berada di bawah matchPrefix-nya. */
+function isItemActive(item: GorutNavigationItem, pathname: string) {
+  if (item.matchPrefix) return pathname === item.matchPrefix || pathname.startsWith(`${item.matchPrefix}/`);
+  return item.href ? pathname === item.href : false;
+}
+
 export function GorutSidebar({ target }: GorutSidebarProps) {
   const [notice, setNotice] = useState('');
   const pathname = usePathname();
@@ -24,5 +30,39 @@ export function GorutSidebar({ target }: GorutSidebarProps) {
 }
 
 function SidebarList({ items, activePath, onUnavailable }: { items: GorutNavigationItem[]; activePath: string; onUnavailable: (item: GorutNavigationItem) => void }) {
-  return <>{items.map((item) => { const Icon = icons[item.icon as keyof typeof icons]; const content = <>{Icon ? <Icon size={16} /> : null}<span>{item.label}</span></>; const isActive = item.href ? activePath === item.href : false; return item.href ? <a key={item.label} href={item.href} className={`gorut-nav-item ${isActive ? 'is-active' : ''}`} aria-current={isActive ? 'page' : undefined}>{content}</a> : <button key={item.label} className="gorut-nav-item" type="button" onClick={() => onUnavailable(item)}>{content}</button>; })}</>;
+  return <>{items.map((item) => {
+    if (item.children?.length) return <SidebarGroup key={item.label} item={item} activePath={activePath} onUnavailable={onUnavailable} />;
+    const Icon = icons[item.icon as keyof typeof icons];
+    const content = <>{Icon ? <Icon size={16} /> : null}<span>{item.label}</span></>;
+    const isActive = isItemActive(item, activePath);
+    return item.href ? <a key={item.label} href={item.href} className={`gorut-nav-item ${isActive ? 'is-active' : ''}`} aria-current={isActive ? 'page' : undefined}>{content}</a> : <button key={item.label} className="gorut-nav-item" type="button" onClick={() => onUnavailable(item)}>{content}</button>;
+  })}</>;
+}
+
+function SidebarGroup({ item, activePath, onUnavailable }: { item: GorutNavigationItem; activePath: string; onUnavailable: (item: GorutNavigationItem) => void }) {
+  const parentActive = isItemActive(item, activePath);
+  // Terbuka otomatis saat salah satu child sedang dibuka; setelah itu ikut kendali pengguna.
+  const [open, setOpen] = useState(parentActive);
+  const Icon = icons[item.icon as keyof typeof icons];
+  const groupId = `nav-group-${item.label.toLowerCase().replace(/[^a-z]/g, '-')}`;
+
+  return (
+    <>
+      <button type="button" className={`gorut-nav-item gorut-nav-parent ${parentActive ? 'is-active' : ''}`} onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls={groupId}>
+        {Icon ? <Icon size={16} /> : null}
+        <span>{item.label}</span>
+        <ChevronDown size={13} className={open ? 'gorut-nav-caret is-open' : 'gorut-nav-caret'} />
+      </button>
+      <div id={groupId} className="gorut-nav-children" hidden={!open}>
+        {item.children?.map((child) => {
+          const ChildIcon = icons[child.icon as keyof typeof icons];
+          const childActive = isItemActive(child, activePath);
+          const content = <>{ChildIcon ? <ChildIcon size={14} /> : null}<span>{child.label}</span></>;
+          return child.href
+            ? <a key={child.label} href={child.href} className={`gorut-nav-item gorut-nav-child ${childActive ? 'is-active' : ''}`} aria-current={childActive ? 'page' : undefined}>{content}</a>
+            : <button key={child.label} type="button" className="gorut-nav-item gorut-nav-child" onClick={() => onUnavailable(child)}>{content}</button>;
+        })}
+      </div>
+    </>
+  );
 }

@@ -172,3 +172,201 @@ button.mqw-notice{width:100%;cursor:pointer}
 
 .mqw-input:focus-visible,.mqw-btn:focus-visible,.mqw-pill:focus-visible,.mqw-choice:focus-visible,.mqw-link:focus-visible,.mqw-close:focus-visible{outline:2px solid var(--g-primary);outline-offset:2px}
 /* ============ end munfiq wizard ============ */
+
+/* ============ Pengambilan Koin (gorut-collect-) ============ */
+.gorut-collect-main{padding-top:28px}
+.gorut-collect-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px}
+.gorut-collect-heading p{margin:0 0 7px;color:var(--g-primary);font-size:10px;font-weight:700;letter-spacing:.12em}
+.gorut-collect-heading h1{margin:0;color:var(--g-navy);font-size:27px;letter-spacing:-.03em}
+.gorut-collect-heading span{display:block;max-width:520px;margin-top:6px;color:var(--g-muted);font-size:12px;line-height:1.5}
+
+.gorut-collect-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:12px}
+.gorut-collect-summary article{display:flex;flex-direction:column;gap:5px;border:1px solid var(--g-border);border-radius:10px;background:#fff;padding:11px 12px;animation:gorut-fade-up .4s cubic-bezier(.16,1,.3,1) var(--item-delay) both}
+.gorut-collect-summary article div{display:flex;align-items:center;gap:7px;color:var(--g-muted);font-size:10px}
+.gorut-collect-summary article strong{color:var(--g-navy);font-size:20px;line-height:1.15}
+.gorut-collect-summary article small{color:var(--g-subtle);font-size:8px}
+
+.gorut-collect-filter{display:flex;align-items:center;gap:10px;border:1px solid var(--g-border);border-radius:10px;background:#fff;padding:12px 14px;margin-bottom:12px}
+.gorut-collect-search{position:relative;display:flex;flex:1;align-items:center;color:var(--g-muted)}
+.gorut-collect-search input{width:100%;height:33px;border:1px solid var(--g-border);border-radius:7px;padding:0 8px 0 28px;font:11px Inter;color:var(--g-text);outline:none}
+.gorut-collect-search input:focus{border-color:var(--g-primary)}
+.gorut-collect-search svg{position:absolute;left:9px;pointer-events:none}
+.gorut-collect-selects{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.gorut-collect-selects select{height:33px;border:1px solid var(--g-border);border-radius:7px;background:#fff;padding:0 24px 0 8px;font:11px Inter;color:var(--g-text);outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237B8794' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 8px center;background-size:12px}
+.gorut-collect-reset{display:flex;align-items:center;gap:4px;border:0;background:none;padding:0 4px;color:var(--g-muted);font:600 10px Inter;cursor:pointer}
+.gorut-collect-reset:hover{color:var(--g-danger)}
+
+.gorut-collect-panel{border:1px solid var(--g-border);border-radius:10px;background:#fff;overflow:hidden}
+.gorut-collect-table-wrap{width:100%;overflow-x:auto}
+.gorut-collect-table-wrap table{width:100%;border-collapse:collapse;text-align:left;font-family:Inter,sans-serif}
+.gorut-collect-table-wrap th{border-bottom:1px solid var(--g-border);background:#fafcfb;padding:12px;color:var(--g-navy);font:600 9px Inter;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.gorut-collect-table-wrap td{border-bottom:1px solid var(--g-grid);padding:10px 12px;color:var(--g-text);font-size:11px;vertical-align:middle}
+.gorut-collect-table-wrap tr:hover td{background:#fbfcfb}
+.gorut-collect-table-wrap td strong{display:block;color:var(--g-navy)}
+.gorut-collect-table-wrap td small{display:block;margin-top:2px;color:var(--g-muted);font-size:8px}
+.gorut-collect-amount{color:var(--g-navy);font-size:12px;font-weight:700}
+.gorut-collect-fee{color:var(--g-hover);font-weight:600}
+
+.gorut-collect-status{display:inline-flex;align-items:center;border-radius:4px;padding:3px 6px;font:600 8px Inter;text-transform:uppercase;white-space:nowrap}
+.gorut-collect-status.is-scheduled{background:#f1f5f9;color:#64748b}
+.gorut-collect-status.is-collecting{background:#e3effc;color:#1d66db}
+.gorut-collect-status.is-collected{background:var(--g-soft);color:var(--g-hover)}
+.gorut-collect-status.is-waiting-handover{background:#fff5e6;color:#d97706}
+.gorut-collect-status.is-handed-to-kordes{background:#ede9fe;color:#6d28d9}
+.gorut-collect-status.is-handed-to-upzis{background:#dcfce7;color:#15803d}
+
+.gorut-collect-visit{display:inline-flex;align-items:center;border-radius:4px;padding:2px 6px;font:600 9px Inter}
+.gorut-collect-visit.is-collected{background:var(--g-soft);color:var(--g-hover)}
+.gorut-collect-visit.is-not-around,.gorut-collect-visit.is-not-ready{background:#fff5e6;color:#d97706}
+.gorut-collect-visit.is-declined{background:#fdecec;color:#cf4a4a}
+
+.gorut-collect-mobile-list{display:none}
+.gorut-collect-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 16px;text-align:center;color:var(--g-muted)}
+.gorut-collect-empty svg{color:var(--g-subtle)}
+.gorut-collect-empty h2{margin:4px 0 0;color:var(--g-navy);font-size:13px;font-weight:600}
+.gorut-collect-empty p{margin:0 0 8px;font-size:10px}
+.gorut-collect-pagination{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--g-border);background:#fafcfb;padding:10px 12px;color:var(--g-muted);font-size:10px}
+.gorut-collect-skeleton{display:flex;flex-direction:column;gap:15px;animation:gorut-shimmer 1.5s infinite ease-in-out}
+
+.gorut-collect-drawer{position:fixed;z-index:90;right:0;top:0;bottom:0;width:460px;display:flex;flex-direction:column;border-left:1px solid var(--g-border);background:#fff;box-shadow:-8px 0 28px rgba(8,33,59,.08);animation:gorut-menu .22s ease-out}
+.gorut-collect-entry-line{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--g-border);border-radius:8px;background:#fff;padding:9px 10px}
+.gorut-collect-entry-line+.gorut-collect-entry-line{margin-top:6px}
+.gorut-collect-entry-line strong{display:block;color:var(--g-navy);font-size:11px}
+.gorut-collect-entry-line small{display:block;margin-top:2px;color:var(--g-muted);font-size:9px}
+.gorut-collect-entry-line>div:last-child{text-align:right}
+.gorut-collect-notice{border:1px solid #F1D68C;border-radius:8px;background:#FFF8E8;padding:10px 12px;color:#8A6318;font-size:10px;line-height:1.5}
+
+/* --- pilih Munfiq (langkah 2) --- */
+.mqw-pick-count{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;border:1px solid var(--g-primary);border-radius:12px;background:var(--g-soft);padding:12px 14px;color:var(--g-hover);font-size:14px;font-weight:600}
+.mqw-pick-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.mqw-pick{display:flex;align-items:center;gap:14px;width:100%;border:1px solid #CBD5D1;border-radius:12px;background:#fff;padding:14px;text-align:left;font-family:inherit;cursor:pointer;transition:border-color .16s,background .16s}
+.mqw-pick:hover{border-color:#AEBDB6}
+.mqw-pick[aria-pressed="true"]{border-color:var(--g-primary);background:#F7FDFA}
+.mqw-pick-box{display:grid;place-items:center;flex-shrink:0;width:22px;height:22px;border:1.5px solid #CBD5D1;border-radius:6px;background:#fff;color:transparent}
+.mqw-pick[aria-pressed="true"] .mqw-pick-box{border-color:var(--g-primary);background:var(--g-primary);color:#fff}
+.mqw-pick-body{flex:1;min-width:0}
+.mqw-pick-name{display:block;color:var(--g-navy);font-size:15px;font-weight:600}
+.mqw-pick-meta{display:block;margin-top:3px;color:var(--g-muted);font-size:13px}
+.mqw-empty{margin-top:16px;border:1px dashed #C2CFC9;border-radius:12px;background:#FAFCFB;padding:28px 20px;color:var(--g-muted);font-size:14px;text-align:center}
+
+/* --- input hasil koin (langkah 3) --- */
+.mqw-entry{border:1px solid #CBD5D1;border-radius:14px;background:#fff;padding:16px}
+.mqw-entry+.mqw-entry{margin-top:14px}
+.mqw-entry-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mqw-entry-name{display:block;color:var(--g-navy);font-size:15px;font-weight:600}
+.mqw-entry-meta{display:block;margin-top:3px;color:var(--g-muted);font-size:13px}
+.mqw-entry-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+.mqw-money{position:relative;display:flex;align-items:center}
+.mqw-money-prefix{position:absolute;left:14px;color:var(--g-muted);font-size:15px;font-weight:500;pointer-events:none}
+.mqw-money .mqw-input{padding-left:40px;font-variant-numeric:tabular-nums}
+.mqw-quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.mqw-quick button{height:34px;padding:0 12px;border:1px solid #CBD5D1;border-radius:9px;background:#fff;color:var(--g-text);font:500 13px Inter;cursor:pointer;transition:border-color .16s,background .16s,color .16s}
+.mqw-quick button:hover{border-color:var(--g-primary);background:var(--g-soft);color:var(--g-hover)}
+.mqw-fee-flag{display:flex;align-items:center;gap:7px;margin-top:12px;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:500}
+.mqw-fee-flag.is-eligible{background:var(--g-soft);color:var(--g-hover)}
+.mqw-fee-flag.is-below{background:#F4F6F5;color:var(--g-muted)}
+.mqw-fee-flag.is-empty{background:#FFF8E8;color:#8A6318}
+.mqw-fee-flag.is-skipped{background:#F4F6F5;color:var(--g-muted)}
+.mqw-fee-flag svg{flex-shrink:0}
+
+/* --- total berjalan --- */
+.mqw-totals{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;border:1px solid var(--g-border);border-radius:14px;background:#FAFCFB;padding:16px}
+.mqw-totals>div{min-width:0}
+.mqw-totals dt{color:var(--g-muted);font-size:12px}
+.mqw-totals dd{margin:4px 0 0;color:var(--g-navy);font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.mqw-totals dd.is-fee{color:var(--g-hover)}
+
+@media(min-width:640px){
+.mqw-entry-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:900px){
+.gorut-collect-main{padding-top:18px;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+.gorut-collect-heading{flex-direction:column}
+.gorut-collect-heading h1{font-size:23px}
+.gorut-collect-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gorut-collect-summary article strong{font-size:18px}
+.gorut-collect-filter{flex-wrap:wrap;padding:10px}
+.gorut-collect-search{flex:none;width:100%}
+.gorut-collect-selects{width:100%}
+.gorut-collect-selects label{flex:1;min-width:120px}
+.gorut-collect-selects select{width:100%}
+.gorut-collect-table-wrap{display:none}
+.gorut-collect-mobile-list{display:grid;gap:10px;padding:10px}
+.gorut-collect-mobile-list article{display:flex;flex-direction:column;gap:8px;border:1px solid var(--g-border);border-radius:10px;background:#fff;padding:12px 14px}
+.gorut-collect-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.gorut-collect-card-top strong{display:block;color:var(--g-navy);font-size:12px}
+.gorut-collect-card-top small{display:block;margin-top:2px;color:var(--g-muted);font-size:9px}
+.gorut-collect-mobile-list dl{display:grid;grid-template-columns:1fr 1fr;row-gap:8px;column-gap:12px;margin:6px 0 0;border-top:1px solid var(--g-grid);padding-top:10px}
+.gorut-collect-mobile-list dt{color:var(--g-muted);font-size:9px}
+.gorut-collect-mobile-list dd{margin:2px 0 0;color:var(--g-navy);font-size:10px;font-weight:500}
+.gorut-collect-pagination{flex-direction:column;gap:10px;padding:12px 8px}
+.gorut-collect-drawer{width:100%}
+.mqw-totals{grid-template-columns:1fr;gap:10px}
+.mqw-totals dd{font-size:16px}
+}
+
+@media(max-width:560px){
+.gorut-collect-main{padding-left:10px;padding-right:10px}
+.gorut-collect-heading h1{font-size:21px}
+.gorut-collect-selects label{flex:none;min-width:100%}
+}
+/* ============ end pengambilan ============ */
+
+/* ============ Navigasi induk-anak ============ */
+.gorut-nav-parent{width:100%;justify-content:flex-start}
+.gorut-nav-parent .gorut-nav-caret{margin-left:auto;transition:transform .18s}
+.gorut-nav-parent .gorut-nav-caret.is-open{transform:rotate(180deg)}
+.gorut-nav-children{display:flex;flex-direction:column;gap:1px;margin:2px 0 2px 8px;padding-left:9px;border-left:1px solid var(--g-border)}
+.gorut-nav-children[hidden]{display:none}
+.gorut-nav-child{height:31px;font-size:10.5px}
+.gorut-nav-child.is-active{background:var(--g-soft);color:var(--g-hover);font-weight:600}
+.gorut-nav-child.is-active:before{display:none}
+span.gorut-nav-parent{cursor:default}
+
+/* ============ Segmented tabs Kordes/UPZIS ============ */
+.gorut-seg{display:flex;gap:4px;margin-bottom:14px;border:1px solid var(--g-border);border-radius:10px;background:#fff;padding:4px;width:fit-content}
+.gorut-seg a{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 16px;border-radius:7px;color:var(--g-muted);font:500 11px Inter;text-decoration:none;white-space:nowrap;transition:background .16s,color .16s}
+.gorut-seg a:hover{background:#f5f8f6;color:var(--g-navy)}
+.gorut-seg a.is-active{background:var(--g-soft);color:var(--g-hover);font-weight:600}
+.gorut-seg a:focus-visible{outline:2px solid var(--g-primary);outline-offset:2px}
+
+@media(max-width:900px){
+.gorut-seg{position:sticky;top:57px;z-index:30;width:auto;border-radius:0;border-left:0;border-right:0;border-top:0;margin:0 -15px 14px;padding:8px 15px;background:#fff;box-shadow:0 1px 3px rgba(8,33,59,.04)}
+.gorut-seg a{flex:1;justify-content:center}
+}
+@media(max-width:560px){
+.gorut-seg{margin-left:-10px;margin-right:-10px;padding-left:10px;padding-right:10px}
+}
+
+/* ============ Rekap UPZIS ============ */
+.gorut-upzis-status{display:inline-flex;align-items:center;border-radius:4px;padding:3px 6px;font:600 8px Inter;text-transform:uppercase;white-space:nowrap}
+.gorut-upzis-status.is-incomplete{background:#fdecec;color:#cf4a4a}
+.gorut-upzis-status.is-ready-to-recap{background:#e3effc;color:#1d66db}
+.gorut-upzis-status.is-recapped{background:var(--g-soft);color:var(--g-hover)}
+.gorut-upzis-status.is-waiting-minutes{background:#fff5e6;color:#d97706}
+.gorut-upzis-status.is-ready-to-deposit{background:#dcfce7;color:#15803d}
+
+.gorut-upzis-card-button{border:0;background:none;padding:0;text-align:left;cursor:pointer}
+.gorut-upzis-card-button strong{display:block;color:var(--g-navy);font-size:12px}
+.gorut-upzis-card-button small{display:block;margin-top:2px;color:var(--g-muted);font-size:9px}
+
+.gorut-upzis-breakdown{border:1px solid var(--g-border);border-radius:8px;background:#fafcfb;padding:10px 12px}
+.gorut-upzis-breakdown+.gorut-upzis-breakdown{margin-top:8px}
+.gorut-upzis-breakdown-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
+.gorut-upzis-breakdown-head strong{color:var(--g-navy);font-size:11px;font-weight:600}
+.gorut-upzis-breakdown-head span{color:var(--g-subtle);font-size:9px}
+.gorut-upzis-breakdown dl{display:grid;grid-template-columns:1fr 1fr;row-gap:6px;column-gap:12px;margin:0}
+.gorut-upzis-breakdown dt{color:var(--g-muted);font-size:9px}
+.gorut-upzis-breakdown dd{margin:2px 0 0;color:var(--g-navy);font-size:10px;font-weight:600}
+
+.gorut-placeholder-skeleton{height:220px;border:1px solid var(--g-border);border-radius:12px;background:linear-gradient(90deg,#f4f7f5,#fff,#f4f7f5);animation:gorut-shimmer 1.5s infinite ease-in-out}
+.gorut-doc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.gorut-doc-card{border:1px solid var(--g-border);border-radius:12px;background:#fff;padding:16px;box-shadow:0 1px 3px rgba(8,33,59,.02)}
+.gorut-doc-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.gorut-doc-card-head strong{color:var(--g-primary);font-size:20px;letter-spacing:-.03em}
+.gorut-doc-badge{border-radius:999px;background:#f1f5f9;padding:4px 8px;color:#64748b;font-size:9px;font-weight:600;white-space:nowrap}
+.gorut-doc-card h2{margin:14px 0 0;color:var(--g-navy);font-size:14px;line-height:1.4}
+.gorut-doc-card p{margin:6px 0 0;color:var(--g-muted);font-size:11px;line-height:1.5}
+@media(max-width:900px){.gorut-doc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.gorut-doc-grid{grid-template-columns:1fr}.gorut-doc-card-head{align-items:flex-start;flex-direction:column}}
