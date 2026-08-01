@@ -26,7 +26,13 @@ Istilah wajib:
 - **Jumlah Bersih:** dana setelah `Jumlah Kotor` dikurangi `Upah PLPK`.
 - **Selisih:** perbedaan antara nilai pembanding, terutama `Jumlah Kotor` atau `Jumlah Bersih` menurut dokumen, sistem, dan uang yang diterima.
 
-## 3. Ketentuan Perhitungan
+## 3. Identitas Dokumen
+
+- `F.009`, `F.010`, `F.015`, dan `F.016` adalah kode berkas/kode formulir, bukan nomor surat atau nomor dokumen.
+- Kode berkas mengikuti posisi desain template, biasanya di tengah bawah logo atau posisi tengah yang ditentukan template.
+- Nomor unik dokumen ditempatkan kecil di pojok kanan atas sebagai `No. Berkas`, `No. Dokumen`, `No. Surat`, atau `No. Berita Acara`.
+
+## 4. Ketentuan Perhitungan
 
 Untuk setiap Munfiq:
 
@@ -44,9 +50,9 @@ Selisih = nilai menurut pembanding - nilai yang diterima atau dicatat
 
 Jika terdapat pembulatan, koreksi, atau nilai yang tidak dapat dibuktikan, transaksi ditahan pada tahap berjalan sampai ada catatan dan pengesahan pihak terkait.
 
-## 4. Tahapan dan Kendali Administrasi
+## 5. Tahapan dan Kendali Administrasi
 
-### 4.1 Munfiq
+### 5.1 Munfiq
 
 | Elemen | Ketentuan |
 |---|---|
@@ -59,7 +65,7 @@ Jika terdapat pembulatan, koreksi, atau nilai yang tidak dapat dibuktikan, trans
 | Penanganan selisih | Nominal yang diperdebatkan dicatat sebagai `Selisih`, tidak dihapus, dan dikonfirmasi ulang kepada Munfiq |
 | Output ke tahap berikutnya | Kaleng/uang, nominal per Munfiq, status kunjungan, dan bukti konfirmasi |
 
-### 4.2 Penjemputan oleh PLPK
+### 5.2 Penjemputan oleh PLPK
 
 | Elemen | Ketentuan |
 |---|---|
@@ -72,7 +78,7 @@ Jika terdapat pembulatan, koreksi, atau nilai yang tidak dapat dibuktikan, trans
 | Penanganan selisih | Bandingkan jumlah kaleng, nominal per Munfiq, uang fisik, dan sistem. Catat `Selisih`, alasan, pihak yang hadir, dan tindakan koreksi; Kordes tidak menyetujui dokumen tanpa penyelesaian atau penerimaan bersyarat yang terdokumentasi |
 | Output ke tahap berikutnya | F.009 bertanda tangan PLPK, uang/kaleng hasil Penjemputan, rincian per Munfiq, dan nilai bersih untuk Verifikasi Kordes |
 
-### 4.3 Verifikasi Kordes
+### 5.3 Verifikasi Kordes
 
 | Elemen | Ketentuan |
 |---|---|
@@ -83,22 +89,22 @@ Jika terdapat pembulatan, koreksi, atau nilai yang tidak dapat dibuktikan, trans
 | Dokumen yang dihasilkan | F.009 terverifikasi Kordes dan catatan Selisih/koreksi bila ada |
 | Status | `Terverifikasi Kordes`, `Terverifikasi Bersyarat`, atau `Dikembalikan ke PLPK` |
 | Penanganan selisih | Kordes mencocokkan ulang dokumen, uang, kaleng, dan sistem. Selisih wajib diberi catatan, bukti, nilai final, serta tanda tangan pihak terkait sebelum diteruskan |
-| Output ke tahap berikutnya | Dokumen terverifikasi, uang/kaleng, nilai final, dan berita Serah Terima Kordes → UPZIS |
+| Output ke tahap berikutnya | Dokumen terverifikasi, uang/kaleng, nilai final, dan F.015 — Berita Acara Serah Terima Donasi Koin NU Tingkat Desa (Kordes → UPZIS) |
 
-### 4.4 Verifikasi UPZIS
+### 5.4 Verifikasi UPZIS
 
 | Elemen | Ketentuan |
 |---|---|
 | Aktor | UPZIS |
 | Data input | Dokumen terverifikasi Kordes, rekap wilayah, uang/kaleng, dan data menurut sistem |
-| Proses | Mengonsolidasikan penghimpunan dari Kordes, memeriksa kelengkapan dan konsistensi nilai, memvalidasi Selisih, lalu menyiapkan Serah Terima ke PC |
+| Proses | Mengonsolidasikan F.015 dari setiap Ranting/Desa ke F.010, memeriksa kelengkapan dan konsistensi nilai, memvalidasi Selisih, lalu membuat F.016 untuk Serah Terima ke PC |
 | Pihak verifikator | UPZIS sebagai pemeriksa tingkat kecamatan; Kordes dan PLPK sebagai sumber klarifikasi |
-| Dokumen yang dihasilkan | Rekap Verifikasi UPZIS dan dokumen Serah Terima UPZIS → PC |
-| Status | `Terverifikasi UPZIS`, `Terverifikasi Bersyarat`, atau `Dikembalikan ke Kordes` |
-| Penanganan selisih | Pisahkan Selisih per Kordes, Munfiq, periode, dan jenisnya. Selisih yang belum selesai tetap terbuka dan ditandai pada rekap; jangan mengubah nilai sumber tanpa jejak koreksi |
-| Output ke tahap berikutnya | Rekap kecamatan, dokumen pendukung, nilai bersih terverifikasi, dan uang/kaleng untuk PC |
+| Dokumen yang dihasilkan | F.010 — Rekap Data Penerimaan Donasi Koin NU Tingkat Kecamatan, lalu F.016 — Berita Acara Serah Terima Donasi Koin NU Tingkat Kecamatan |
+| Status | `Belum Lengkap`, `Menunggu Verifikasi UPZIS`, `Ada Selisih`, `Terverifikasi UPZIS`, atau `Siap Dibuatkan F.016` |
+| Penanganan selisih | Pisahkan Selisih per Kordes, Ranting/Desa, Munfiq, periode, dan jenisnya. Selisih yang belum selesai tetap terbuka dan ditandai pada F.010; jangan mengubah nilai sumber tanpa jejak koreksi |
+| Output ke tahap berikutnya | F.010 yang siap dibuatkan F.016, F.016, dokumen pendukung, nilai bersih terverifikasi, dan uang/kaleng untuk PC |
 
-### 4.5 Penjemputan dan Verifikasi PC
+### 5.5 Penjemputan dan Verifikasi PC
 
 | Elemen | Ketentuan |
 |---|---|
@@ -106,22 +112,22 @@ Jika terdapat pembulatan, koreksi, atau nilai yang tidak dapat dibuktikan, trans
 | Data input | Rekap UPZIS, dokumen Kordes, dokumen Serah Terima, uang/kaleng, dan data menurut sistem |
 | Proses | Melakukan Penjemputan dari UPZIS, mencocokkan dokumen dan fisik, memeriksa formula serta seluruh Selisih, mengesahkan penerimaan, dan menutup periode |
 | Pihak verifikator | Pejabat/verifikator PC yang ditunjuk; UPZIS menjadi pihak Serah Terima |
-| Dokumen yang dihasilkan | Berita Serah Terima UPZIS → PC, rekap final PC, dan daftar Selisih terbuka/terselesaikan |
+| Dokumen yang dihasilkan | F.016 — Berita Acara Serah Terima Donasi Koin NU Tingkat Kecamatan, rekap final PC, dan daftar Selisih terbuka/terselesaikan |
 | Status | `Diterima PC`, `Selesai`, atau `Dikembalikan ke UPZIS` |
 | Penanganan selisih | Selisih diselesaikan melalui pemeriksaan berjenjang dan berita acara koreksi. Jika belum selesai, status periode tetap `Terverifikasi Bersyarat`, bukan `Selesai` |
 | Output ke tahap berikutnya | Tidak ada tahap operasional berikutnya; menghasilkan arsip final dan laporan penghimpunan |
 
-## 5. Kriteria Selesai
+## 6. Kriteria Selesai
 
 Alur hanya berstatus `Selesai` jika:
 
-- seluruh dokumen dari PLPK, Kordes, dan UPZIS tersedia;
+- seluruh dokumen dari PLPK, Kordes, dan UPZIS tersedia, termasuk F.009 untuk PLPK → Kordes, F.015 untuk Kordes → UPZIS, F.010 sebagai rekap UPZIS, dan F.016 untuk UPZIS → PC;
 - Serah Terima fisik di setiap perpindahan memiliki pihak, waktu, nilai, dan tanda tangan;
 - `Jumlah Kotor`, `Upah PLPK`, dan `Jumlah Bersih` dapat ditelusuri sampai daftar Munfiq;
 - `Selisih` sudah diselesaikan atau memiliki keputusan final PC;
 - PC mengesahkan penerimaan dan menutup periode.
 
-## 6. Aset Resmi Dokumen
+## 7. Aset Resmi Dokumen
 
 Aset resmi yang digunakan tanpa modifikasi:
 
@@ -130,6 +136,6 @@ Aset resmi yang digunakan tanpa modifikasi:
 
 Logo tidak boleh diubah, dipotong, digambar ulang, diberi filter, atau diubah warnanya.
 
-## 7. Batasan Implementasi
+## 8. Batasan Implementasi
 
 Blueprint ini tidak mencakup generator PDF dan tidak mengusulkan perubahan pada source code, API, Prisma, atau database aplikasi.
