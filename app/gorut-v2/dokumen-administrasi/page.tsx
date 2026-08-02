@@ -3,7 +3,7 @@ import { PlaceholderShell } from '@/components/gorut-v2/placeholder-shell';
 const documentCards = [
   { code: 'F.009', name: 'Formulir Penghimpunan PLPK', note: 'PLPK → Kordes' },
   { code: 'F.015', name: 'Rekap Hasil Penghimpunan Kordes', note: 'Kordes/desa → UPZIS' },
-  { code: 'F.010', name: 'Rekap Penghimpunan Per Kecamatan', note: 'UPZIS → PC' },
+  { code: 'F.010', name: 'Rekap Penghimpunan Tingkat Desa', note: 'Kordes → UPZIS' },
   { code: 'F.016', name: 'Rekap Penerimaan UPZIS', note: 'UPZIS → PC' },
 ];
 

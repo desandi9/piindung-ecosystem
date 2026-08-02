@@ -136,3 +136,50 @@ export function canConfirmCollection(batch: CollectionBatch): boolean {
 export function isBatchLocked(batch: CollectionBatch): boolean {
   return Boolean(batch.lockedAt) && batch.status !== 'needs-correction';
 }
+
+/** Transisi tunggal dari review PLPK ke antrean Kordes, termasuk pengiriman ulang koreksi. */
+export function submitPlpkBatch(
+  batch: CollectionBatch,
+  submittedAt = new Date().toISOString(),
+): { batch?: CollectionBatch; error?: string } {
+  if (!isBatchEditable(batch)) return { error: 'Data penjemputan sudah dikunci.' };
+  if (!batch.entries.length) return { error: 'Periode penjemputan belum memiliki Munfiq.' };
+  if (incompleteEntries(batch).length) {
+    return { error: 'Lengkapi seluruh hasil kunjungan dan catatan sebelum konfirmasi.' };
+  }
+  if (batch.entries.some((entry) => entry.visitStatus === 'collected' && (!Number.isFinite(entry.amount) || entry.amount <= 0))) {
+    return { error: 'Nominal Terjemput harus lebih dari Rp0.' };
+  }
+
+  const entries = batch.entries.map((entry) => {
+    const amount = normalizeAmount(entry.amount, entry.visitStatus);
+    return {
+      ...entry,
+      amount,
+      eligibleForPlpkFee: isEligibleForPlpkFee(amount, entry.visitStatus),
+      plpkFee: calculatePlpkFee(amount, entry.visitStatus),
+    };
+  });
+
+  return {
+    batch: {
+      ...batch,
+      entries,
+      ...summarizeEntries(entries),
+      status: 'waiting-kordes-verification',
+      documentStatus: 'Siap',
+      confirmedByPlpkAt: submittedAt,
+      lockedAt: submittedAt,
+      f009DocumentNumber: batch.f009DocumentNumber ?? batch.documentNumber,
+      submittedToKordesAt: submittedAt,
+      verifiedByKordesAt: undefined,
+      verifiedByKordesName: undefined,
+      returnedForCorrectionAt: undefined,
+      kordesNotes: undefined,
+      correctionEntryIds: undefined,
+      kordesMoneyMatches: undefined,
+      kordesHasDamagedMoney: undefined,
+      kordesCashReceived: undefined,
+    },
+  };
+}

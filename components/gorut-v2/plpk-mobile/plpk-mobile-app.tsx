@@ -4,13 +4,14 @@ import { GridViewIcon, HandCoinsIcon, Home01Icon, Notebook01Icon, UserIcon } fro
 import type { IconSvgElement } from '@hugeicons/react';
 import { useCallback, useMemo, useState } from 'react';
 
+import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
 import { saveCollectionBatch } from '@/features/gorut-v2/collection-store';
 import { plpkNotifications, type PlpkServiceScreen } from '@/features/gorut-v2/plpk-mobile-content';
 import { activeBatchForPlpk, activePlpkProfile, historyForPlpk, useCollectionBatches } from '@/features/gorut-v2/plpk-mobile-data';
-import { summarizeEntries } from '@/features/gorut-v2/pengambilan-options';
+import { submitPlpkBatch, summarizeEntries } from '@/features/gorut-v2/pengambilan-options';
 import type { CollectionBatch, CollectionEntry } from '@/features/gorut-v2/types';
 
-import { MobileServiceIcon } from './mobile-service-icon';
+import { MobileBottomNav } from './mobile-bottom-nav';
 import { PlpkCollectionTab } from './plpk-collection-tab';
 import { PlpkDistributionScreen } from './plpk-distribution-screen';
 import { PlpkHome } from './plpk-home';
@@ -41,10 +42,12 @@ export function PlpkMobileApp() {
   const profile = activePlpkProfile;
   const [tab, setTab] = useState<TabKey>('home');
   const [subScreen, setSubScreen] = useState<PlpkServiceScreen | null>(null);
+  const [newsArticleId, setNewsArticleId] = useState<string | undefined>();
   const [openEntryId, setOpenEntryId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [workingBatchId, setWorkingBatchId] = useState<string | null>(null);
+  const [f009BatchId, setF009BatchId] = useState<string | null>(null);
 
   const periodBatch = useMemo(() => activeBatchForPlpk(batches, profile.plpkId), [batches, profile.plpkId]);
   const history = useMemo(() => historyForPlpk(batches, profile.plpkId), [batches, profile.plpkId]);
@@ -60,6 +63,7 @@ export function PlpkMobileApp() {
 
   const navigateTab = useCallback((nextTab: TabKey) => {
     setSubScreen(null);
+    setNewsArticleId(undefined);
     setTab(nextTab);
     if (nextTab === 'collection') setWorkingBatchId(null);
   }, []);
@@ -69,8 +73,14 @@ export function PlpkMobileApp() {
       navigateTab(destination);
       return;
     }
+    setNewsArticleId(undefined);
     setSubScreen(destination);
   }, [navigateTab]);
+
+  const openNewsArticle = useCallback((articleId: string) => {
+    setNewsArticleId(articleId);
+    setSubScreen('news');
+  }, []);
 
   const saveEntry = useCallback((entry: CollectionEntry) => {
     if (!activeBatch) return;
@@ -86,23 +96,13 @@ export function PlpkMobileApp() {
 
   const confirmCollection = useCallback(() => {
     if (!activeBatch) return;
-    const today = new Date().toISOString().slice(0, 10);
     const isResubmission = activeBatch.status === 'needs-correction';
-    const documentNumber = activeBatch.f009DocumentNumber ?? activeBatch.documentNumber;
-    const next: CollectionBatch = {
-      ...activeBatch,
-      status: 'waiting-kordes-verification',
-      documentStatus: 'Siap',
-      confirmedByPlpkAt: today,
-      lockedAt: today,
-      f009DocumentNumber: documentNumber,
-      submittedToKordesAt: today,
-      verifiedByKordesAt: undefined,
-      verifiedByKordesName: undefined,
-      kordesNotes: undefined,
-      correctionEntryIds: undefined,
-    };
-    saveCollectionBatch(next);
+    const result = submitPlpkBatch(activeBatch);
+    if (!result.batch) {
+      showToast(result.error ?? 'Data belum dapat dikirim.');
+      return;
+    }
+    saveCollectionBatch(result.batch);
     setReviewOpen(false);
     setOpenEntryId(null);
     setWorkingBatchId(null);
@@ -121,27 +121,28 @@ export function PlpkMobileApp() {
   return (
     <div className="plpk-app">
       {subScreen === 'munfiq' ? <PlpkMunfiqScreen profile={profile} batches={batches} activeBatch={periodBatch} onBack={() => setSubScreen(null)} onOpenCollection={(entryId) => { setSubScreen(null); setWorkingBatchId(null); setTab('collection'); setOpenEntryId(entryId); }} /> : null}
-      {subScreen === 'news' ? <PlpkNewsScreen onBack={() => setSubScreen(null)} /> : null}
+      {subScreen === 'news' ? <PlpkNewsScreen initialArticleId={newsArticleId} onBack={() => { setNewsArticleId(undefined); setSubScreen(null); }} /> : null}
       {subScreen === 'distribution' ? <PlpkDistributionScreen onBack={() => setSubScreen(null)} /> : null}
       {subScreen === 'ziswaf' ? <PlpkZiswafScreen onBack={() => setSubScreen(null)} /> : null}
       {subScreen === 'ppob' ? <PlpkPpobScreen onBack={() => setSubScreen(null)} /> : null}
       {subScreen === 'notifications' ? <PlpkNotificationsScreen onBack={() => setSubScreen(null)} /> : null}
 
-      {!subScreen && tab === 'home' ? <PlpkHome profile={profile} batch={periodBatch} unreadCount={unreadCount} onNavigate={navigateHome} /> : null}
+      {!subScreen && tab === 'home' ? <PlpkHome profile={profile} batch={periodBatch} unreadCount={unreadCount} onNavigate={navigateHome} onOpenArticle={openNewsArticle} /> : null}
       {!subScreen && tab === 'collection' ? <PlpkCollectionTab batch={activeBatch} onOpenEntry={setOpenEntryId} onReview={() => setReviewOpen(true)} /> : null}
-      {!subScreen && tab === 'journal' ? <PlpkJournalTab batches={history} onFixCorrection={(batchId) => { setWorkingBatchId(batchId); setTab('collection'); }} /> : null}
+      {!subScreen && tab === 'journal' ? <PlpkJournalTab batches={history} onFixCorrection={(batchId) => { setWorkingBatchId(batchId); setTab('collection'); }} onOpenF009={setF009BatchId} /> : null}
       {!subScreen && tab === 'services' ? <PlpkServicesTab unreadCount={unreadCount} onOpen={setSubScreen} /> : null}
       {!subScreen && tab === 'profile' ? <PlpkProfileTab profile={profile} onNotice={showToast} /> : null}
 
-      <nav className="plpk-nav" aria-label="Navigasi utama">
-        {tabs.map(({ key, label, icon }) => (
-          <button key={key} type="button" className={currentTab === key ? 'is-active' : undefined} aria-current={currentTab === key ? 'page' : undefined} aria-label={label} onClick={() => navigateTab(key)}>
-            <MobileServiceIcon icon={icon} label={label} size={22} />
-            <span>{label}</span>
-            {key === 'collection' && pendingCount > 0 ? <span className="plpk-nav-badge" aria-label={`${pendingCount} Munfiq belum dikunjungi`}>{pendingCount}</span> : null}
-          </button>
-        ))}
-      </nav>
+      <MobileBottomNav
+        items={tabs.map((item) => ({
+          ...item,
+          badge: item.key === 'collection' ? pendingCount : undefined,
+          badgeLabel: item.key === 'collection' ? `${pendingCount} Munfiq belum dikunjungi` : undefined,
+        }))}
+        activeKey={currentTab}
+        ariaLabel="Navigasi utama"
+        onSelect={navigateTab}
+      />
 
       {openEntry && activeBatch ? (
         <PlpkVisitForm
@@ -169,6 +170,7 @@ export function PlpkMobileApp() {
       ) : null}
 
       {reviewOpen && activeBatch ? <PlpkReviewSheet batch={activeBatch} onClose={() => setReviewOpen(false)} onConfirm={confirmCollection} /> : null}
+      <F009Preview batch={batches.find((batch) => batch.id === f009BatchId) ?? null} canPrint={false} onClose={() => setF009BatchId(null)} />
       {toast ? <div className="plpk-toast" role="status">{toast}</div> : null}
     </div>
   );

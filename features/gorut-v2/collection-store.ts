@@ -14,8 +14,35 @@ const STORAGE_KEY = 'gorut-v2:collection-overrides';
 
 let overrides: Record<string, CollectionBatch> = {};
 let hydrated = false;
+let storageListening = false;
 let snapshot: CollectionBatch[] = gorutCollectionBatches;
 const listeners = new Set<() => void>();
+const knownBatchIds = new Set(gorutCollectionBatches.map((batch) => batch.id));
+
+function parseOverrides(raw: string): Record<string, CollectionBatch> {
+  const parsed: unknown = JSON.parse(raw);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+  return Object.fromEntries(Object.entries(parsed).filter(([key, value]) => {
+    if (!knownBatchIds.has(key) || !value || typeof value !== 'object') return false;
+    const batch = value as Partial<CollectionBatch>;
+    return batch.id === key && typeof batch.period === 'string' && typeof batch.status === 'string' && Array.isArray(batch.entries);
+  })) as Record<string, CollectionBatch>;
+}
+
+function listenForStorageChanges() {
+  if (storageListening || typeof window === 'undefined') return;
+  storageListening = true;
+  window.addEventListener('storage', (event) => {
+    if (event.key !== STORAGE_KEY) return;
+    try {
+      overrides = event.newValue ? parseOverrides(event.newValue) : {};
+      emit();
+    } catch {
+      overrides = {};
+      emit();
+    }
+  });
+}
 
 function rebuildSnapshot() {
   snapshot = Object.keys(overrides).length
@@ -32,14 +59,12 @@ function emit() {
 export function hydrateCollectionStore() {
   if (hydrated || typeof window === 'undefined') return;
   hydrated = true;
+  listenForStorageChanges();
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
-    const parsed = JSON.parse(raw) as Record<string, CollectionBatch>;
-    if (parsed && typeof parsed === 'object') {
-      overrides = parsed;
-      emit();
-    }
+    overrides = parseOverrides(raw);
+    emit();
   } catch {
     // Data rusak atau storage diblokir — cukup jalan dengan data mock awal.
   }

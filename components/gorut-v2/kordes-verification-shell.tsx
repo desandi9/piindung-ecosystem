@@ -1,11 +1,13 @@
 'use client';
 
-import { AlertTriangle, Banknote, CheckCircle2, Clock3, Eye, FileText, Filter, MapPin, Printer, Search, X } from 'lucide-react';
-import Image from 'next/image';
+import { AlertTriangle, Banknote, CheckCircle2, Clock3, Eye, FileText, Filter, MapPin, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { KordesDocumentViewer } from '@/components/gorut-v2/documents/kordes-document-viewer';
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
 import { VerificationWizard } from '@/components/gorut-v2/kordes-verification-form';
-import { formatDateShort, formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
+import { saveCollectionBatch } from '@/features/gorut-v2/collection-store';
+import { formatDateShort, formatRupiah } from '@/features/gorut-v2/formatters';
+import { applyKordesDecision } from '@/features/gorut-v2/kordes-mobile';
 import { buildKordesVerifications, createVillageRecaps, getBatch, isF015Ready, summarizeVillageRecap } from '@/features/gorut-v2/kordes-mock-data';
 import { useCollectionBatches } from '@/features/gorut-v2/plpk-mobile-data';
 import type { F015Status, KordesVerification, KordesVerificationStatus, KordesVillageRecap } from '@/features/gorut-v2/types';
@@ -38,8 +40,6 @@ const actionLabels: Record<KordesVerificationStatus, string> = {
   'needs-correction': 'Lihat Hasil Verifikasi',
 };
 
-const moneyWords = (value: number) => `${formatRupiah(value)} (terbilang mock)`;
-
 function recapCompleteness(recap: KordesVillageRecap): string {
   if (recap.f015Status === 'handed-to-upzis') return 'F.015 Selesai';
   if (recap.f015Status === 'waiting-upzis-handover') return 'F.015 Siap';
@@ -56,8 +56,6 @@ export function KordesVerificationShell() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [notice, setNotice] = useState('');
   const batches = useCollectionBatches();
-  /** Keputusan verifikasi disimpan terpisah supaya baris baru dari PLPK tetap ikut masuk. */
-  const [decisions, setDecisions] = useState<Record<string, KordesVerification>>({});
   const [activeTab, setActiveTab] = useState<'plpk' | 'village'>('plpk');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -66,7 +64,7 @@ export function KordesVerificationShell() {
   const [wizard, setWizard] = useState<KordesVerification | null>(null);
   const [f009Preview, setF009Preview] = useState<KordesVerification | null>(null);
   const [villageDetail, setVillageDetail] = useState<KordesVillageRecap | null>(null);
-  const [f015Preview, setF015Preview] = useState<KordesVillageRecap | null>(null);
+  const [documentPreview, setDocumentPreview] = useState<{ type: 'f010' | 'f015'; recap: KordesVillageRecap } | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoading(false), 420);
@@ -78,10 +76,7 @@ export function KordesVerificationShell() {
     window.setTimeout(() => setNotice(''), 2500);
   };
 
-  const rows = useMemo(
-    () => buildKordesVerifications(batches).map((row) => decisions[row.id] ?? row),
-    [batches, decisions],
-  );
+  const rows = useMemo(() => buildKordesVerifications(batches), [batches]);
 
   const recaps = useMemo(() => createVillageRecaps(rows), [rows]);
 
@@ -118,7 +113,23 @@ export function KordesVerificationShell() {
   );
 
   const updateRow = (next: KordesVerification) => {
-    setDecisions((current) => ({ ...current, [next.id]: next }));
+    const source = batches.find((batch) => batch.id === next.batchId);
+    if (source) {
+      const decidedAt = next.verifiedAt ?? next.returnedForCorrectionAt ?? new Date().toISOString();
+      const action = next.status === 'verified-by-kordes' ? 'verify' : 'correction';
+      const result = applyKordesDecision(source, {
+        moneyMatches: next.moneyMatches,
+        hasDamagedMoney: next.hasDamagedMoney,
+        cashReceived: next.cashReceived,
+        notes: next.notes,
+        correctionEntryIds: action === 'correction' ? next.correctionEntryIds : undefined,
+      }, action, next.verifiedByKordesName ?? next.kordesName, decidedAt);
+      if (result.error || !result.batch) {
+        triggerNotice(result.error ?? 'Keputusan verifikasi gagal disimpan.');
+        return;
+      }
+      saveCollectionBatch(result.batch);
+    }
     setWizard(null);
     setDetail(next);
   };
@@ -170,7 +181,7 @@ export function KordesVerificationShell() {
                     className={activeTab === 'village' ? 'is-active' : ''}
                     onClick={() => setActiveTab('village')}
                   >
-                    Rekap Desa &amp; F.015
+                    Rekap Desa &amp; Dokumen
                   </button>
                 </div>
                 {activeTab === 'plpk' && (
@@ -215,7 +226,8 @@ export function KordesVerificationShell() {
                     recaps={recaps}
                     villageSummary={villageSummary}
                     onDetail={(r) => setVillageDetail(r)}
-                    onPreview={(r) => setF015Preview(r)}
+                    onF010={(recap) => setDocumentPreview({ type: 'f010', recap })}
+                    onF015={(recap) => setDocumentPreview({ type: 'f015', recap })}
                   />
                 )}
               </div>
@@ -260,12 +272,15 @@ export function KordesVerificationShell() {
           <VillageDrawer
             item={villageDetail}
             onClose={() => setVillageDetail(null)}
-            onPreview={() => { if (villageDetail) setF015Preview(villageDetail); }}
+            onF010={() => { if (villageDetail) setDocumentPreview({ type: 'f010', recap: villageDetail }); }}
+            onF015={() => { if (villageDetail) setDocumentPreview({ type: 'f015', recap: villageDetail }); }}
           />
 
-          <F015PreviewModal
-            recap={f015Preview}
-            onClose={() => setF015Preview(null)}
+          <KordesDocumentViewer
+            documentType={documentPreview?.type ?? 'f010'}
+            recap={documentPreview?.recap ?? null}
+            batches={batches}
+            onClose={() => setDocumentPreview(null)}
           />
 
           <F009Preview
@@ -457,19 +472,21 @@ function VillageTab({
   recaps,
   villageSummary,
   onDetail,
-  onPreview,
+  onF010,
+  onF015,
 }: {
   recaps: KordesVillageRecap[];
   villageSummary: { waiting: number; ready: number; f015Ready: number; totalNet: number };
   onDetail: (r: KordesVillageRecap) => void;
-  onPreview: (r: KordesVillageRecap) => void;
+  onF010: (r: KordesVillageRecap) => void;
+  onF015: (r: KordesVillageRecap) => void;
 }) {
   return (
     <>
       <div className="kordes-village-heading">
         <div>
-          <h2>Rekap Desa &amp; F.015</h2>
-          <p>Gabungkan hasil verifikasi PLPK per desa/ranting dan kelola dokumen F.015 sebagai keluaran utama tahap Kordes.</p>
+          <h2>Rekap Desa &amp; Dokumen Resmi</h2>
+          <p>Periksa rekap PLPK melalui F.010 dan berita acara serah terima melalui F.015.</p>
         </div>
       </div>
       <div className="kordes-summary">
@@ -533,12 +550,20 @@ function VillageTab({
                         >
                           Lihat Detail Rekap
                         </button>
+                        <button
+                          type="button"
+                          className="gorut-button gorut-secondary-button"
+                          onClick={() => onF010(recap)}
+                        >
+                          <Eye size={13} />
+                          Lihat F.010
+                        </button>
                         {ready ? (
                           <>
                             <button
                               type="button"
                               className="gorut-button gorut-primary-button"
-                              onClick={() => onPreview(recap)}
+                              onClick={() => onF015(recap)}
                             >
                               <Eye size={13} />
                               Lihat F.015
@@ -597,9 +622,17 @@ function VillageTab({
                   </button>
                   <button
                     type="button"
+                    className="gorut-button gorut-secondary-button"
+                    onClick={() => onF010(recap)}
+                  >
+                    <Eye size={13} />
+                    F.010
+                  </button>
+                  <button
+                    type="button"
                     className="gorut-button gorut-primary-button"
                     disabled={!ready}
-                    onClick={() => { if (ready) onPreview(recap); }}
+                    onClick={() => { if (ready) onF015(recap); }}
                   >
                     <Eye size={13} />
                     Lihat F.015
@@ -627,6 +660,8 @@ function PlpkDetailDrawer({
   if (!item) return null;
   const batch = getBatch(item.batchId);
   const canVerify = item.status === 'waiting-kordes-verification';
+  const decisionAt = item.status === 'needs-correction' ? item.returnedForCorrectionAt : item.verifiedAt;
+  const decisionDateLabel = item.status === 'needs-correction' ? 'Tanggal Dikembalikan' : 'Tanggal Verifikasi';
   return (
     <aside className="kordes-drawer" aria-label="Detail Verifikasi PLPK">
       <button type="button" className="kordes-close" onClick={onClose}><X size={18} /></button>
@@ -679,7 +714,7 @@ function PlpkDetailDrawer({
             <div><dt>Jumlah Uang Sesuai</dt><dd>{item.moneyMatches === undefined ? '—' : item.moneyMatches ? 'Ya' : 'Tidak'}</dd></div>
             <div><dt>Ada Uang Rusak</dt><dd>{item.hasDamagedMoney === undefined ? '—' : item.hasDamagedMoney ? 'Ya' : 'Tidak'}</dd></div>
             <div><dt>Uang Sudah Diterima</dt><dd>{item.cashReceived === undefined ? '—' : item.cashReceived ? 'Ya' : 'Tidak'}</dd></div>
-            <div><dt>Tanggal Verifikasi</dt><dd>{item.verifiedAt ? formatDateShort(item.verifiedAt) : '—'}</dd></div>
+            <div><dt>{decisionDateLabel}</dt><dd>{decisionAt ? formatDateShort(decisionAt) : '—'}</dd></div>
             <div><dt>Nama Kordes</dt><dd>{item.verifiedByKordesName ?? '—'}</dd></div>
           </div>
         </div>
@@ -691,8 +726,8 @@ function PlpkDetailDrawer({
             <div>
               <dt>Riwayat Keputusan</dt>
               <dd>
-                {item.verifiedAt
-                  ? `${formatDateShort(item.verifiedAt)} · ${verificationLabels[item.status]}`
+                {decisionAt
+                  ? `${formatDateShort(decisionAt)} · ${verificationLabels[item.status]}`
                   : 'Belum ada keputusan'}
               </dd>
             </div>
@@ -721,11 +756,13 @@ function PlpkDetailDrawer({
 function VillageDrawer({
   item,
   onClose,
-  onPreview,
+  onF010,
+  onF015,
 }: {
   item: KordesVillageRecap | null;
   onClose: () => void;
-  onPreview: () => void;
+  onF010: () => void;
+  onF015: () => void;
 }) {
   if (!item) return null;
   const total = summarizeVillageRecap(item);
@@ -803,8 +840,11 @@ function VillageDrawer({
         <button type="button" className="gorut-button gorut-secondary-button" onClick={onClose}>
           Tutup
         </button>
+        <button type="button" className="gorut-button gorut-secondary-button" onClick={onF010}>
+          <Eye size={14} />Lihat F.010
+        </button>
         {ready && (
-          <button type="button" className="gorut-button gorut-primary-button" onClick={onPreview}>
+          <button type="button" className="gorut-button gorut-primary-button" onClick={onF015}>
             <Eye size={14} />Lihat F.015
           </button>
         )}
@@ -813,129 +853,3 @@ function VillageDrawer({
     </aside>
   );
 }
-function F015PreviewModal({
-  recap,
-  onClose,
-}: {
-  recap: KordesVillageRecap | null;
-  onClose: () => void;
-}) {
-  if (!recap) return null;
-  const total = summarizeVillageRecap(recap);
-
-  const print = () => {
-    const content = document.getElementById('f015-doc')?.outerHTML;
-    if (!content) return;
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
-    document.body.appendChild(iframe);
-    const doc = iframe.contentDocument;
-    if (!doc) return;
-    doc.open();
-    doc.write(`<!doctype html><html><head><style>${F015_PRINT_CSS}</style></head><body>${content}</body></html>`);
-    doc.close();
-    Promise.all(
-      Array.from(doc.images).map((img) =>
-        img.complete
-          ? Promise.resolve()
-          : new Promise<void>((resolve) => { img.onload = () => resolve(); img.onerror = () => resolve(); }),
-      ),
-    ).then(() => {
-      iframe.contentWindow?.print();
-      window.setTimeout(() => iframe.remove(), 1000);
-    });
-  };
-
-  return (
-    <div className="f009-modal" role="dialog" aria-modal="true" aria-label="Preview F.015">
-      <div className="f009-toolbar">
-        <strong>Preview F.015</strong>
-        <div>
-          <button type="button" className="gorut-button gorut-secondary-button" onClick={print}>
-            <Printer size={14} />Cetak
-          </button>
-          <button type="button" className="gorut-button gorut-primary-button" onClick={onClose}>
-            Tutup
-          </button>
-        </div>
-      </div>
-
-      <article id="f015-doc" className="f015-page">
-        <Image className="f015-watermark" src="/logo koin nu.png" alt="" width={420} height={420} aria-hidden="true" />
-
-        <div className="f015-number">
-          <span>No. Berita Acara</span>
-          <strong>{recap.f015Number}</strong>
-        </div>
-
-        <header className="f015-header">
-          <Image src="/logo untuk berkas gorut.png" alt="Logo resmi GORUT" width={250} height={193} priority />
-          <b>F.015</b>
-          <h1>BERITA ACARA SERAH TERIMA<br />DONASI KOIN NU<br />TINGKAT DESA</h1>
-        </header>
-
-        <p className="f015-intro">
-          Pada tanggal {formatDateShort(recap.handoverDate)}, telah dilakukan serah terima donasi
-          Koin NU periode {recap.period} di {recap.village}, Kecamatan {recap.kecamatan}.
-        </p>
-
-        <dl className="f015-dl">
-          {([
-            ['Pihak yang menyerahkan', `Kordes · ${recap.kordesName}`],
-            ['Pihak yang menerima', `Petugas/Admin UPZIS · ${recap.upzisOfficerName}`],
-            ['Total nominal yang diserahkan', formatRupiah(total.netAmount)],
-            ['Nominal terbilang', moneyWords(total.netAmount)],
-            ['Jumlah PLPK', formatNumber(total.plpkCount)],
-            ['Total kaleng aktif', formatNumber(total.activeCanCount)],
-            ['Total kaleng terjemput', formatNumber(total.collectedCanCount)],
-            ['Total kaleng tidak terjemput', formatNumber(total.uncollectedCanCount)],
-            ['Status verifikasi', isF015Ready(recap) ? 'Data penerimaan terverifikasi' : 'Belum lengkap'],
-          ] as [string, string][]).map(([key, val]) => (
-            <div key={key}><dt>{key}</dt><dd>{val}</dd></div>
-          ))}
-        </dl>
-
-        {isF015Ready(recap) && (
-          <strong className="f015-verified">Data penerimaan terverifikasi</strong>
-        )}
-
-        <div className="f015-signatures">
-          <div>
-            <span>Diserahkan oleh Kordes</span>
-            <em />
-            <strong>{recap.kordesName}</strong>
-          </div>
-          <div>
-            <span>Diterima dan diverifikasi oleh UPZIS</span>
-            <em />
-            <strong>{recap.upzisOfficerName}</strong>
-          </div>
-        </div>
-      </article>
-    </div>
-  );
-}
-const F015_PRINT_CSS =
-  '@page{size:A4 portrait;margin:14mm}' +
-  '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
-  'body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif;color:#202b38}' +
-  '.f015-page{position:relative;isolation:isolate;width:182mm;min-height:269mm;margin:0 auto;background:#fff;overflow:hidden}' +
-  '.f015-watermark{position:absolute;z-index:0;width:105mm;height:105mm;left:50%;top:48%;transform:translate(-50%,-50%);object-fit:contain;opacity:.05}' +
-  '.f015-number,.f015-header,.f015-intro,.f015-dl,.f015-verified,.f015-signatures{position:relative;z-index:1}' +
-  '.f015-number{position:absolute;right:0;top:0;font-size:7.5pt;text-align:right;color:#52606d}' +
-  '.f015-number strong{display:block;font-size:8pt;color:#202b38}' +
-  '.f015-header{text-align:center;border-bottom:2px solid #202b38;padding:3mm 25mm 5mm}' +
-  '.f015-header img{display:block;width:62mm;height:auto;margin:0 auto 3mm;object-fit:contain}' +
-  '.f015-header b{display:block;font-size:13pt;letter-spacing:.15em;color:#08213b}' +
-  '.f015-header h1{margin:2mm 0 0;font-size:16pt;line-height:1.2;color:#08213b}' +
-  '.f015-intro{margin:7mm 0;font-size:9.5pt;line-height:1.6;color:#334155}' +
-  '.f015-dl{display:grid;grid-template-columns:1fr 1fr;gap:0 8mm}' +
-  '.f015-dl div{display:grid;grid-template-columns:42mm 1fr;gap:2mm;border-bottom:1px solid #e5e7eb;padding:2mm 0;font-size:8.5pt}' +
-  '.f015-dl dt{color:#52606d}' +
-  '.f015-dl dd{margin:0;font-weight:700;color:#202b38}' +
-  '.f015-verified{display:block;margin-top:7mm;font-size:10pt;font-weight:700;color:#067a4c;text-align:center}' +
-  '.f015-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24mm;margin-top:20mm;text-align:center;font-size:9pt}' +
-  '.f015-signatures div{display:flex;min-height:35mm;flex-direction:column;justify-content:space-between}' +
-  '.f015-signatures span{color:#52606d}' +
-  '.f015-signatures em{display:block;height:20mm;border-bottom:1px solid #94a3b8;margin:4mm 8mm 0;font-style:normal}' +
-  '.f015-signatures strong{display:block;margin-top:3mm;font-weight:700;color:#08213b}';

@@ -109,10 +109,15 @@ export interface CollectionBatch {
   submittedToKordesAt?: string;
   verifiedByKordesAt?: string;
   verifiedByKordesName?: string;
+  returnedForCorrectionAt?: string;
   /** Catatan Kordes saat batch dikembalikan untuk dikoreksi. */
   kordesNotes?: string;
   /** Entri yang ditandai Kordes; hanya ini yang boleh diubah PLPK saat Perlu Koreksi. */
   correctionEntryIds?: string[];
+  /** Jawaban verifikasi Kordes disimpan bersama batch agar mobile dan desktop sinkron. */
+  kordesMoneyMatches?: boolean;
+  kordesHasDamagedMoney?: boolean;
+  kordesCashReceived?: boolean;
   createdAt: string;
 }
 
@@ -195,7 +200,9 @@ export interface KordesVerification {
   hasDamagedMoney?: boolean;
   cashReceived?: boolean;
   notes?: string;
+  correctionEntryIds?: string[];
   verifiedAt?: string;
+  returnedForCorrectionAt?: string;
   verifiedByKordesName?: string;
 }
 

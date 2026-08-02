@@ -59,12 +59,13 @@ export function MobileServiceTile({ icon, title, description, badge, onClick, co
   );
 }
 
-export function MobileEmptyState({ icon, title, description }: { icon: IconSvgElement; title: string; description: string }) {
+export function MobileEmptyState({ icon, title, description, action }: { icon: IconSvgElement; title: string; description: string; action?: ReactNode }) {
   return (
     <div className="plpk-empty">
       <span className="plpk-empty-icon"><MobileServiceIcon icon={icon} label={title} size={26} /></span>
       <strong>{title}</strong>
       <p>{description}</p>
+      {action}
     </div>
   );
 }

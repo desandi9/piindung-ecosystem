@@ -10,8 +10,8 @@ import { plpkNewsArticles, type PlpkNewsArticle } from '@/features/gorut-v2/plpk
 import { MobileServiceIcon } from './mobile-service-icon';
 import { MobilePageHeader, MobileSectionHeader } from './mobile-ui';
 
-export function PlpkNewsScreen({ onBack }: { onBack: () => void }) {
-  const [article, setArticle] = useState<PlpkNewsArticle | null>(null);
+export function PlpkNewsScreen({ onBack, initialArticleId }: { onBack: () => void; initialArticleId?: string }) {
+  const [article, setArticle] = useState<PlpkNewsArticle | null>(() => plpkNewsArticles.find((item) => item.id === initialArticleId) ?? null);
   const featured = plpkNewsArticles.find((item) => item.featured) ?? plpkNewsArticles[0];
   const latest = plpkNewsArticles.filter((item) => item.id !== featured.id);
 

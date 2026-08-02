@@ -21,6 +21,7 @@ import type { CollectionBatch, PlpkProfile } from '@/features/gorut-v2/types';
 
 import { MobileServiceIcon } from './mobile-service-icon';
 import { MobileSectionHeader, MobileServiceTile, MobileStatusBadge } from './mobile-ui';
+import { MobileNewsPortal } from '../mobile-shared/mobile-news-portal';
 
 type HomeDestination = 'collection' | 'journal' | PlpkServiceScreen;
 
@@ -29,11 +30,13 @@ export function PlpkHome({
   batch,
   unreadCount,
   onNavigate,
+  onOpenArticle,
 }: {
   profile: PlpkProfile;
   batch: CollectionBatch | null;
   unreadCount: number;
   onNavigate: (destination: HomeDestination) => void;
+  onOpenArticle: (articleId: string) => void;
 }) {
   const metrics = summarizePlpkPeriod(batch);
   const progress = batch ? collectionProgress(batch) : 0;
@@ -128,6 +131,8 @@ export function PlpkHome({
           ))}
         </div>
       </section>
+
+      <MobileNewsPortal onOpenAll={() => onNavigate('news')} onOpenArticle={onOpenArticle} />
     </div>
   );
 }

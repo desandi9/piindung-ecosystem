@@ -10,13 +10,16 @@ export function VerificationWizard({ item, onClose, onSave }: { item: KordesVeri
   const [hasDamagedMoney, setHasDamagedMoney] = useState<boolean>();
   const [cashReceived, setCashReceived] = useState<boolean>();
   const [notes, setNotes] = useState('');
+  const [correctionEntryIds, setCorrectionEntryIds] = useState<string[]>([]);
   const [preview, setPreview] = useState(false);
   if (!item) return null;
   const batch = getBatch(item.batchId);
-  const valid = validateKordesDecision({ moneyMatches, hasDamagedMoney, cashReceived, notes });
+  const returningForCorrection = moneyMatches === false;
+  const valid = validateKordesDecision({ moneyMatches, hasDamagedMoney, cashReceived, notes }) && (!returningForCorrection || correctionEntryIds.length > 0);
   const save = () => {
     if (!valid) return;
-    onSave({ ...item, moneyMatches, hasDamagedMoney, cashReceived, notes: notes.trim() || undefined, status: moneyMatches && cashReceived ? 'verified-by-kordes' : 'needs-correction', verifiedAt: new Date().toISOString(), verifiedByKordesName: item.kordesName });
+    const decidedAt = new Date().toISOString();
+    onSave({ ...item, moneyMatches, hasDamagedMoney, cashReceived, notes: notes.trim() || undefined, correctionEntryIds: returningForCorrection ? correctionEntryIds : undefined, status: returningForCorrection ? 'needs-correction' : 'verified-by-kordes', verifiedAt: returningForCorrection ? undefined : decidedAt, returnedForCorrectionAt: returningForCorrection ? decidedAt : undefined, verifiedByKordesName: item.kordesName });
   };
   return (
     <div className="kordes-overlay" role="dialog" aria-modal="true" aria-label="Verifikasi Data Kordes">
@@ -30,6 +33,22 @@ export function VerificationWizard({ item, onClose, onSave }: { item: KordesVeri
           <Choice label="Jumlah uang sesuai?" value={moneyMatches} onChange={setMoneyMatches} />
           <Choice label="Ada uang rusak?" value={hasDamagedMoney} onChange={setHasDamagedMoney} />
           <Choice label="Uang sudah diterima?" value={cashReceived} onChange={setCashReceived} />
+          {returningForCorrection ? (
+            <fieldset className="kordes-field">
+              <legend>Munfiq yang perlu dikoreksi</legend>
+              {batch.entries.map((entry) => (
+                <label key={entry.id} className="kordes-correction-option">
+                  <input
+                    type="checkbox"
+                    checked={correctionEntryIds.includes(entry.id)}
+                    onChange={() => setCorrectionEntryIds((current) => current.includes(entry.id) ? current.filter((id) => id !== entry.id) : [...current, entry.id])}
+                  />
+                  {entry.canCode} · {entry.munfiqName}
+                </label>
+              ))}
+              {!correctionEntryIds.length ? <small className="kordes-error">Pilih minimal satu Munfiq yang perlu dikoreksi.</small> : null}
+            </fieldset>
+          ) : null}
           <label className="kordes-field">Catatan verifikasi<textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
           {!cashReceived && cashReceived !== undefined ? <small className="kordes-error">Verifikasi tidak dapat diselesaikan sebelum uang diterima.</small> : null}
           {(!moneyMatches || hasDamagedMoney) && (moneyMatches !== undefined && hasDamagedMoney !== undefined) && !notes.trim() ? <small className="kordes-error">Catatan wajib untuk kondisi tidak sesuai atau uang rusak.</small> : null}

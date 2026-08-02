@@ -1,6 +1,6 @@
 'use client';
 
-import { Coins01Icon, HandCoinsIcon, Notebook01Icon, PackageOpenIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
+import { Coins01Icon, FileVerifiedIcon, HandCoinsIcon, Notebook01Icon, PackageOpenIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { ChevronRight, Filter } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -12,7 +12,7 @@ import type { CollectionBatch } from '@/features/gorut-v2/types';
 import { MobilePageHeader, MobileStatusBadge } from './mobile-ui';
 import { MobileServiceIcon } from './mobile-service-icon';
 
-export function PlpkJournalTab({ batches, onFixCorrection }: { batches: CollectionBatch[]; onFixCorrection: (batchId: string) => void }) {
+export function PlpkJournalTab({ batches, onFixCorrection, onOpenF009 }: { batches: CollectionBatch[]; onFixCorrection: (batchId: string) => void; onOpenF009: (batchId: string) => void }) {
   const journal = useMemo(() => buildPlpkJournal(batches), [batches]);
   const periods = useMemo(() => Array.from(new Set(journal.map((item) => item.period))), [journal]);
   const [period, setPeriod] = useState('all');
@@ -61,6 +61,13 @@ export function PlpkJournalTab({ batches, onFixCorrection }: { batches: Collecti
                   {expanded ? 'Tutup Ringkasan' : 'Lihat Ringkasan'}
                   <ChevronRight size={18} aria-hidden="true" />
                 </button>
+                {['waiting-kordes-verification', 'verified-by-kordes', 'needs-correction'].includes(item.status) ? (
+                  <button type="button" className="plpk-card-action" onClick={() => onOpenF009(item.batchId)}>
+                    <MobileServiceIcon icon={FileVerifiedIcon} label="Dokumen F.009" size={18} />
+                    Preview &amp; Simpan F.009
+                    <ChevronRight size={18} aria-hidden="true" />
+                  </button>
+                ) : null}
                 {item.status === 'needs-correction' ? (
                   <button type="button" className="plpk-btn plpk-btn-secondary" onClick={() => onFixCorrection(item.batchId)}>Perbaiki Data</button>
                 ) : null}

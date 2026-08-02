@@ -3,11 +3,22 @@ import { getCollectionSnapshot } from './collection-store';
 
 const eligibleStatuses: CollectionBatch['status'][] = ['waiting-kordes-verification', 'verified-by-kordes', 'needs-correction'];
 
-type VerificationSeed = Pick<KordesVerification, 'status' | 'moneyMatches' | 'hasDamagedMoney' | 'cashReceived' | 'notes' | 'verifiedAt' | 'verifiedByKordesName'>;
+/** Identitas Kordes aktif untuk prototipe mobile; cakupan wajib desa + kecamatan. */
+export const activeKordesProfile = {
+  kordesId: 'KORDES-03',
+  name: 'Cecep Suhendar',
+  phone: '081234500103',
+  village: 'Sindangpalay',
+  kecamatan: 'Karangpawitan',
+  upzis: 'UPZIS Karangpawitan',
+  accountStatus: 'Aktif',
+} as const;
+
+type VerificationSeed = Pick<KordesVerification, 'status' | 'moneyMatches' | 'hasDamagedMoney' | 'cashReceived' | 'notes' | 'verifiedAt' | 'returnedForCorrectionAt' | 'verifiedByKordesName'>;
 
 const verificationSeeds: Record<string, VerificationSeed> = {
   'batch-001': { status: 'verified-by-kordes', moneyMatches: true, hasDamagedMoney: false, cashReceived: true, notes: 'Data dan uang sesuai.', verifiedAt: '2026-07-10', verifiedByKordesName: 'Kordes Paminggir' },
-  'batch-002': { status: 'needs-correction', moneyMatches: false, hasDamagedMoney: false, cashReceived: true, notes: 'Nominal uang tidak sesuai dengan F.009.', verifiedAt: '2026-07-11', verifiedByKordesName: 'Kordes Sukakarya' },
+  'batch-002': { status: 'verified-by-kordes', moneyMatches: true, hasDamagedMoney: false, cashReceived: true, notes: 'Data dan uang sesuai.', verifiedAt: '2026-07-11', verifiedByKordesName: 'Kordes Sukakarya' },
   'batch-003': { status: 'waiting-kordes-verification' },
   'batch-019': { status: 'verified-by-kordes', moneyMatches: true, hasDamagedMoney: false, cashReceived: true, notes: 'F.009 lengkap dan uang diterima.', verifiedAt: '2026-07-10', verifiedByKordesName: 'Kordes Paminggir' },
 };
@@ -21,7 +32,7 @@ export function validateKordesDecision(input: { moneyMatches?: boolean; hasDamag
 
 function fallbackSeed(index: number, batch: CollectionBatch): VerificationSeed {
   if (batch.status === 'waiting-kordes-verification') return { status: 'waiting-kordes-verification' };
-  if (batch.status === 'needs-correction') return { status: 'needs-correction', moneyMatches: false, hasDamagedMoney: false, cashReceived: true, notes: 'Perlu koreksi nominal.', verifiedAt: batch.verifiedByKordesAt ?? batch.submittedToKordesAt ?? batch.createdAt, verifiedByKordesName: batch.verifiedByKordesName ?? batch.kordesName };
+  if (batch.status === 'needs-correction') return { status: 'needs-correction', moneyMatches: false, hasDamagedMoney: false, cashReceived: true, notes: 'Perlu koreksi nominal.', returnedForCorrectionAt: batch.returnedForCorrectionAt ?? batch.submittedToKordesAt ?? batch.createdAt, verifiedByKordesName: batch.verifiedByKordesName ?? batch.kordesName };
   return { status: 'verified-by-kordes', moneyMatches: true, hasDamagedMoney: index % 5 === 0, cashReceived: true, notes: index % 5 === 0 ? 'Ada uang rusak, sudah dicatat.' : 'Data sesuai.', verifiedAt: batch.verifiedByKordesAt ?? batch.submittedToKordesAt ?? batch.createdAt, verifiedByKordesName: batch.verifiedByKordesName ?? batch.kordesName };
 }
 
@@ -51,14 +62,16 @@ export function buildKordesVerifications(batches: CollectionBatch[] = getCollect
         grossAmount: batch.grossAmount,
         totalPlpkFee: batch.totalPlpkFee,
         netAmount: batch.netAmount,
-        status: seed.status,
+        status: batch.status as KordesVerification['status'],
         f015Status: 'not-ready',
-        moneyMatches: seed.moneyMatches,
-        hasDamagedMoney: seed.hasDamagedMoney,
-        cashReceived: seed.cashReceived,
-        notes: seed.notes,
-        verifiedAt: seed.verifiedAt,
-        verifiedByKordesName: seed.verifiedByKordesName,
+        moneyMatches: batch.kordesMoneyMatches ?? seed.moneyMatches,
+        hasDamagedMoney: batch.kordesHasDamagedMoney ?? seed.hasDamagedMoney,
+        cashReceived: batch.kordesCashReceived ?? seed.cashReceived,
+        notes: batch.kordesNotes ?? seed.notes,
+        correctionEntryIds: batch.correctionEntryIds,
+        verifiedAt: batch.verifiedByKordesAt ?? seed.verifiedAt,
+        returnedForCorrectionAt: batch.returnedForCorrectionAt ?? seed.returnedForCorrectionAt,
+        verifiedByKordesName: batch.verifiedByKordesName ?? seed.verifiedByKordesName,
       };
     });
 }
