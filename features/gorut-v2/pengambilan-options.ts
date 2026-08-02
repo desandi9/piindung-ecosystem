@@ -1,26 +1,33 @@
-import type { CollectionBatch, CollectionEntry, CollectionStatus, CollectionVisitStatus } from '@/features/gorut-v2/types';
+import type { CollectionBatch, CollectionEntry, CollectionStatus, CollectionVisitOutcome, CollectionVisitStatus } from '@/features/gorut-v2/types';
 
 /** Ambang dan besaran upah PLPK — satu-satunya sumber kebenaran untuk seluruh modul. */
 export const PLPK_FEE_THRESHOLD = 7000;
 export const PLPK_FEE_AMOUNT = 2500;
 
+/** Pilihan nominal cepat di form mobile PLPK. */
+export const quickAmountOptions = [5000, 10000, 20000, 50000];
+
 export const collectionStatusLabels: Record<CollectionStatus, string> = {
   draft: 'Draft',
   scheduled: 'Dijadwalkan',
   collecting: 'Dalam Penjemputan',
-  collected: 'Penjemputan Selesai',
-  'f009-ready': 'F.009 Siap',
-  'waiting-handover': 'Menunggu Penyerahan ke Kordes',
-  'handed-to-kordes': 'Diserahkan ke Kordes',
+  'collection-completed': 'Penjemputan Selesai',
+  'waiting-kordes-verification': 'Menunggu Verifikasi Kordes',
+  'verified-by-kordes': 'Terverifikasi Kordes',
+  'needs-correction': 'Perlu Koreksi',
 };
 
 export const collectionVisitStatusLabels: Record<CollectionVisitStatus, string> = {
+  pending: 'Belum Dikunjungi',
   collected: 'Terjemput',
   'not-around': 'Tidak ada di tempat',
   'not-ready': 'Belum tersedia',
   declined: 'Menolak/Berhenti',
   'damaged-lost': 'Kaleng rusak/hilang',
 };
+
+/** Urutan pilihan hasil kunjungan di form mobile. "pending" sengaja tidak ikut. */
+export const collectionVisitOutcomes: CollectionVisitOutcome[] = ['collected', 'not-around', 'not-ready', 'declined', 'damaged-lost'];
 
 export const collectionPeriodOptions = ['Semua Periode', '2026-07', '2026-06', '2026-05', '2026-04', '2026-03'];
 export const collectionKecamatanOptions = ['Semua Kecamatan', 'Garut Kota', 'Tarogong Kidul', 'Karangpawitan', 'Cilawu'];
@@ -32,22 +39,45 @@ export function isEligibleForPlpkFee(amount: number, visitStatus: CollectionVisi
   return visitStatus === 'collected' && amount > PLPK_FEE_THRESHOLD;
 }
 
+/** Hanya status Terjemput yang boleh menyimpan nominal. Sisanya dipaksa 0. */
+export function normalizeAmount(amount: number, visitStatus: CollectionVisitStatus): number {
+  return visitStatus === 'collected' ? Math.max(0, Math.round(amount)) : 0;
+}
+
+/** Status selain Terjemput wajib punya catatan. */
+export function requiresNotes(visitStatus: CollectionVisitStatus): boolean {
+  return visitStatus !== 'pending' && visitStatus !== 'collected';
+}
+
+/** Ambil angka dari input bebas ("Rp10.000", "10 000"). null bila kosong/bukan angka. */
+export function parseAmount(raw: string): number | null {
+  const digits = raw.replace(/[^\d]/g, '');
+  if (!digits) return null;
+  const parsed = Number(digits);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function calculatePlpkFee(amount: number, visitStatus: CollectionVisitStatus = 'collected'): number {
   return isEligibleForPlpkFee(amount, visitStatus) ? PLPK_FEE_AMOUNT : 0;
 }
 
 /** Turunkan seluruh angka batch dari entri-entrinya, supaya total tidak pernah lepas sinkron. */
 export function summarizeEntries(entries: CollectionEntry[]) {
-  const activeCanCount = entries.reduce((sum, entry) => sum + (entry.canCount ?? 1), 0);
+  const cans = (entry: CollectionEntry) => entry.canCount ?? 1;
+  const activeCanCount = entries.reduce((sum, entry) => sum + cans(entry), 0);
   const collected = entries.filter((entry) => entry.visitStatus === 'collected');
-  const collectedCanCount = collected.reduce((sum, entry) => sum + (entry.canCount ?? 1), 0);
+  const pending = entries.filter((entry) => entry.visitStatus === 'pending');
+  /** Tidak terjemput = sudah dikunjungi tapi tidak menghasilkan koin. Belum dikunjungi tidak dihitung di sini. */
+  const uncollected = entries.filter((entry) => entry.visitStatus !== 'collected' && entry.visitStatus !== 'pending');
   const eligible = entries.filter((entry) => isEligibleForPlpkFee(entry.amount, entry.visitStatus));
   const grossAmount = collected.reduce((sum, entry) => sum + entry.amount, 0);
   const totalPlpkFee = eligible.reduce((sum, entry) => sum + calculatePlpkFee(entry.amount, entry.visitStatus), 0);
   return {
     activeCanCount,
-    collectedCanCount,
-    uncollectedCanCount: Math.max(0, activeCanCount - collectedCanCount),
+    visitedCount: entries.length - pending.length,
+    pendingCount: pending.length,
+    collectedCanCount: collected.reduce((sum, entry) => sum + cans(entry), 0),
+    uncollectedCanCount: uncollected.reduce((sum, entry) => sum + cans(entry), 0),
     grossAmount,
     totalCollected: grossAmount,
     eligibleMunfiqCount: eligible.length,
@@ -56,8 +86,14 @@ export function summarizeEntries(entries: CollectionEntry[]) {
   };
 }
 
+/** Progres penjemputan dalam persen, dihitung dari Munfiq yang sudah dikunjungi. */
+export function collectionProgress(batch: Pick<CollectionBatch, 'entries' | 'visitedCount'>): number {
+  if (!batch.entries.length) return 0;
+  return Math.round((batch.visitedCount / batch.entries.length) * 100);
+}
+
 export function documentStatusForBatch(status: CollectionStatus): 'Draft' | 'Siap' {
-  return status === 'collected' || status === 'f009-ready' || status === 'waiting-handover' || status === 'handed-to-kordes' ? 'Siap' : 'Draft';
+  return status === 'waiting-kordes-verification' || status === 'verified-by-kordes' || status === 'needs-correction' ? 'Siap' : 'Draft';
 }
 
 export function formatPeriodLabel(period: string): string {
@@ -67,11 +103,36 @@ export function formatPeriodLabel(period: string): string {
   return names[index] ? `${names[index]} ${year}` : period;
 }
 
-/** Batch masih bisa disunting selama belum diserahterimakan. */
 export function isBatchEditable(batch: CollectionBatch): boolean {
-  return batch.status === 'draft' || batch.status === 'scheduled' || batch.status === 'collecting';
+  if (batch.status === 'needs-correction') return true;
+  return !batch.lockedAt && (batch.status === 'draft' || batch.status === 'scheduled' || batch.status === 'collecting' || batch.status === 'collection-completed');
 }
 
-export function isBatchHandedOver(batch: CollectionBatch): boolean {
-  return batch.status === 'handed-to-kordes';
+/** Entri yang masih boleh diubah PLPK. Saat Perlu Koreksi hanya entri bertanda Kordes. */
+export function isEntryEditable(batch: CollectionBatch, entryId: string): boolean {
+  if (!isBatchEditable(batch)) return false;
+  if (batch.status !== 'needs-correction') return true;
+  return (batch.correctionEntryIds ?? []).includes(entryId);
+}
+
+/** Daftar Munfiq yang datanya belum lengkap — dipakai layar Review sebelum konfirmasi. */
+export function incompleteEntries(batch: CollectionBatch): CollectionEntry[] {
+  return batch.entries.filter((entry) => entry.visitStatus === 'pending' || (requiresNotes(entry.visitStatus) && !entry.notes?.trim()));
+}
+
+/**
+ * Konfirmasi hanya boleh dilakukan bila seluruh Munfiq sudah punya hasil kunjungan.
+ * Batch yang sudah dikunci tidak bisa dikonfirmasi ulang.
+ */
+export function canConfirmCollection(batch: CollectionBatch): boolean {
+  if (!isBatchEditable(batch)) return false;
+  if (batch.status === 'needs-correction') return incompleteEntries(batch).length === 0;
+  if (batch.lockedAt) return false;
+  if (!batch.entries.length) return false;
+  return incompleteEntries(batch).length === 0;
+}
+
+/** Batch terkunci = read-only di seluruh aplikasi. */
+export function isBatchLocked(batch: CollectionBatch): boolean {
+  return Boolean(batch.lockedAt) && batch.status !== 'needs-correction';
 }

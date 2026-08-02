@@ -43,21 +43,31 @@ export type CollectionStatus =
   | 'draft'
   | 'scheduled'
   | 'collecting'
-  | 'collected'
-  | 'f009-ready'
-  | 'waiting-handover'
-  | 'handed-to-kordes';
+  | 'collection-completed'
+  | 'waiting-kordes-verification'
+  | 'verified-by-kordes'
+  | 'needs-correction';
 
-/** Hasil kunjungan PLPK ke satu Munfiq. Hanya "collected" yang punya nominal. */
-export type CollectionVisitStatus = 'collected' | 'not-around' | 'not-ready' | 'declined' | 'damaged-lost';
+/**
+ * Hasil kunjungan PLPK ke satu Munfiq. Hanya "collected" yang punya nominal.
+ * "pending" = belum dikunjungi; bukan pilihan di form, dipakai sebagai keadaan awal.
+ */
+export type CollectionVisitStatus = 'pending' | 'collected' | 'not-around' | 'not-ready' | 'declined' | 'damaged-lost';
+
+/** Hasil kunjungan yang boleh dipilih PLPK di aplikasi mobile. */
+export type CollectionVisitOutcome = Exclude<CollectionVisitStatus, 'pending'>;
 
 export interface CollectionEntry {
   id: string;
   munfiqId: string;
   munfiqName: string;
   memberId: string;
+  /** Kode kaleng yang dipegang Munfiq — identitas utama di lapangan. */
+  canCode: string;
   phone: string;
   address?: string;
+  rt?: string;
+  rw?: string;
   isActive?: boolean;
   canCount?: number;
   amount: number;
@@ -78,6 +88,10 @@ export interface CollectionBatch {
   kordesName: string;
   entries: CollectionEntry[];
   activeCanCount: number;
+  /** Munfiq yang sudah punya hasil kunjungan (status apa pun selain pending). */
+  visitedCount: number;
+  /** Munfiq yang belum dikunjungi sama sekali. */
+  pendingCount: number;
   collectedCanCount: number;
   uncollectedCanCount: number;
   grossAmount: number;
@@ -89,9 +103,29 @@ export interface CollectionBatch {
   documentNumber: string;
   documentStatus: 'Draft' | 'Siap';
   status: CollectionStatus;
-  handoverDestination?: 'kordes';
-  handedToKordesAt?: string;
+  confirmedByPlpkAt?: string;
+  lockedAt?: string;
+  f009DocumentNumber?: string;
+  submittedToKordesAt?: string;
+  verifiedByKordesAt?: string;
+  verifiedByKordesName?: string;
+  /** Catatan Kordes saat batch dikembalikan untuk dikoreksi. */
+  kordesNotes?: string;
+  /** Entri yang ditandai Kordes; hanya ini yang boleh diubah PLPK saat Perlu Koreksi. */
+  correctionEntryIds?: string[];
   createdAt: string;
+}
+
+/** Identitas PLPK yang sedang memakai aplikasi mobile. Mock, bukan dari auth. */
+export interface PlpkProfile {
+  plpkId: string;
+  name: string;
+  phone: string;
+  village: string;
+  kecamatan: string;
+  kordesName: string;
+  upzis: string;
+  joinedAt: string;
 }
 
 /** Status rekap satu desa dalam satu periode di tingkat UPZIS. */
@@ -127,6 +161,56 @@ export interface UpzisVillageRecap {
   status: UpzisRecapStatus;
   minutesNumber?: string;
   recappedAt?: string;
+}
+
+export type KordesVerificationStatus =
+  | 'waiting-kordes-verification'
+  | 'verified-by-kordes'
+  | 'needs-correction';
+
+export type F015Status =
+  | 'not-ready'
+  | 'waiting-plpk-completion'
+  | 'ready-to-create'
+  | 'f015-ready'
+  | 'waiting-upzis-handover'
+  | 'handed-to-upzis';
+
+export interface KordesVerification {
+  id: string;
+  batchId: string;
+  f009DocumentNumber: string;
+  plpkId: string;
+  plpkName: string;
+  period: string;
+  kecamatan: string;
+  village: string;
+  kordesName: string;
+  grossAmount: number;
+  totalPlpkFee: number;
+  netAmount: number;
+  status: KordesVerificationStatus;
+  f015Status: F015Status;
+  moneyMatches?: boolean;
+  hasDamagedMoney?: boolean;
+  cashReceived?: boolean;
+  notes?: string;
+  verifiedAt?: string;
+  verifiedByKordesName?: string;
+}
+
+export interface KordesVillageRecap {
+  id: string;
+  period: string;
+  kecamatan: string;
+  village: string;
+  kordesName: string;
+  upzisOfficerName: string;
+  f015Number: string;
+  handoverDate: string;
+  plpkRows: KordesVerification[];
+  f015Status: F015Status;
+  handedToUpzisAt?: string;
 }
 
 export type GorutMetric = {

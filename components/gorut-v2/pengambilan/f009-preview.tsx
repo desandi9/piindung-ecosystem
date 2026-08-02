@@ -7,6 +7,7 @@ import { formatDateShort, formatNumber, formatRupiah } from '@/features/gorut-v2
 import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 
 const f009VisitStatusLabels: Record<CollectionVisitStatus, string> = {
+  pending: 'Belum Dikunjungi',
   collected: 'Terjemput',
   'not-around': 'Tidak Terjemput',
   'not-ready': 'Belum Tersedia',
@@ -15,13 +16,11 @@ const f009VisitStatusLabels: Record<CollectionVisitStatus, string> = {
 };
 
 function getCanCode(entry: CollectionEntry) {
-  return entry.id.replace(/^entry-/, 'KLG-').toUpperCase();
+  return entry.canCode;
 }
 
-function getRtRw(address?: string) {
-  const rt = address?.match(/RT\s*\.?\s*(\d+)/i)?.[1] ?? '—';
-  const rw = address?.match(/RW\s*\.?\s*(\d+)/i)?.[1] ?? '—';
-  return { rt, rw };
+function getRtRw(entry: CollectionEntry) {
+  return { rt: entry.rt ?? '—', rw: entry.rw ?? '—' };
 }
 
 export function F009Preview({ batch, onClose }: { batch: CollectionBatch | null; onClose: () => void }) {
@@ -100,7 +99,7 @@ export function F009Preview({ batch, onClose }: { batch: CollectionBatch | null;
           </thead>
           <tbody>
             {batch.entries.map((entry, index) => {
-              const { rt, rw } = getRtRw(entry.address);
+              const { rt, rw } = getRtRw(entry);
               const isCollected = entry.visitStatus === 'collected';
               return (
                 <tr key={entry.id} className={isCollected ? undefined : 'is-warning'}>

@@ -29,16 +29,16 @@ const minutesByGroup: Record<string, string> = {
 /**
  * Status rekap desa ditentukan dari status batch PLPK di dalamnya:
  * - ada batch yang belum selesai diambil  → Belum Lengkap
- * - semua selesai tapi belum diserahkan   → Siap Direkap
- * - sudah diserahkan, belum ada BA        → Sudah Direkap / Menunggu Berita Acara
- * - sudah diserahkan dan BA terbit        → Siap Disetor
+ * - semua selesai tapi belum diverifikasi → Siap Direkap
+ * - sudah diverifikasi, belum ada BA      → Sudah Direkap / Menunggu Berita Acara
+ * - sudah diverifikasi dan BA terbit      → Siap Disetor
  */
 function deriveStatus(batches: CollectionBatch[], hasMinutes: boolean): UpzisRecapStatus {
   const anyUnfinished = batches.some((batch) => batch.status === 'scheduled' || batch.status === 'collecting');
   if (anyUnfinished) return 'incomplete';
 
-  const allHandedOver = batches.every((batch) => batch.status === 'handed-to-kordes');
-  if (!allHandedOver) return 'ready-to-recap';
+  const allVerified = batches.every((batch) => batch.status === 'verified-by-kordes');
+  if (!allVerified) return 'ready-to-recap';
 
   if (hasMinutes) return 'ready-to-deposit';
 
