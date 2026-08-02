@@ -1,11 +1,12 @@
 'use client';
 
-import { Building2, SearchX } from 'lucide-react';
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { Building2, Download, Info, Rows3, Search, SearchX, UserRound } from 'lucide-react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { UpzisVillageRecap } from '@/features/gorut-v2/types';
 import { formatNumber } from '@/features/gorut-v2/formatters';
 import { currentUpzisPeriod, gorutUpzisRecaps } from '@/features/gorut-v2/upzis-mock-data';
+import { upzisKordesOptions } from '@/features/gorut-v2/upzis-options';
 import { bottomNavigation, mainNavigation, masterDataNavigation, mobileNavigation, operationalNavigation } from '@/features/gorut-v2/navigation';
 
 import { GorutSidebar } from '../gorut-sidebar';
@@ -15,12 +16,13 @@ import { GorutHeader } from '../gorut-header';
 import { PenghimpunanTabs } from '../penghimpunan-tabs';
 
 import { UpzisSummary } from './upzis-summary';
-import { UpzisFilterBar, initialUpzisFilters, type UpzisFilters } from './upzis-filter-bar';
+import { UpzisFilterBar } from './upzis-filter-bar';
 import { UpzisTable } from './upzis-table';
 import { UpzisMobileList } from './upzis-mobile-list';
 import { UpzisDetailDrawer } from './upzis-detail-drawer';
 import { BeritaAcaraDialog } from './berita-acara-dialog';
 import { UpzisSkeleton } from './upzis-skeleton';
+import { filterUpzisRecaps, initialUpzisFilters, type UpzisFilters } from './upzis-view';
 
 const target = { current: 'Rp1,42 M', max: 'Rp2 M', percentage: 71 };
 
@@ -35,6 +37,7 @@ export function UpzisShell() {
 
   const [detailRecap, setDetailRecap] = useState<UpzisVillageRecap | null>(null);
   const [minutesRecap, setMinutesRecap] = useState<UpzisVillageRecap | null>(null);
+  const detailTriggerRef = useRef<HTMLElement | null>(null);
 
   const deferredFilters = useDeferredValue(filters);
 
@@ -49,29 +52,25 @@ export function UpzisShell() {
   };
 
   const filtered = useMemo(() => {
-    const query = deferredFilters.query.trim().toLowerCase();
-    return recaps.filter((recap) => {
-      const matchQuery = !query
-        || recap.village.toLowerCase().includes(query)
-        || recap.kecamatan.toLowerCase().includes(query)
-        || recap.kordesName.toLowerCase().includes(query)
-        || recap.plpkBreakdown.some((item) => item.plpkName.toLowerCase().includes(query));
-      const matchPeriod = deferredFilters.period === 'all' || recap.period === deferredFilters.period;
-      const matchKecamatan = deferredFilters.kecamatan === 'all' || recap.kecamatan === deferredFilters.kecamatan;
-      const matchVillage = deferredFilters.village === 'all' || recap.village === deferredFilters.village;
-      const matchKordes = deferredFilters.kordes === 'all' || recap.kordesName === deferredFilters.kordes;
-      const matchStatus = deferredFilters.status === 'all' || recap.status === deferredFilters.status;
-      return matchQuery && matchPeriod && matchKecamatan && matchVillage && matchKordes && matchStatus;
-    });
+    return filterUpzisRecaps(recaps, deferredFilters);
   }, [recaps, deferredFilters]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
   const currentRecaps = useMemo(() => {
-    const start = (page - 1) * pageSize;
+    const start = (safePage - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
-  }, [filtered, page, pageSize]);
+  }, [filtered, safePage, pageSize]);
 
   const resetFilters = () => { setFilters(initialUpzisFilters); setPage(1); };
+  const openDetail = (recap: UpzisVillageRecap, trigger?: HTMLElement) => {
+    detailTriggerRef.current = trigger ?? null;
+    setDetailRecap(recap);
+  };
+  const closeDetail = () => {
+    setDetailRecap(null);
+    window.requestAnimationFrame(() => detailTriggerRef.current?.focus());
+  };
 
   /** Buat Rekap hanya memindahkan status ke "Sudah Direkap" pada state lokal. */
   const createRecap = (recap: UpzisVillageRecap) => {
@@ -104,16 +103,57 @@ export function UpzisShell() {
               <section className="gorut-collect-heading" aria-label="Judul halaman">
                 <div>
                   <p>PENGHIMPUNAN</p>
-                  <h1>UPZIS</h1>
-                  <span>Rekap penghimpunan koin bulanan per desa, dirangkum dari hasil pengambilan seluruh petugas PLPK.</span>
+                  <h1>Verifikasi UPZIS</h1>
+                  <span>Periksa kelengkapan rekap penghimpunan setiap ranting/desa sebelum diteruskan ke tingkat PC.</span>
                 </div>
               </section>
 
-              <UpzisSummary recaps={recaps} period={currentUpzisPeriod} />
-
               <UpzisFilterBar filters={filters} onChange={(next) => { setFilters(next); setPage(1); }} onReset={resetFilters} />
 
-              <section className="gorut-collect-panel">
+              <UpzisSummary recaps={recaps} period={filters.period === 'all' ? currentUpzisPeriod : filters.period} />
+
+              <p className="gorut-collect-readonly-note upzis-verification-note">
+                <Info size={14} aria-hidden="true" />
+                Halaman ini digunakan untuk memeriksa kelengkapan hasil penghimpunan dari setiap ranting/desa sebelum rekap diteruskan ke tingkat PC.
+              </p>
+
+              <section className="pjm-panel gorut-collect-panel upzis-verification-panel">
+                <header className="pjm-toolbar upzis-verification-toolbar">
+                  <label className="pjm-search">
+                    <Search size={16} aria-hidden="true" />
+                    <input
+                      type="search"
+                      value={filters.query}
+                      onChange={(event) => { setFilters((current) => ({ ...current, query: event.target.value })); setPage(1); }}
+                      placeholder="Cari desa/ranting, Kordes, atau wilayah"
+                      aria-label="Cari desa atau ranting, Kordes, atau wilayah"
+                    />
+                  </label>
+
+                  <div className="pjm-toolbar-actions upzis-verification-toolbar-actions">
+                    <label className="upzis-verification-kordes-filter">
+                      <UserRound size={15} aria-hidden="true" />
+                      <span>Kordes</span>
+                      <select value={filters.kordes} onChange={(event) => { setFilters((current) => ({ ...current, kordes: event.target.value })); setPage(1); }}>
+                        {upzisKordesOptions.map((option, index) => <option key={option} value={index === 0 ? 'all' : option}>{option}</option>)}
+                      </select>
+                    </label>
+                    <label className="pjm-page-size">
+                      <Rows3 size={15} aria-hidden="true" />
+                      <span>Tampilkan</span>
+                      <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <span>baris</span>
+                    </label>
+                    <button type="button" className="pjm-export" onClick={() => triggerNotice('Export: prototipe UI, belum tersedia')}>
+                      <Download size={15} aria-hidden="true" />Export
+                    </button>
+                  </div>
+                </header>
+
                 {filtered.length === 0 ? (
                   <div className="gorut-collect-empty">
                     <SearchX size={28} />
@@ -125,37 +165,29 @@ export function UpzisShell() {
                   <>
                     <UpzisTable
                       recaps={currentRecaps}
-                      onDetail={setDetailRecap}
+                      onDetail={openDetail}
                       onRecap={createRecap}
                       onMinutes={setMinutesRecap}
                     />
 
                     <UpzisMobileList
                       recaps={currentRecaps}
-                      onDetail={setDetailRecap}
+                      onDetail={openDetail}
                       onRecap={createRecap}
                       onMinutes={setMinutesRecap}
                     />
 
                     <footer className="gorut-collect-pagination">
                       <div className="gorut-pagination-info">
-                        Menampilkan <strong>{Math.min(filtered.length, (page - 1) * pageSize + 1)}–{Math.min(filtered.length, page * pageSize)}</strong> dari <strong>{formatNumber(filtered.length)}</strong> desa
+                        Menampilkan <strong>{(safePage - 1) * pageSize + 1}–{Math.min(filtered.length, safePage * pageSize)}</strong> dari <strong>{formatNumber(filtered.length)}</strong> desa
                       </div>
                       <div className="gorut-pagination-controls">
-                        <label className="gorut-pagination-size">
-                          <span>Baris per halaman:</span>
-                          <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                          </select>
-                        </label>
                         <div className="gorut-pagination-buttons">
-                          <button type="button" disabled={page === 1} onClick={() => setPage(1)}>Awal</button>
-                          <button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Sebelumnya</button>
-                          <span className="gorut-pagination-current">Halaman <strong>{page}</strong> dari <strong>{pageCount}</strong></span>
-                          <button type="button" disabled={page === pageCount} onClick={() => setPage((value) => value + 1)}>Berikutnya</button>
-                          <button type="button" disabled={page === pageCount} onClick={() => setPage(pageCount)}>Akhir</button>
+                          <button type="button" disabled={safePage === 1} onClick={() => setPage(1)}>Awal</button>
+                          <button type="button" disabled={safePage === 1} onClick={() => setPage(safePage - 1)}>Sebelumnya</button>
+                          <span className="gorut-pagination-current">Halaman <strong>{safePage}</strong> dari <strong>{pageCount}</strong></span>
+                          <button type="button" disabled={safePage === pageCount} onClick={() => setPage(safePage + 1)}>Berikutnya</button>
+                          <button type="button" disabled={safePage === pageCount} onClick={() => setPage(pageCount)}>Akhir</button>
                         </div>
                       </div>
                     </footer>
@@ -182,7 +214,7 @@ export function UpzisShell() {
           <UpzisDetailDrawer
             open={Boolean(detailRecap)}
             recap={detailRecap}
-            onClose={() => setDetailRecap(null)}
+            onClose={closeDetail}
             onRecap={() => { if (detailRecap) createRecap(detailRecap); }}
             onMinutes={() => { if (detailRecap) setMinutesRecap(detailRecap); }}
           />
