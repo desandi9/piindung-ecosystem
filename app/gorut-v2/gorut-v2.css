@@ -488,3 +488,27 @@ span.gorut-nav-parent{cursor:default}
 .pjm-page-size>span:last-child{display:none}
 }
 .kordes-field .kordes-correction-option{display:flex;align-items:center;gap:8px;min-height:38px;color:var(--g-navy);font-size:11px}.kordes-field .kordes-correction-option input{width:18px;height:18px;flex:0 0 18px;padding:0;accent-color:var(--g-primary)}
+
+/* Desktop Verifikasi Kordes — modifiers di atas pola presentasional pjm-* */
+.kordes-verification-mobile-filters,.kordes-verification-mobile-summary{display:none}
+.kordes-verification-summary article:nth-child(3):before{background:#0A8F5B}
+.kordes-verification-panel{border:0;border-radius:0;background:transparent;overflow:visible}
+.kordes-verification-table{min-width:1060px;table-layout:fixed}
+.kordes-verification-table th:nth-child(1){width:104px}.kordes-verification-table th:nth-child(2){width:112px}.kordes-verification-table th:nth-child(3){width:72px}.kordes-verification-table th:nth-child(4){width:110px}.kordes-verification-table th:nth-child(5){width:130px}.kordes-verification-table th:nth-child(6),.kordes-verification-table th:nth-child(7),.kordes-verification-table th:nth-child(8){width:92px}.kordes-verification-table th:nth-child(9){width:164px}.kordes-verification-table th:nth-child(10){width:144px}
+.kordes-verification-table th:nth-child(4),.kordes-verification-table th:nth-child(5){white-space:normal;font-size:8px;line-height:1.35}.kordes-verification-table td:nth-child(3){white-space:nowrap}
+.kordes-verification-table th:nth-child(4),.kordes-verification-table th:nth-child(5),.kordes-verification-table td:nth-child(4),.kordes-verification-table td:nth-child(5){text-align:center}.kordes-verification-table td:nth-child(4),.kordes-verification-table td:nth-child(5){white-space:nowrap}
+.kordes-verification-table th.is-action,.kordes-verification-table td.is-action{text-align:center;white-space:nowrap}
+.kordes-verification-table td:first-child strong,.kordes-verification-table td:nth-child(2) strong{display:block;color:var(--g-navy);font-weight:700}
+.kordes-verification-table td:first-child small,.kordes-verification-table td:nth-child(2) small{display:block;margin-top:3px;color:var(--g-muted);font-size:9px}
+.kordes-verification-badge.is-verified-by-kordes{border-color:#CDEADB;background:#ECF9F2;color:#087A4D}
+.kordes-verification-badge.is-waiting-kordes-verification{border-color:#D5E5F8;background:#EDF5FE;color:#1D66DB}
+.kordes-verification-badge.is-needs-correction{border-color:#F4DFC1;background:#FFF7E8;color:#A85B08}
+.kordes-verification-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;border:1px solid #D7E1DC;border-radius:9px;background:#fff;padding:0 8px;color:var(--g-navy);font:600 9px Inter;cursor:pointer;white-space:nowrap;transition:border-color .16s,background .16s,box-shadow .16s}
+.kordes-verification-action:hover{border-color:#9ACFBA;background:var(--g-soft);color:var(--g-hover);box-shadow:0 3px 10px rgba(7,150,93,.08)}
+
+@media(min-width:901px){.kordes-shell{padding-top:0}}
+@media(max-width:900px){
+.kordes-verification-filters,.kordes-verification-summary,.kordes-verification-note,.kordes-verification-toolbar,.kordes-verification-pagination{display:none}
+.kordes-verification-mobile-filters{display:block}.kordes-verification-mobile-summary{display:grid}
+.kordes-verification-panel{border:1px solid var(--g-border);border-radius:12px;background:#fff;overflow:hidden}
+}

@@ -1,12 +1,12 @@
 'use client';
 
-import { AlertTriangle, Banknote, CheckCircle2, Clock3, Eye, FileText, Filter, MapPin, Search, X } from 'lucide-react';
+import { AlertTriangle, Banknote, CalendarDays, CheckCircle2, Clock3, Download, Eye, FileText, Filter, Info, ListFilter, Map, MapPin, MapPinned, Rows3, Search, SearchX, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { KordesDocumentViewer } from '@/components/gorut-v2/documents/kordes-document-viewer';
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
 import { VerificationWizard } from '@/components/gorut-v2/kordes-verification-form';
 import { saveCollectionBatch } from '@/features/gorut-v2/collection-store';
-import { formatDateShort, formatRupiah } from '@/features/gorut-v2/formatters';
+import { formatDateShort, formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
 import { applyKordesDecision } from '@/features/gorut-v2/kordes-mobile';
 import { buildKordesVerifications, createVillageRecaps, getBatch, isF015Ready, summarizeVillageRecap } from '@/features/gorut-v2/kordes-mock-data';
 import { useCollectionBatches } from '@/features/gorut-v2/plpk-mobile-data';
@@ -58,8 +58,13 @@ export function KordesVerificationShell() {
   const batches = useCollectionBatches();
   const [activeTab, setActiveTab] = useState<'plpk' | 'village'>('plpk');
   const [query, setQuery] = useState('');
+  const [periodFilter, setPeriodFilter] = useState('all');
+  const [kecamatanFilter, setKecamatanFilter] = useState('all');
+  const [villageFilter, setVillageFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [detail, setDetail] = useState<KordesVerification | null>(null);
   const [wizard, setWizard] = useState<KordesVerification | null>(null);
   const [f009Preview, setF009Preview] = useState<KordesVerification | null>(null);
@@ -84,13 +89,23 @@ export function KordesVerificationShell() {
     () =>
       rows.filter(
         (row) =>
+          (periodFilter === 'all' || row.period === periodFilter) &&
+          (kecamatanFilter === 'all' || row.kecamatan === kecamatanFilter) &&
+          (villageFilter === 'all' || row.village === villageFilter) &&
           (statusFilter === 'all' || row.status === statusFilter) &&
           `${row.plpkName} ${row.plpkId} ${row.village} ${row.kecamatan} ${row.period}`
             .toLowerCase()
             .includes(query.toLowerCase()),
       ),
-    [rows, statusFilter, query],
+    [rows, periodFilter, kecamatanFilter, villageFilter, statusFilter, query],
   );
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const pageRows = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, pageSize, safePage]);
 
   const summary = useMemo(
     () => ({
@@ -161,10 +176,10 @@ export function KordesVerificationShell() {
                   <div>
                     <p>PENGHIMPUNAN</p>
                     <h1>Verifikasi Kordes</h1>
-                      <span>Periksa hasil penjemputan PLPK yang sudah dikonfirmasi, lalu verifikasi kesesuaian data penghimpunan pada tingkat ranting/desa.</span>
+                    <span>Periksa hasil penjemputan PLPK yang sudah dikonfirmasi, lalu verifikasi kesesuaian data penghimpunan pada tingkat ranting/desa.</span>
                   </div>
                 </div>
-                 <div className="kordes-tabs" role="tablist" aria-label="Tahap verifikasi Kordes">
+                <div className="kordes-tabs" role="tablist" aria-label="Tahap verifikasi Kordes">
                   <button
                     type="button"
                     role="tab"
@@ -186,7 +201,7 @@ export function KordesVerificationShell() {
                 </div>
                 {activeTab === 'plpk' && (
                   <>
-                    <div className="kordes-summary">
+                    <div className="kordes-summary kordes-verification-mobile-summary">
                       <article>
                         <div><Clock3 size={15} /><span>Menunggu Verifikasi</span></div>
                         <strong>{summary.waiting}</strong>
@@ -206,19 +221,102 @@ export function KordesVerificationShell() {
                     </div>
 
                     <PlpkFilterBar
+                      rows={rows}
                       query={query}
-                      setQuery={setQuery}
+                      setQuery={(value) => { setQuery(value); setPage(1); }}
+                      periodFilter={periodFilter}
+                      setPeriodFilter={(value) => { setPeriodFilter(value); setPage(1); }}
+                      kecamatanFilter={kecamatanFilter}
+                      setKecamatanFilter={(value) => { setKecamatanFilter(value); setPage(1); }}
+                      villageFilter={villageFilter}
+                      setVillageFilter={(value) => { setVillageFilter(value); setPage(1); }}
                       statusFilter={statusFilter}
-                      setStatusFilter={setStatusFilter}
+                      setStatusFilter={(value) => { setStatusFilter(value); setPage(1); }}
                       filtersOpen={filtersOpen}
                       setFiltersOpen={setFiltersOpen}
-                      rows={rows}
                     />
 
-                    <PlpkTable
-                      rows={filtered}
-                      onDetail={(row) => setDetail(row)}
-                    />
+                    <section className="pjm-summary kordes-verification-summary" aria-label="Ringkasan verifikasi Kordes">
+                      <article>
+                        <div className="pjm-summary-heading"><span><Clock3 size={15} aria-hidden="true" /></span><p>Menunggu Verifikasi</p></div>
+                        <strong>{summary.waiting}</strong>
+                      </article>
+                      <article>
+                        <div className="pjm-summary-heading"><span><CheckCircle2 size={15} aria-hidden="true" /></span><p>Terverifikasi Kordes</p></div>
+                        <strong>{summary.verified}</strong>
+                      </article>
+                      <article className="is-highlighted">
+                        <div className="pjm-summary-heading"><span><Banknote size={15} aria-hidden="true" /></span><p>Jumlah Bersih</p></div>
+                        <strong>{formatRupiah(summary.totalNet)}</strong>
+                      </article>
+                      <article>
+                        <div className="pjm-summary-heading"><span><AlertTriangle size={15} aria-hidden="true" /></span><p>Perlu Koreksi</p></div>
+                        <strong>{summary.corrections}</strong>
+                      </article>
+                    </section>
+
+                    <p className="gorut-collect-readonly-note kordes-verification-note">
+                      <Info size={14} aria-hidden="true" />
+                      Verifikasi menggunakan data penjemputan yang telah dikonfirmasi PLPK. Periksa kesesuaian data sebelum menetapkan hasil verifikasi Kordes.
+                    </p>
+
+                    <section className="pjm-panel gorut-collect-panel kordes-panel kordes-verification-panel">
+                      <header className="pjm-toolbar kordes-verification-toolbar">
+                        <label className="pjm-search">
+                          <Search size={16} aria-hidden="true" />
+                          <input
+                            type="search"
+                            value={query}
+                            onChange={(event) => { setQuery(event.target.value); setPage(1); }}
+                            placeholder="Cari PLPK, ID, atau wilayah"
+                            aria-label="Cari PLPK, ID, atau wilayah"
+                          />
+                        </label>
+
+                        <div className="pjm-toolbar-actions">
+                          <label className="pjm-page-size">
+                            <Rows3 size={15} aria-hidden="true" />
+                            <span>Tampilkan</span>
+                            <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>
+                              <option value={5}>5</option>
+                              <option value={10}>10</option>
+                              <option value={25}>25</option>
+                              <option value={50}>50</option>
+                            </select>
+                            <span>baris</span>
+                          </label>
+                          <button type="button" className="pjm-export" onClick={() => triggerNotice('Export: prototipe UI, belum tersedia')}>
+                            <Download size={15} aria-hidden="true" />Export
+                          </button>
+                        </div>
+                      </header>
+
+                      {pageRows.length === 0 ? (
+                        <div className="gorut-collect-empty">
+                          <SearchX size={28} />
+                          <h2>Belum ada data verifikasi yang cocok</h2>
+                          <p>Ubah kata kunci pencarian atau pilih kombinasi filter lain.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <PlpkTable rows={pageRows} mobileRows={filtered} onDetail={(row) => setDetail(row)} />
+                          <footer className="gorut-collect-pagination kordes-verification-pagination">
+                            <div className="gorut-pagination-info">
+                              Menampilkan <strong>{(safePage - 1) * pageSize + 1}–{Math.min(filtered.length, safePage * pageSize)}</strong> dari <strong>{formatNumber(filtered.length)}</strong> data
+                            </div>
+                            <div className="gorut-pagination-controls">
+                              <div className="gorut-pagination-buttons">
+                                <button type="button" disabled={safePage === 1} onClick={() => setPage(1)}>Awal</button>
+                                <button type="button" disabled={safePage === 1} onClick={() => setPage(safePage - 1)}>Sebelumnya</button>
+                                <span className="gorut-pagination-current">Halaman <strong>{safePage}</strong> dari <strong>{pageCount}</strong></span>
+                                <button type="button" disabled={safePage === pageCount} onClick={() => setPage(safePage + 1)}>Berikutnya</button>
+                                <button type="button" disabled={safePage === pageCount} onClick={() => setPage(pageCount)}>Akhir</button>
+                              </div>
+                            </div>
+                          </footer>
+                        </>
+                      )}
+                    </section>
                   </>
                 )}
                 {activeTab === 'village' && (
@@ -293,106 +391,125 @@ export function KordesVerificationShell() {
   );
 }
 function PlpkFilterBar({
+  rows,
   query,
   setQuery,
+  periodFilter,
+  setPeriodFilter,
+  kecamatanFilter,
+  setKecamatanFilter,
+  villageFilter,
+  setVillageFilter,
   statusFilter,
   setStatusFilter,
   filtersOpen,
   setFiltersOpen,
-  rows,
 }: {
+  rows: KordesVerification[];
   query: string;
   setQuery: (v: string) => void;
+  periodFilter: string;
+  setPeriodFilter: (v: string) => void;
+  kecamatanFilter: string;
+  setKecamatanFilter: (v: string) => void;
+  villageFilter: string;
+  setVillageFilter: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: string) => void;
   filtersOpen: boolean;
   setFiltersOpen: (v: boolean) => void;
-  rows: KordesVerification[];
 }) {
+  const periods = useMemo(() => Array.from(new Set(rows.map((row) => row.period))).sort().reverse(), [rows]);
+  const kecamatans = useMemo(() => Array.from(new Set(rows.map((row) => row.kecamatan))).sort(), [rows]);
   const villages = useMemo(() => Array.from(new Set(rows.map((r) => r.village))), [rows]);
   return (
-    <div className="kordes-filter-card">
-      <button
-        type="button"
-        className="gorut-button gorut-secondary-button kordes-filter-toggle"
-        onClick={() => setFiltersOpen(!filtersOpen)}
-      >
-        <Filter size={14} />
-        Filter
-      </button>
-      <div className={`kordes-filter-body${filtersOpen ? ' is-open' : ''}`}>
-        <label className="gorut-collect-search">
-          <Search size={14} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari PLPK, ID, desa, periode"
-          />
-        </label>
-        <div className="gorut-collect-selects">
-          <label>
-            <select defaultValue="all">
-              <option value="all">Semua Periode</option>
-              <option>2026-07</option>
-              <option>2026-06</option>
-              <option>2026-05</option>
-            </select>
+    <>
+      <section className="pjm-filters kordes-verification-filters" aria-label="Filter verifikasi Kordes">
+        <div className="pjm-filter">
+          <label className="pjm-filter-label" htmlFor="kordes-period"><CalendarDays size={14} aria-hidden="true" />Periode</label>
+          <select id="kordes-period" value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value)}>
+            <option value="all">Semua Periode</option>
+            {periods.map((period) => <option key={period} value={period}>{period}</option>)}
+          </select>
+        </div>
+        <div className="pjm-filter">
+          <label className="pjm-filter-label" htmlFor="kordes-kecamatan"><MapPinned size={14} aria-hidden="true" />Kecamatan</label>
+          <select id="kordes-kecamatan" value={kecamatanFilter} onChange={(event) => setKecamatanFilter(event.target.value)}>
+            <option value="all">Semua Kecamatan</option>
+            {kecamatans.map((kecamatan) => <option key={kecamatan} value={kecamatan}>{kecamatan}</option>)}
+          </select>
+        </div>
+        <div className="pjm-filter">
+          <label className="pjm-filter-label" htmlFor="kordes-village"><Map size={14} aria-hidden="true" />Desa/Ranting</label>
+          <select id="kordes-village" value={villageFilter} onChange={(event) => setVillageFilter(event.target.value)}>
+            <option value="all">Semua Desa/Ranting</option>
+            {villages.map((village) => <option key={village} value={village}>{village}</option>)}
+          </select>
+        </div>
+        <div className="pjm-filter">
+          <label className="pjm-filter-label" htmlFor="kordes-status"><ListFilter size={14} aria-hidden="true" />Status Verifikasi</label>
+          <select id="kordes-status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+            <option value="all">Semua Status Verifikasi</option>
+            {Object.entries(verificationLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </div>
+      </section>
+
+      <div className="kordes-filter-card kordes-verification-mobile-filters">
+        <button
+          type="button"
+          className="gorut-button gorut-secondary-button kordes-filter-toggle"
+          onClick={() => setFiltersOpen(!filtersOpen)}
+        >
+          <Filter size={14} />
+          Filter
+        </button>
+        <div className={`kordes-filter-body${filtersOpen ? ' is-open' : ''}`}>
+          <label className="gorut-collect-search">
+            <Search size={14} />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari PLPK, ID, desa, periode" />
           </label>
-          <label>
-            <select defaultValue="all">
-              <option value="all">Semua Kecamatan</option>
-              <option>Garut Kota</option>
-              <option>Tarogong Kidul</option>
-              <option>Karangpawitan</option>
-            </select>
-          </label>
-          <label>
-            <select defaultValue="all">
-              <option value="all">Semua Desa/Ranting</option>
-              {villages.map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">Semua Status Verifikasi</option>
-              {Object.entries(verificationLabels).map(([val, label]) => (
-                <option key={val} value={val}>{label}</option>
-              ))}
-            </select>
-          </label>
+          <div className="gorut-collect-selects">
+            <label><select defaultValue="all"><option value="all">Semua Periode</option><option>2026-07</option><option>2026-06</option><option>2026-05</option></select></label>
+            <label><select defaultValue="all"><option value="all">Semua Kecamatan</option><option>Garut Kota</option><option>Tarogong Kidul</option><option>Karangpawitan</option></select></label>
+            <label><select defaultValue="all"><option value="all">Semua Desa/Ranting</option>{villages.map((village) => <option key={village}>{village}</option>)}</select></label>
+            <label>
+              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                <option value="all">Semua Status Verifikasi</option>
+                {Object.entries(verificationLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 function PlpkTable({
   rows,
+  mobileRows,
   onDetail,
 }: {
   rows: KordesVerification[];
+  mobileRows: KordesVerification[];
   onDetail: (row: KordesVerification) => void;
 }) {
   return (
-    <div className="gorut-collect-panel kordes-panel">
-      <div className="gorut-collect-table-wrap">
-        <table className="kordes-table">
+    <>
+      <div className="pjm-table-wrap kordes-verification-table-wrap">
+        <table className="pjm-table kordes-verification-table">
           <thead>
             <tr>
-              <th>PLPK</th>
-              <th>Wilayah</th>
-              <th>Periode</th>
-              <th>Kaleng Terjemput</th>
-              <th>Kaleng Tidak Terjemput</th>
-              <th>Jumlah Kotor</th>
-              <th>Bisyaroh PLPK</th>
-              <th>Jumlah Bersih</th>
-              <th>Status</th>
-              <th>Aksi</th>
+              <th scope="col">PLPK</th>
+              <th scope="col">Wilayah</th>
+              <th scope="col">Periode</th>
+              <th scope="col">Kaleng Terjemput</th>
+              <th scope="col">Kaleng Tidak Terjemput</th>
+              <th scope="col" className="is-amount">Jumlah Kotor</th>
+              <th scope="col" className="is-amount">Bisyaroh PLPK</th>
+              <th scope="col" className="is-amount">Jumlah Bersih</th>
+              <th scope="col" className="is-status">Status</th>
+              <th scope="col" className="is-action">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -411,16 +528,16 @@ function PlpkTable({
                   <td>{row.period}</td>
                   <td>{batch.collectedCanCount}</td>
                   <td>{batch.uncollectedCanCount}</td>
-                  <td className="is-money">{formatRupiah(row.grossAmount)}</td>
-                  <td className="is-money">{formatRupiah(row.totalPlpkFee)}</td>
-                  <td className="is-money">{formatRupiah(row.netAmount)}</td>
-                  <td>
-                    <StatusBadge value={verificationLabels[row.status]} tone={row.status} />
+                  <td className="is-amount">{formatRupiah(row.grossAmount)}</td>
+                  <td className="is-amount">{formatRupiah(row.totalPlpkFee)}</td>
+                  <td className="is-amount">{formatRupiah(row.netAmount)}</td>
+                  <td className="is-status">
+                    <span className={`pjm-badge kordes-verification-badge is-${row.status}`}>{verificationLabels[row.status]}</span>
                   </td>
-                  <td>
+                  <td className="is-action">
                     <button
                       type="button"
-                      className="gorut-button gorut-secondary-button kordes-row-button"
+                      className="kordes-verification-action"
                       onClick={() => onDetail(row)}
                     >
                       <Eye size={14} />
@@ -434,7 +551,7 @@ function PlpkTable({
         </table>
       </div>
       <div className="gorut-collect-mobile-list">
-        {rows.map((row) => {
+        {mobileRows.map((row) => {
           const batch = getBatch(row.batchId);
           return (
             <article key={row.id}>
@@ -465,7 +582,7 @@ function PlpkTable({
           );
         })}
       </div>
-    </div>
+    </>
   );
 }
 function VillageTab({
