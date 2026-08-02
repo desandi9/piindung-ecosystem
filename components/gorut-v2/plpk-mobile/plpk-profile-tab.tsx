@@ -1,66 +1,73 @@
 'use client';
 
-import { Info, UserRound } from 'lucide-react';
+import {
+  CustomerSupportIcon,
+  InformationCircleIcon,
+  Logout03Icon,
+  Notification02Icon,
+  Settings02Icon,
+  UserIcon,
+} from '@hugeicons/core-free-icons';
+import { ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 
-import type { CollectionBatch, PlpkProfile } from '@/features/gorut-v2/types';
-import { formatDateShort, formatNumber, formatPhoneNumber, formatRupiah, getInitials } from '@/features/gorut-v2/formatters';
+import { formatDateShort, formatPhoneNumber, getInitials } from '@/features/gorut-v2/formatters';
+import type { PlpkProfile } from '@/features/gorut-v2/types';
 
-/** Profil PLPK. Mock — tidak terhubung ke auth atau role. */
-export function PlpkProfileTab({ profile, batches }: { profile: PlpkProfile; batches: CollectionBatch[] }) {
-  const verified = batches.filter((batch) => batch.status === 'verified-by-kordes');
-  const lifetimeGross = verified.reduce((sum, batch) => sum + batch.grossAmount, 0);
-  const lifetimeFee = verified.reduce((sum, batch) => sum + batch.totalPlpkFee, 0);
+import { MobileServiceIcon } from './mobile-service-icon';
+import { MobilePageHeader, MobileSectionHeader } from './mobile-ui';
+
+type ProfileInfo = 'help' | 'privacy' | 'about' | null;
+
+export function PlpkProfileTab({ profile, onNotice }: { profile: PlpkProfile; onNotice: (message: string) => void }) {
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [openInfo, setOpenInfo] = useState<ProfileInfo>(null);
+
+  const info = openInfo === 'help'
+    ? { title: 'Bantuan', description: `Hubungi Kordes ${profile.kordesName} untuk bantuan operasional dan koreksi data penjemputan.` }
+    : openInfo === 'privacy'
+      ? { title: 'Kebijakan Privasi', description: 'Data Munfiq hanya digunakan untuk kebutuhan operasional penghimpunan sesuai wilayah tugas PLPK.' }
+      : openInfo === 'about'
+        ? { title: 'Tentang Aplikasi', description: 'GORUT Mobile adalah prototipe aplikasi kerja lapangan multi-role untuk Munfiq, PLPK, dan Kordes.' }
+        : null;
 
   return (
     <>
-      <header className="plpk-header is-plain">
-        <span className="plpk-header-mark" aria-hidden="true"><UserRound size={19} /></span>
-        <div className="plpk-header-text">
-          <strong>Profil</strong>
-          <span>Petugas Lapangan Penghimpun Koin</span>
-        </div>
-      </header>
-
+      <MobilePageHeader title="Profil" subtitle="Akun dan pengaturan PLPK" />
       <div className="plpk-scroll">
-        <section className="plpk-identity" aria-label="Identitas petugas">
-          <div className="plpk-identity-top">
-            <span className="plpk-identity-avatar" aria-hidden="true">{getInitials(profile.name)}</span>
-            <div>
-              <strong>{profile.name}</strong>
-              <span>{profile.plpkId}</span>
-            </div>
-          </div>
+        <section className="plpk-profile-hero">
+          <div className="plpk-profile-avatar" aria-hidden="true">{getInitials(profile.name)}</div>
+          <div><h1>{profile.name}</h1><span>{profile.plpkId}</span><small>Aktif sejak {formatDateShort(profile.joinedAt)}</small></div>
+          <span className="plpk-account-badge">Akun Aktif</span>
         </section>
 
-        <h2 className="plpk-section-title">Data Petugas</h2>
+        <MobileSectionHeader title="Informasi Petugas" />
         <section className="plpk-card">
           <dl className="plpk-profile-rows">
-            <div><dt>Nama</dt><dd>{profile.name}</dd></div>
             <div><dt>ID PLPK</dt><dd>{profile.plpkId}</dd></div>
+            <div><dt>Wilayah tugas</dt><dd>Desa {profile.village}, {profile.kecamatan}</dd></div>
             <div><dt>Nomor HP</dt><dd>{formatPhoneNumber(profile.phone)}</dd></div>
-            <div><dt>Desa/Ranting</dt><dd>{profile.village}</dd></div>
-            <div><dt>Kecamatan</dt><dd>{profile.kecamatan}</dd></div>
             <div><dt>Kordes</dt><dd>{profile.kordesName}</dd></div>
-            <div><dt>UPZIS</dt><dd>{profile.upzis}</dd></div>
-            <div><dt>Bertugas Sejak</dt><dd>{formatDateShort(profile.joinedAt)}</dd></div>
+            <div><dt>Status akun</dt><dd><span className="plpk-account-inline">Aktif</span></dd></div>
           </dl>
         </section>
 
-        <h2 className="plpk-section-title">Rekap Tugas</h2>
-        <section className="plpk-card">
-          <dl className="plpk-profile-rows">
-            <div><dt>Periode Terverifikasi</dt><dd>{formatNumber(verified.length)}</dd></div>
-            <div><dt>Total Penghimpunan</dt><dd>{formatRupiah(lifetimeGross)}</dd></div>
-            <div><dt>Total Bisyaroh</dt><dd>{formatRupiah(lifetimeFee)}</dd></div>
-          </dl>
+        <MobileSectionHeader title="Pengaturan" />
+        <section className="plpk-profile-menu">
+          <div className="plpk-profile-menu-row">
+            <span><MobileServiceIcon icon={Notification02Icon} label="Pengaturan notifikasi" size={20} /></span>
+            <div><strong>Notifikasi</strong><small>Pengingat periode dan informasi Kordes</small></div>
+            <button type="button" className={notificationsEnabled ? 'plpk-switch is-on' : 'plpk-switch'} aria-label="Aktifkan notifikasi" aria-pressed={notificationsEnabled} onClick={() => { setNotificationsEnabled((value) => !value); onNotice(`Notifikasi ${notificationsEnabled ? 'dinonaktifkan' : 'diaktifkan'}.`); }}><i /></button>
+          </div>
+          <button type="button" onClick={() => setOpenInfo(openInfo === 'help' ? null : 'help')}><span><MobileServiceIcon icon={CustomerSupportIcon} label="Bantuan" size={20} /></span><div><strong>Bantuan</strong><small>Panduan dan kontak Kordes</small></div><ChevronRight size={18} aria-hidden="true" /></button>
+          <button type="button" onClick={() => setOpenInfo(openInfo === 'privacy' ? null : 'privacy')}><span><MobileServiceIcon icon={Settings02Icon} label="Kebijakan privasi" size={20} /></span><div><strong>Kebijakan Privasi</strong><small>Penggunaan dan perlindungan data</small></div><ChevronRight size={18} aria-hidden="true" /></button>
+          <button type="button" onClick={() => setOpenInfo(openInfo === 'about' ? null : 'about')}><span><MobileServiceIcon icon={InformationCircleIcon} label="Tentang aplikasi" size={20} /></span><div><strong>Tentang Aplikasi</strong><small>GORUT Mobile untuk petugas PLPK</small></div><ChevronRight size={18} aria-hidden="true" /></button>
         </section>
 
-        <div className="plpk-card" style={{ marginTop: 12 }}>
-          <p className="plpk-hint" style={{ display: 'flex', gap: 8, margin: 0 }}>
-            <Info size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
-            Prototipe aplikasi PLPK. Data yang tampil adalah data contoh dan belum terhubung ke sistem sebenarnya.
-          </p>
-        </div>
+        {info ? <section className="plpk-profile-info"><MobileServiceIcon icon={UserIcon} label={info.title} size={20} /><div><strong>{info.title}</strong><p>{info.description}</p></div></section> : null}
+
+        <div className="plpk-app-version"><span>Versi aplikasi</span><strong>2.0.0-prototype</strong></div>
+        <button type="button" className="plpk-logout-button" onClick={() => onNotice('Fitur keluar dinonaktifkan pada prototipe ini.')}><MobileServiceIcon icon={Logout03Icon} label="Keluar" size={19} />Keluar</button>
       </div>
     </>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardCheck, Inbox, Lock, Search, SearchX } from 'lucide-react';
+import { ChevronRight, ClipboardCheck, Inbox, Lock, Search, SearchX } from 'lucide-react';
 import { useDeferredValue, useMemo, useState } from 'react';
 
 import type { CollectionBatch, CollectionVisitStatus } from '@/features/gorut-v2/types';
@@ -143,7 +143,10 @@ export function PlpkCollectionTab({ batch, onOpenEntry, onReview }: { batch: Col
                     <span className={entry.visitStatus === 'collected' ? 'plpk-munfiq-amount' : 'plpk-munfiq-amount is-empty'}>
                       {entry.visitStatus === 'collected' ? formatRupiah(entry.amount) : 'Tanpa nominal'}
                     </span>
-                    {flagged ? <span className="plpk-badge is-needs-correction">Perlu Koreksi</span> : null}
+                    <span className="plpk-munfiq-action">
+                      {flagged ? <span className="plpk-badge is-needs-correction">Perlu Koreksi</span> : null}
+                      <ChevronRight size={18} aria-hidden="true" />
+                    </span>
                   </div>
                 </button>
               );

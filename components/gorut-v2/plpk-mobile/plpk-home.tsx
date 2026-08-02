@@ -1,134 +1,133 @@
 'use client';
 
-import { CheckCircle2, Clock3, Coins, HandCoins, Inbox, MapPin, TrendingUp, Users } from 'lucide-react';
+import {
+  CharityIcon,
+  Coins01Icon,
+  HandCoinsIcon,
+  Mosque01Icon,
+  News01Icon,
+  Notebook01Icon,
+  Notification02Icon,
+  PackageOpenIcon,
+  SmartPhone01Icon,
+  UserGroupIcon,
+} from '@hugeicons/core-free-icons';
+import { Bell } from 'lucide-react';
 
-import type { CollectionBatch, PlpkProfile } from '@/features/gorut-v2/types';
 import { formatNumber, formatRupiah, getInitials } from '@/features/gorut-v2/formatters';
-import { collectionProgress, collectionStatusLabels, formatPeriodLabel, isBatchLocked } from '@/features/gorut-v2/pengambilan-options';
+import { summarizePlpkPeriod, type PlpkServiceScreen } from '@/features/gorut-v2/plpk-mobile-content';
+import { collectionProgress, formatPeriodLabel, isBatchLocked } from '@/features/gorut-v2/pengambilan-options';
+import type { CollectionBatch, PlpkProfile } from '@/features/gorut-v2/types';
 
-/** Beranda: identitas PLPK, ringkasan periode aktif, dan pintu masuk penjemputan. */
-export function PlpkHome({ profile, batch, onStart }: { profile: PlpkProfile; batch: CollectionBatch | null; onStart: () => void }) {
+import { MobileServiceIcon } from './mobile-service-icon';
+import { MobileSectionHeader, MobileServiceTile, MobileStatusBadge } from './mobile-ui';
+
+type HomeDestination = 'collection' | 'journal' | PlpkServiceScreen;
+
+export function PlpkHome({
+  profile,
+  batch,
+  unreadCount,
+  onNavigate,
+}: {
+  profile: PlpkProfile;
+  batch: CollectionBatch | null;
+  unreadCount: number;
+  onNavigate: (destination: HomeDestination) => void;
+}) {
+  const metrics = summarizePlpkPeriod(batch);
   const progress = batch ? collectionProgress(batch) : 0;
-  const started = Boolean(batch && batch.visitedCount > 0);
   const locked = batch ? isBatchLocked(batch) : false;
+  const actionLabel = batch?.status === 'needs-correction'
+    ? 'Perbaiki Data'
+    : batch && batch.visitedCount > 0
+      ? 'Lanjutkan Penjemputan'
+      : 'Mulai Penjemputan';
+
+  const menu = [
+    { title: 'Penjemputan', icon: HandCoinsIcon, destination: 'collection' as const },
+    { title: 'Jurnal', icon: Notebook01Icon, destination: 'journal' as const },
+    { title: 'Munfiq', icon: UserGroupIcon, destination: 'munfiq' as const },
+    { title: 'Berita', icon: News01Icon, destination: 'news' as const },
+    { title: 'Pentasyarufan', icon: CharityIcon, destination: 'distribution' as const },
+    { title: 'e-ZISWAF', icon: Mosque01Icon, destination: 'ziswaf' as const, badge: 'Informasi' },
+    { title: 'PPOB', icon: SmartPhone01Icon, destination: 'ppob' as const, badge: 'Segera Hadir' },
+    { title: 'Notifikasi', icon: Notification02Icon, destination: 'notifications' as const, badge: unreadCount ? String(unreadCount) : undefined },
+  ];
 
   return (
-    <>
-      <header className="plpk-header">
-        <span className="plpk-header-mark" aria-hidden="true"><HandCoins size={20} /></span>
-        <div className="plpk-header-text">
-          <strong>Aplikasi PLPK</strong>
-          <span>Gerakan Koin NU · Kabupaten Garut</span>
+    <div className="plpk-scroll plpk-home-screen">
+      <header className="plpk-home-header">
+        <div className="plpk-home-avatar" aria-hidden="true">{getInitials(profile.name)}</div>
+        <div className="plpk-home-greeting">
+          <span>Assalamu’alaikum</span>
+          <strong>{profile.name}</strong>
+          <small>PLPK Desa {profile.village}</small>
         </div>
+        <button type="button" className="plpk-icon-button plpk-notification-button" onClick={() => onNavigate('notifications')} aria-label={`Buka notifikasi, ${unreadCount} belum dibaca`}>
+          <Bell size={21} aria-hidden="true" />
+          {unreadCount > 0 ? <i aria-hidden="true" /> : null}
+        </button>
       </header>
 
-      <div className="plpk-scroll">
-        <section className="plpk-identity" aria-label="Identitas petugas">
-          <div className="plpk-identity-top">
-            <span className="plpk-identity-avatar" aria-hidden="true">{getInitials(profile.name)}</span>
+      {batch ? (
+        <section className="plpk-period-hero" aria-labelledby="active-period-title">
+          <div className="plpk-period-top">
             <div>
-              <strong>{profile.name}</strong>
-              <span>{profile.plpkId}</span>
+              <span>Periode aktif</span>
+              <h1 id="active-period-title">{formatPeriodLabel(batch.period)}</h1>
             </div>
+            <MobileStatusBadge status={batch.status} />
           </div>
-          <dl className="plpk-identity-grid">
-            <div>
-              <dt>Desa/Ranting</dt>
-              <dd>{profile.village}</dd>
-            </div>
-            <div>
-              <dt>Kecamatan</dt>
-              <dd>{profile.kecamatan}</dd>
-            </div>
-            <div>
-              <dt>Periode Aktif</dt>
-              <dd>{batch ? formatPeriodLabel(batch.period) : '—'}</dd>
-            </div>
-            <div>
-              <dt>Kordes</dt>
-              <dd>{profile.kordesName}</dd>
-            </div>
-          </dl>
+          <div className="plpk-progress-head">
+            <span>{formatNumber(metrics.completedMunfiq)} dari {formatNumber(metrics.activeMunfiq)} Munfiq selesai</span>
+            <strong>{progress}%</strong>
+          </div>
+          <div className="plpk-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Progres penjemputan">
+            <i style={{ width: `${progress}%` }} />
+          </div>
+          {!locked ? (
+            <button type="button" className="plpk-btn plpk-btn-hero" onClick={() => onNavigate('collection')}>
+              <MobileServiceIcon icon={PackageOpenIcon} label={actionLabel} size={20} />
+              {actionLabel}
+            </button>
+          ) : (
+            <p className="plpk-period-note">Data periode sudah dikunci dan sedang diproses oleh Kordes.</p>
+          )}
         </section>
+      ) : (
+        <section className="plpk-period-hero is-empty">
+          <span>Periode aktif</span>
+          <h1>Belum tersedia</h1>
+          <p>Belum ada periode penjemputan untuk wilayah tugas Anda.</p>
+        </section>
+      )}
 
-        {batch ? (
-          <>
-            <h2 className="plpk-section-title">Ringkasan Periode Ini</h2>
-
-            <div className="plpk-card">
-              <div className="plpk-progress-head">
-                <strong>Progres Penjemputan</strong>
-                <span>{progress}%</span>
-              </div>
-              <div className="plpk-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Progres penjemputan">
-                <i style={{ width: `${progress}%` }} />
-              </div>
-              <p className="plpk-progress-legend">
-                <span>{formatNumber(batch.visitedCount)} dari {formatNumber(batch.entries.length)} Munfiq sudah dikunjungi</span>
-              </p>
-            </div>
-
-            <div className="plpk-stat-grid" style={{ marginTop: 12 }}>
-              <div className="plpk-stat">
-                <span><Users size={14} aria-hidden="true" />Munfiq Aktif</span>
-                <strong>{formatNumber(batch.entries.length)}</strong>
-                <small>kaleng aktif di wilayah Anda</small>
-              </div>
-              <div className="plpk-stat">
-                <span><CheckCircle2 size={14} aria-hidden="true" />Sudah Dikunjungi</span>
-                <strong>{formatNumber(batch.visitedCount)}</strong>
-                <small>punya hasil kunjungan</small>
-              </div>
-              <div className="plpk-stat">
-                <span><Clock3 size={14} aria-hidden="true" />Belum Dikunjungi</span>
-                <strong>{formatNumber(batch.pendingCount)}</strong>
-                <small>menunggu didatangi</small>
-              </div>
-              <div className="plpk-stat">
-                <span><Coins size={14} aria-hidden="true" />Terjemput</span>
-                <strong>{formatNumber(batch.collectedCanCount)}</strong>
-                <small>menghasilkan koin</small>
-              </div>
-              <div className="plpk-stat is-wide is-accent">
-                <span><TrendingUp size={14} aria-hidden="true" />Total Perolehan Sementara</span>
-                <strong>{formatRupiah(batch.grossAmount)}</strong>
-                <small>jumlah kotor sebelum bisyaroh</small>
-              </div>
-            </div>
-
-            <div className="plpk-card" style={{ marginTop: 12 }}>
-              <div className="plpk-progress-head">
-                <strong>Status Periode</strong>
-                <span className={`plpk-badge is-${batch.status}`}>{collectionStatusLabels[batch.status]}</span>
-              </div>
-              <p className="plpk-hint">
-                {batch.status === 'needs-correction'
-                  ? 'Kordes meminta koreksi. Perbaiki data yang ditandai lalu kirim ulang.'
-                  : locked
-                    ? 'Data periode ini sudah dikunci dan sedang diproses Kordes.'
-                    : 'Catat hasil kunjungan setiap Munfiq, lalu konfirmasi bila seluruh Munfiq sudah selesai.'}
-              </p>
-            </div>
-          </>
-        ) : (
-          <div className="plpk-card" style={{ marginTop: 16 }}>
-            <div className="plpk-empty">
-              <Inbox size={30} aria-hidden="true" />
-              <strong>Belum ada penjemputan aktif</strong>
-              <p>Tidak ada periode penjemputan yang sedang berjalan untuk wilayah Anda saat ini.</p>
-            </div>
+      <section className="plpk-home-section" aria-labelledby="summary-title">
+        <MobileSectionHeader title="Informasi Utama" description="Ringkasan dari data periode aktif" />
+        <article className="plpk-amount-card">
+          <span className="plpk-amount-icon"><MobileServiceIcon icon={Coins01Icon} label="Nominal infak" size={21} /></span>
+          <div>
+            <small>Nominal Infak Periode Ini</small>
+            <strong id="summary-title">{formatRupiah(metrics.grossAmount)}</strong>
+            <span>Jumlah kotor yang telah terinput</span>
           </div>
-        )}
-      </div>
-
-      {batch && !locked ? (
-        <div className="plpk-footer">
-          <button type="button" className="plpk-btn plpk-btn-primary" onClick={onStart}>
-            <MapPin size={17} aria-hidden="true" />
-            {batch.status === 'needs-correction' ? 'Perbaiki Data' : started ? 'Lanjutkan Penjemputan' : 'Mulai Penjemputan'}
-          </button>
+        </article>
+        <div className="plpk-home-stat-grid">
+          <article><span><MobileServiceIcon icon={PackageOpenIcon} label="Kaleng aktif" size={19} /></span><small>Kaleng Aktif</small><strong>{formatNumber(metrics.activeCans)}</strong></article>
+          <article><span><MobileServiceIcon icon={HandCoinsIcon} label="Kaleng terjemput" size={19} /></span><small>Terjemput</small><strong>{formatNumber(metrics.collectedCans)}</strong></article>
+          <article><span><MobileServiceIcon icon={Notification02Icon} label="Belum terjemput" size={19} /></span><small>Belum Terjemput</small><strong>{formatNumber(metrics.pendingCans)}</strong></article>
         </div>
-      ) : null}
-    </>
+      </section>
+
+      <section className="plpk-home-section" aria-labelledby="menu-title">
+        <MobileSectionHeader title="Menu Utama" description="Akses cepat kebutuhan PLPK" />
+        <div id="menu-title" className="plpk-quick-grid">
+          {menu.map((item) => (
+            <MobileServiceTile key={item.title} {...item} compact onClick={() => onNavigate(item.destination)} />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
