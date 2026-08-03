@@ -1,1 +1,5 @@
-import { GorutShell } from '@/components/gorut-v2/gorut-shell';export default function DashboardPage(){return <GorutShell/>}
+import { DashboardShell } from '@/components/gorut-v2/dashboard/dashboard-shell';
+
+export default function DashboardPage() {
+  return <DashboardShell />;
+}
