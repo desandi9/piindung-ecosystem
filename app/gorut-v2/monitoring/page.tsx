@@ -1,7 +1,5 @@
-import { PlaceholderShell } from '@/components/gorut-v2/placeholder-shell';
+import { MonitoringShell } from '@/components/gorut-v2/monitoring/monitoring-shell';
 
 export default function MonitoringPage() {
-  return (
-    <PlaceholderShell title="Monitoring" description="Pantauan progres penghimpunan lintas desa, kecamatan, dan UPZIS secara read-only." />
-  );
+  return <MonitoringShell />;
 }
