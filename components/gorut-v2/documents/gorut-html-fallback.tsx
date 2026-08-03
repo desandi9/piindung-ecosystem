@@ -20,7 +20,7 @@ export function F009HtmlFallback({ batch }: { batch: CollectionBatch }) {
   return (
     <article className="gorut-html-document is-f009">
       <Image className="gorut-html-watermark" src="/logo koin nu.png" alt="" width={420} height={420} aria-hidden="true" />
-      <div className="gorut-html-number"><span>No. Dokumen</span><strong>{batch.documentNumber}</strong></div>
+      <div className="gorut-html-number"><span>No. Dokumen</span><strong>{batch.f009DocumentNumber ?? batch.documentNumber}</strong></div>
       <header><Image src="/logo untuk berkas gorut.png" alt="Logo GORUT" width={250} height={193} /><b>F.009</b><h1>LEMBAR PENERIMAAN KOIN NU</h1></header>
       <dl className="gorut-html-identity">
         <div><dt>Nama PLPK</dt><dd>{batch.plpkName}</dd></div><div><dt>ID PLPK</dt><dd>{batch.plpkId}</dd></div>
@@ -30,7 +30,7 @@ export function F009HtmlFallback({ batch }: { batch: CollectionBatch }) {
       <div className="gorut-html-table-wrap"><table><thead><tr><th>No.</th><th>Nama Lengkap</th><th>Kode Kaleng</th><th>RT/RW</th><th>No. HP</th><th>Nominal</th><th>Keterangan</th></tr></thead><tbody>
         {batch.entries.map((entry, index) => <tr key={entry.id}><td>{index + 1}</td><td>{entry.munfiqName}</td><td>{entry.canCode}</td><td>{entry.rt ?? '—'}/{entry.rw ?? '—'}</td><td>{entry.phone}</td><td>{entry.visitStatus === 'collected' ? formatRupiah(entry.amount) : '—'}</td><td>{visitLabels[entry.visitStatus]}</td></tr>)}
       </tbody></table></div>
-      <section className="gorut-html-summary"><div><span>Kaleng Aktif</span><strong>{formatNumber(batch.activeCanCount)}</strong></div><div><span>Kaleng Terjemput</span><strong>{formatNumber(batch.collectedCanCount)}</strong></div><div><span>Tidak Terjemput</span><strong>{formatNumber(batch.uncollectedCanCount)}</strong></div><div><span>Total Nominal</span><strong>{formatRupiah(batch.grossAmount)}</strong></div></section>
+      <section className="gorut-html-summary"><div><span>Kaleng Aktif</span><strong>{formatNumber(batch.activeCanCount)}</strong></div><div><span>Kaleng Terjemput</span><strong>{formatNumber(batch.collectedCanCount)}</strong></div><div><span>Tidak Terjemput</span><strong>{formatNumber(batch.uncollectedCanCount)}</strong></div><div><span>Total Nominal Penghimpunan</span><strong>{formatRupiah(batch.grossAmount)}</strong></div></section>
       <div className="gorut-html-signatures"><div><span>Diserahkan oleh PLPK</span><strong>{batch.plpkName}</strong></div><div><span>Diterima oleh Kordes</span><strong>{batch.kordesName}</strong></div></div>
     </article>
   );

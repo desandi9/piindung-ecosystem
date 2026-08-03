@@ -144,7 +144,7 @@ function buildRecapRows(batches: CollectionBatch[]): DocumentCatalogRow[] {
       readinessLabel: documentReadinessLabels[f010],
       updatedAt,
       recapId: recap.id,
-      canPreview: f010 !== 'unavailable',
+      canPreview: f010 === 'ready',
     });
 
     rows.push({

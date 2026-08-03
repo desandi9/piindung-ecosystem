@@ -1,4 +1,4 @@
-import { collectionStatusLabels, formatPeriodLabel } from './pengambilan-options';
+import { calculateNetAmount, collectionStatusLabels, formatPeriodLabel } from './pengambilan-options';
 import type { CollectionBatch, CollectionStatus } from './types';
 
 export type OpsMonitoringFilters = {
@@ -67,7 +67,7 @@ export function summarizeOpsBatches(batches: CollectionBatch[]) {
   return {
     grossAmount,
     totalPlpkFee,
-    netAmount: grossAmount - totalPlpkFee,
+    netAmount: calculateNetAmount(grossAmount, totalPlpkFee),
     batchCount: batches.length,
     plpkCount: plpkIds.size,
     incomplete: batches.filter((batch) => unfinished.includes(batch.status)).length,
@@ -145,7 +145,7 @@ export function buildOpsRegions(batches: CollectionBatch[]): OpsRegionRow[] {
       batchCount: items.length,
       grossAmount,
       totalPlpkFee,
-      netAmount: grossAmount - totalPlpkFee,
+      netAmount: calculateNetAmount(grossAmount, totalPlpkFee),
       processLabel: process.label,
       processTone: process.tone,
     };
@@ -165,8 +165,8 @@ export function buildOpsAttention(batches: CollectionBatch[]): OpsAttentionItem[
       title: `Perlu koreksi · ${batch.plpkName}`,
       detail: `${batch.village}, ${batch.kecamatan} · ${formatPeriodLabel(batch.period)}${batch.kordesNotes ? ` · ${batch.kordesNotes}` : ''}`,
       severity: 'critical',
-      href: '/gorut-v2/penghimpunan/verifikasi-kordes',
-      hrefLabel: 'Verifikasi Kordes',
+      href: '/gorut-v2/penghimpunan/penjemputan-plpk',
+      hrefLabel: 'Penjemputan PLPK',
     });
   }
 

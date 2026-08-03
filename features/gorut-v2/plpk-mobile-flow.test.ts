@@ -49,6 +49,10 @@ const source = (status: CollectionBatch['status'] = 'collecting'): CollectionBat
   createdAt: '2026-07-01',
 });
 
+test('net amount always subtracts the eligible PLPK fee from gross amount', () => {
+  assert.equal(options.calculateNetAmount(100_000, 2_500), 97_500);
+});
+
 test('PLPK submission locks a complete period and clears correction state on resubmission', () => {
   const submit = (options as typeof options & {
     submitPlpkBatch?: (batch: CollectionBatch, submittedAt: string) => { batch?: CollectionBatch; error?: string };

@@ -57,6 +57,10 @@ export function parseAmount(raw: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export function calculateNetAmount(grossAmount: number, totalPlpkFee: number): number {
+  return grossAmount - totalPlpkFee;
+}
+
 export function calculatePlpkFee(amount: number, visitStatus: CollectionVisitStatus = 'collected'): number {
   return isEligibleForPlpkFee(amount, visitStatus) ? PLPK_FEE_AMOUNT : 0;
 }
@@ -82,7 +86,7 @@ export function summarizeEntries(entries: CollectionEntry[]) {
     totalCollected: grossAmount,
     eligibleMunfiqCount: eligible.length,
     totalPlpkFee,
-    netAmount: grossAmount - totalPlpkFee,
+    netAmount: calculateNetAmount(grossAmount, totalPlpkFee),
   };
 }
 

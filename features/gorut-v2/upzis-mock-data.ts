@@ -34,7 +34,7 @@ const minutesByGroup: Record<string, string> = {
  * - sudah diverifikasi dan BA terbit      → Siap Disetor
  */
 function deriveStatus(batches: CollectionBatch[], hasMinutes: boolean): UpzisRecapStatus {
-  const anyUnfinished = batches.some((batch) => batch.status === 'scheduled' || batch.status === 'collecting');
+  const anyUnfinished = batches.some((batch) => ['draft', 'scheduled', 'collecting', 'collection-completed', 'needs-correction'].includes(batch.status));
   if (anyUnfinished) return 'incomplete';
 
   const allVerified = batches.every((batch) => batch.status === 'verified-by-kordes');

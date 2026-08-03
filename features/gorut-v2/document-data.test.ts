@@ -45,6 +45,13 @@ test('F.009 data is derived from one PLPK batch and preserves every Munfiq row',
   assert.equal(request.data.documentNumber, 'F.009/MKR/VII/2026/001');
 });
 
+test('F.009 prefers the assigned document number when available', () => {
+  const source = batch({ f009DocumentNumber: 'F.009/RESMI/VII/2026/001' });
+  const request = buildF009DocumentRequest(source);
+
+  assert.equal(request.data.documentNumber, 'F.009/RESMI/VII/2026/001');
+});
+
 test('F.010 data derives PLPK rows and totals from the same village batches', () => {
   const request = buildF010DocumentRequest(recap, [batch()]);
   assert.equal(request.documentType, 'f010');
