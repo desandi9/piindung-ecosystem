@@ -285,7 +285,7 @@ export function KordesVerificationShell() {
                             </select>
                             <span>baris</span>
                           </label>
-                          <button type="button" className="pjm-export" onClick={() => triggerNotice('Export: prototipe UI, belum tersedia')}>
+                          <button type="button" className="pjm-export" disabled aria-label="Export belum tersedia pada tahap frontend ini" title="Export belum tersedia pada tahap frontend ini">
                             <Download size={15} aria-hidden="true" />Export
                           </button>
                         </div>
