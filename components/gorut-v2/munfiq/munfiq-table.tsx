@@ -1,0 +1,20 @@
+'use client';
+
+import { ArrowUpDown, Edit3, Eye, MoreHorizontal, Settings2, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { GorutMunfiq } from '@/features/gorut-v2/types';
+import { formatDateShort, formatPhoneNumber, formatRupiah, getInitials } from '@/features/gorut-v2/formatters';
+import { munfiqStatusLabels } from '@/features/gorut-v2/munfiq-options';
+
+export function MunfiqTable({ items, checkedIds, onToggle, onToggleAll, onDetail, onEdit, onDelete, onNotice }: { items: GorutMunfiq[]; checkedIds: string[]; onToggle: (id: string) => void; onToggleAll: () => void; onDetail: (item: GorutMunfiq) => void; onEdit: (item: GorutMunfiq) => void; onDelete: (item: GorutMunfiq) => void; onNotice: (message: string) => void }) {
+  const allChecked = items.length > 0 && items.every((item) => checkedIds.includes(item.id));
+  return <div className="gorut-munfiq-table-wrap"><table><thead><tr><th style={{ width: '40px' }}><input type="checkbox" checked={allChecked} onChange={onToggleAll} aria-label="Pilih semua baris" /></th><th>Munfiq <ArrowUpDown size={11} className="inline-block ml-1" /></th><th>ID Munfiq</th><th>Wilayah</th><th>PLPK</th><th>Setoran Terakhir</th><th>Total Penghimpunan</th><th>Status</th><th aria-label="Aksi" /></tr></thead><tbody>{items.map((item) => { const checked = checkedIds.includes(item.id); return <tr key={item.id} className={checked ? 'is-checked' : ''}><td><input type="checkbox" checked={checked} onChange={() => onToggle(item.id)} aria-label={`Pilih ${item.name}`} /></td><td><button type="button" className="gorut-munfiq-person" onClick={() => onDetail(item)} aria-label={`Lihat detail ${item.name}`}><span className="gorut-avatar">{getInitials(item.name)}</span><span><strong>{item.name}</strong><small>{formatPhoneNumber(item.phone)}</small></span></button></td><td><strong>{item.memberId}</strong></td><td><strong>{item.kecamatan}</strong><small>{item.upzis}</small></td><td><strong>{item.plpkName}</strong><small>{item.village}</small></td><td>{item.lastDepositAt ? <div className="gorut-deposit-cell"><strong>{formatRupiah(item.lastDepositAmount ?? 0)}</strong><small>{formatDateShort(item.lastDepositAt)}</small></div> : <small>Belum Setor</small>}</td><td><strong>{formatRupiah(item.totalCollected)}</strong><small>{item.transactionCount} transaksi</small></td><td><span className={`gorut-munfiq-status is-${item.status}`}>{munfiqStatusLabels[item.status]}</span></td><td><RowActions item={item} onDetail={onDetail} onEdit={onEdit} onDelete={onDelete} onNotice={onNotice} /></td></tr>; })}</tbody></table></div>;
+}
+
+function RowActions({ item, onDetail, onEdit, onDelete, onNotice }: { item: GorutMunfiq; onDetail: (item: GorutMunfiq) => void; onEdit: (item: GorutMunfiq) => void; onDelete: (item: GorutMunfiq) => void; onNotice: (message: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { const close = (event: MouseEvent) => { if (!ref.current?.contains(event.target as Node)) setOpen(false); }; document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close); }, []);
+  const run = (action: () => void) => { setOpen(false); action(); };
+  return <div className="gorut-dropdown" ref={ref}><button type="button" className="gorut-icon-button" onClick={() => setOpen((val) => !val)} aria-label="Menu Aksi" aria-expanded={open}><MoreHorizontal size={15} /></button>{open ? <div className="gorut-dropdown-menu"><button type="button" onClick={() => run(() => onDetail(item))}><Eye size={13} />Lihat Detail</button><button type="button" onClick={() => run(() => onEdit(item))}><Edit3 size={13} />Edit</button><button type="button" onClick={() => run(() => onNotice(`Status ${item.name} berhasil diubah`))}><Settings2 size={13} />Ubah Status</button><button type="button" onClick={() => run(() => onDelete(item))}><Trash2 size={13} className="text-red-500" />Hapus</button></div> : null}</div>;
+}

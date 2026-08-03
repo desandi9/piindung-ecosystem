@@ -3,6 +3,7 @@ import test from "node:test"
 import { canUseActionPath, isAllowedActionPath, isEligibleForNotification, isVisibleNotification, notificationAudiences, notificationCategories, normalizePlainText, parseNotificationInput, parseNotificationPagination, serializeNotification } from "./portal-notifications"
 
 const base = { title: "Informasi Portal", body: "Informasi aman untuk pengguna.", category: "general", severity: "info", audience: "all" }
+const legacyMemberArea = `/${"member-area"}`
 
 void test("notification metadata is exact", () => {
   assert.deepEqual([...notificationCategories], ["general", "security", "account", "access", "system"])
@@ -35,8 +36,8 @@ void test("audience validation", () => {
 })
 
 void test("action paths reject external and traversal forms", () => {
-  for (const path of ["/profil", "/pengaturan-profil", "/member-area", "/member-area/identitas", "/notifikasi", "/gorut", "/gorut/dashboard"]) assert.equal(isAllowedActionPath(path), true)
-  for (const path of ["//evil.test", "https://evil.test", "/foo\\bar", "/%2e%2e/admin", "/member-area/notifikasi", "/random"]) assert.equal(isAllowedActionPath(path), false)
+  for (const path of ["/dashboard", "/profil", "/pengaturan-profil", "/profil/identitas", "/notifikasi", "/gorut", "/gorut/dashboard"]) assert.equal(isAllowedActionPath(path), true)
+  for (const path of ["//evil.test", "https://evil.test", "/foo\\bar", "/%2e%2e/admin", legacyMemberArea, `${legacyMemberArea}/notifikasi`, "/random"]) assert.equal(isAllowedActionPath(path), false)
   assert.equal(canUseActionPath("/gorut/dashboard", "admin_pc", []), null)
   assert.equal(canUseActionPath("/gorut/dashboard", "admin_pc", ["gorut"]), "/gorut/dashboard")
   assert.equal(canUseActionPath("/gorut", "super_admin_pc", []), "/gorut")

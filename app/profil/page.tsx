@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion, useMotionValue, useSpring, useTransform, useReducedMotion, type Variants } from "motion/react"
 import {
-  Activity,
   ArrowRight,
   BadgeCheck,
   Bell,
@@ -134,7 +133,6 @@ function ProfileContent({ profile }: { profile: AccountProfile }) {
     { href: profile.identityPath, title: "Kartu Identitas Digital", description: "Lihat dan bagikan identitas anggota.", icon: IdCard, accent: "from-teal-500/15 to-emerald-500/10" },
     { href: "/pengaturan-profil", title: "Keamanan & Password", description: "Perbarui kata sandi akun Anda.", icon: KeyRound, accent: "from-emerald-400/15 to-teal-400/10" },
     { href: profile.verificationUrl, title: "Verifikasi Identitas", description: "Konfirmasi keaslian data anggota.", icon: BadgeCheck, external: true, accent: "from-teal-400/15 to-emerald-500/10" },
-    { href: "/member-area/aktivitas", title: "Aktivitas Akun", description: "Riwayat tindakan pada akun Anda.", icon: Activity, accent: "from-emerald-500/15 to-teal-500/10" },
     { href: "/notifikasi", title: "Notifikasi", description: "Kabar dan pemberitahuan terbaru.", icon: Bell, accent: "from-teal-500/15 to-emerald-500/10" },
     { href: "/bantuan", title: "Pusat Bantuan", description: "Panduan dan dukungan PIINDUNG.", icon: CircleHelp, accent: "from-emerald-400/15 to-teal-400/10" },
   ]
@@ -360,7 +358,7 @@ function HeroCard({
             Pengaturan Akun
           </Link>
           <Link
-            href="/member-area/identitas"
+            href="/profil/identitas"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#dce8e2] bg-white/90 px-5 text-sm font-semibold text-[#08213b] shadow-sm transition hover:border-[#07965d]/40 hover:bg-[#e7f7ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-emerald-500/10"
           >
             <IdCard className="h-4 w-4" aria-hidden="true" />

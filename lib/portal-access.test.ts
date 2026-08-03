@@ -3,10 +3,7 @@ import test from "node:test"
 import {
   roleHasPortalPermission,
   hasEffectiveModuleEntry,
-  canAccessMemberAreaRoute,
-  isRegisteredModuleKey,
-  isPortalPermission,
-  getRegisteredModuleByRoute
+  canAccessLandingPageRoute
 } from "./portal-access"
 
 void test("portal-access: Basic permissions", () => {
@@ -134,42 +131,22 @@ void test("portal-access: Module entry rules", () => {
   assert.equal(hasEffectiveModuleEntry("super_admin_pc", true, "unknown_module", true), false)
 })
 
-void test("portal-access: Member Area route policy", () => {
-  // exact /member-area allowed for active authenticated roles
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_upzis", "/member-area"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_kordes", "/member-area"), true)
-  assert.equal(canAccessMemberAreaRoute("unknown_role", "/member-area"), false)
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/notifikasi"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/notifikasi"), false)
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/audit"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/audit"), false)
-  assert.equal(canAccessMemberAreaRoute("admin_upzis", "/member-area/aktivitas"), true)
+void test("portal-access: landing page route policy", () => {
+  // hub + artikel routes allow Super Admin and Admin PC
+  assert.equal(canAccessLandingPageRoute("super_admin_pc", "/dashboard/landing-page"), true)
+  assert.equal(canAccessLandingPageRoute("super_admin_pc", "/dashboard/landing-page/artikel"), true)
+  assert.equal(canAccessLandingPageRoute("super_admin_pc", "/dashboard/landing-page/artikel/migrasi"), true)
+  assert.equal(canAccessLandingPageRoute("admin_pc", "/dashboard/landing-page/artikel"), true)
+  assert.equal(canAccessLandingPageRoute("admin_pc", "/dashboard/landing-page/artikel/migrasi"), true)
+  assert.equal(canAccessLandingPageRoute("admin_upzis", "/dashboard/landing-page/artikel"), false)
+  assert.equal(canAccessLandingPageRoute("admin_kordes", "/dashboard/landing-page/artikel/migrasi"), false)
 
-  // /member-area/konten/artikel routes allow Super Admin and Admin PC
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/konten/artikel"), true)
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/konten/artikel/migrasi"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/konten/artikel"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/konten/artikel/migrasi"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_upzis", "/member-area/konten/artikel"), false)
-  assert.equal(canAccessMemberAreaRoute("admin_kordes", "/member-area/konten/artikel/migrasi"), false)
+  // non-article content routes remain Super Admin-only
+  assert.equal(canAccessLandingPageRoute("super_admin_pc", "/dashboard/landing-page/beranda"), true)
+  assert.equal(canAccessLandingPageRoute("admin_pc", "/dashboard/landing-page/beranda"), false)
+  assert.equal(canAccessLandingPageRoute("super_admin_pc", "/dashboard/landing-page/pengaturan"), true)
+  assert.equal(canAccessLandingPageRoute("admin_pc", "/dashboard/landing-page/pengaturan"), false)
 
-  // /member-area/hak-akses requires access.manage (Super Admin only)
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/hak-akses"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/hak-akses"), false)
-  assert.equal(canAccessMemberAreaRoute("admin_upzis", "/member-area/hak-akses"), false)
-
-  // /member-area/pengguna requires users.manage (Super Admin only)
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/pengguna"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/pengguna"), false)
-  assert.equal(canAccessMemberAreaRoute("admin_upzis", "/member-area/pengguna"), false)
-
-  // non-article content routes remain Super Admin-only (meaning require respective permissions like homepage.manage)
-  // Let's check a non-article route /member-area/konten/beranda
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/konten/beranda"), true)
-  assert.equal(canAccessMemberAreaRoute("admin_pc", "/member-area/konten/beranda"), false)
-
-  // unknown protected /member-area/** route denied
-  assert.equal(canAccessMemberAreaRoute("super_admin_pc", "/member-area/random-route"), false)
+  // unknown protected /dashboard/landing-page/** route denied
+  assert.equal(canAccessLandingPageRoute("super_admin_pc", "/dashboard/landing-page/random-route"), false)
 })

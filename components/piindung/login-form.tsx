@@ -8,10 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { LoginTransitionScreen } from "@/components/piindung/login-transition-screen"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
-export function LoginForm() {
+export function LoginForm({ onTransitionStart }: { onTransitionStart?: () => void }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { login } = useAuth()
@@ -36,6 +35,7 @@ export function LoginForm() {
     if (result.success) {
       setErrorMessage(null)
       setIsTransitioning(true)
+      onTransitionStart?.()
       await new Promise((resolve) => window.setTimeout(resolve, 1250))
       router.push(safeRedirectPath(searchParams.get("next")))
     } else {
@@ -47,7 +47,6 @@ export function LoginForm() {
 
   return (
     <>
-      {isTransitioning ? <LoginTransitionScreen /> : null}
       <div className="w-full max-w-md mx-auto transition-all duration-500 ease-out data-[transitioning=true]:scale-[0.985] data-[transitioning=true]:opacity-80" data-transitioning={isTransitioning}>
       {/* Logo */}
       <div className="flex justify-center mb-10">

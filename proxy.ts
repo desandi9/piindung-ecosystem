@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { canAccessAdminDashboard, isSuperAdminOnlyRoute } from "@/features/auth"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
-import { canAccessMemberAreaRoute } from "@/lib/portal-access"
+import { canAccessLandingPageRoute } from "@/lib/portal-access"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
-const protectedUiPrefixes = ["/dashboard", "/admin", "/profil", "/pengaturan-profil", "/gorut", "/member-area", "/notifikasi"]
+const legacyMemberAreaPath = "/member-area"
 const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-scopes", "/api/public-products"]
 const publicReadableRecordScopes = new Set([
   "maintenance-mode",
@@ -25,12 +25,17 @@ function extractRecordScope(pathname: string) {
   return segments[2] ?? null
 }
 
-function isProtectedUiPath(pathname: string) {
-  return protectedUiPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+const gorutV2Prefix = "/gorut-v2"
+
+/** Role yang boleh membuka seluruh /gorut-v2/**. Sengaja daftar tertutup, bukan turunan izin /gorut lama. */
+const gorutV2AllowedRoles = new Set(["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"])
+
+function isGorutV2Path(pathname: string) {
+  return pathname === gorutV2Prefix || pathname.startsWith(`${gorutV2Prefix}/`)
 }
 
-function canAccessGorut(role?: string | null) {
-  return role === "super_admin_pc" || role === "admin_pc"
+function canAccessGorutV2Path(role: string | null | undefined) {
+  return typeof role === "string" && gorutV2AllowedRoles.has(role)
 }
 
 function canAccessGorutPath(role: string | null | undefined, pathname: string) {
@@ -136,6 +141,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  if (pathname === legacyMemberAreaPath) return NextResponse.redirect(new URL("/dashboard", request.url))
+  if (pathname === `${legacyMemberAreaPath}/identitas`) return NextResponse.redirect(new URL("/profil/identitas", request.url))
+  if (pathname === `${legacyMemberAreaPath}/notifikasi`) return NextResponse.redirect(new URL("/notifikasi", request.url))
+
   if (pathname === "/login") {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
     if (!token) return NextResponse.next()
@@ -198,11 +207,17 @@ export async function proxy(request: NextRequest) {
   }
 
 
-  if (pathname.startsWith("/member-area") && !canAccessMemberAreaRoute(session.role, pathname)) {
+  if (pathname.startsWith("/dashboard/landing-page") && !canAccessLandingPageRoute(session.role, pathname)) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
-  if (pathname.startsWith("/gorut")) {
+  // /gorut-v2 dijaga terpisah: daftar prefix canAccessGorutPath hanya mengenal /gorut/**,
+  // sehingga tanpa cabang ini seluruh /gorut-v2 selalu jatuh ke penolakan.
+  if (isGorutV2Path(pathname)) {
+    if (!canAccessGorutV2Path(session.role)) {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+  } else if (pathname.startsWith("/gorut")) {
     if (!canAccessGorutPath(session.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url))
     }
