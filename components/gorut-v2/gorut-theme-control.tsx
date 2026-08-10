@@ -1,8 +1,6 @@
 'use client';
 
 import { Check, Laptop, Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { useSyncExternalStore } from 'react';
 
 import {
   DropdownMenu,
@@ -13,11 +11,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   GORUT_THEME_OPTIONS,
-  normalizeGorutTheme,
   type GorutThemeMode,
 } from '@/features/gorut-v2/theme';
 
-const subscribeToHydration = () => () => undefined;
+import { useGorutTheme } from './gorut-theme-provider';
+
 
 function ThemeIcon({ mode }: { mode: GorutThemeMode }) {
   if (mode === 'light') return <Sun size={16} aria-hidden="true" />;
@@ -26,9 +24,7 @@ function ThemeIcon({ mode }: { mode: GorutThemeMode }) {
 }
 
 export function GorutThemeControl({ compact = false }: { compact?: boolean }) {
-  const mounted = useSyncExternalStore(subscribeToHydration, () => true, () => false);
-  const { theme, setTheme } = useTheme();
-  const selected = normalizeGorutTheme(mounted ? theme : 'system');
+  const { mode: selected, resolvedTheme, setMode } = useGorutTheme();
   const selectedLabel = GORUT_THEME_OPTIONS.find((option) => option.id === selected)?.label ?? 'Sistem';
 
   return (
@@ -43,8 +39,8 @@ export function GorutThemeControl({ compact = false }: { compact?: boolean }) {
           {compact ? null : <span>{selectedLabel}</span>}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="gorut-theme-menu">
-        <DropdownMenuRadioGroup value={selected} onValueChange={setTheme}>
+      <DropdownMenuContent align="end" className={`gorut-theme-menu gorut-theme-${resolvedTheme}`}>
+        <DropdownMenuRadioGroup value={selected} onValueChange={(value) => setMode(value as GorutThemeMode)}>
           {GORUT_THEME_OPTIONS.map((option) => (
             <DropdownMenuRadioItem key={option.id} value={option.id} className="gorut-theme-option">
               <ThemeIcon mode={option.id} />

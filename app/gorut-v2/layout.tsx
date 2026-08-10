@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Manrope } from 'next/font/google';
 
+import { GorutThemeProvider } from '@/components/gorut-v2/gorut-theme-provider';
+
 import './gorut-v2.css';
 
 const manrope = Manrope({
@@ -15,5 +17,9 @@ export const metadata: Metadata = {
 };
 
 export default function GorutV2Layout({ children }: { children: React.ReactNode }) {
-  return <div className={manrope.variable}>{children}</div>;
+  return (
+    <div className={manrope.variable}>
+      <GorutThemeProvider>{children}</GorutThemeProvider>
+    </div>
+  );
 }

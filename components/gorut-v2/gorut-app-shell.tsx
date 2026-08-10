@@ -13,6 +13,7 @@ import type { GorutNavigationItem } from '@/features/gorut-v2/types';
 
 import { GorutHeader } from './gorut-header';
 import { GorutSidebar } from './gorut-sidebar';
+import { useGorutTheme } from './gorut-theme-provider';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { MobileSidebar } from './mobile-sidebar';
 
@@ -39,6 +40,7 @@ export function GorutAppShell({
   mobileNavigation = defaultMobileNavigation,
   onUnavailable,
 }: GorutAppShellProps) {
+  const { resolvedTheme } = useGorutTheme();
   const [mobileMenu, setMobileMenu] = useState(false);
   const [notice, setNotice] = useState('');
 
@@ -53,7 +55,7 @@ export function GorutAppShell({
   };
 
   return (
-    <div className="gorut-viewport">
+    <div className={`gorut-viewport gorut-theme-${resolvedTheme}`}>
       <a className="gorut-skip-link" href="#gorut-main-content">Lewati ke konten utama</a>
       <div className="gorut-app">
         <GorutSidebar target={target} />
