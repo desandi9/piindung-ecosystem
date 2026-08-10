@@ -1,5 +1,7 @@
 import type { CollectionBatch, GorutMunfiq, UpzisVillageRecap } from './types';
-import { calculateNetAmount } from './pengambilan-options';
+// The explicit extension keeps this pure derivation module executable by Node's TS test runner.
+// @ts-expect-error The application tsconfig intentionally disallows TS extensions.
+import { calculateNetAmount } from './pengambilan-options.ts';
 
 export type DashboardTrendPoint = {
   period: string;
