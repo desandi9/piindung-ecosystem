@@ -1,3 +1,4 @@
+html[data-gorut-theme='light'],
 .gorut-viewport {
   color-scheme: light;
   --gorut-canvas: #F3F6F4;
@@ -49,16 +50,10 @@
   --g-danger: var(--gorut-critical);
   --g-warning: var(--gorut-warning);
 
-  min-height: 100vh;
-  background: var(--gorut-canvas);
-  color: var(--gorut-ink);
-  font-family: var(--font-gorut), Manrope, ui-sans-serif, system-ui, sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
 }
 
 .gorut-viewport.gorut-theme-dark,
-html[data-gorut-theme='dark'] .gorut-viewport,
+html[data-gorut-theme='dark'],
 .dark .gorut-viewport {
   color-scheme: dark;
   --gorut-canvas: #09130F;
@@ -91,6 +86,15 @@ html[data-gorut-theme='dark'] .gorut-viewport,
   --gorut-shadow-md: 0 18px 44px rgb(0 0 0 / 30%);
   --gorut-shadow-lg: 0 30px 80px rgb(0 0 0 / 42%);
   --g-bright: #5ADAA4;
+}
+
+.gorut-viewport {
+  min-height: 100vh;
+  background: var(--gorut-canvas);
+  color: var(--gorut-ink);
+  font-family: var(--font-gorut), Manrope, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 .gorut-viewport *,

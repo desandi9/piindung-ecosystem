@@ -43,6 +43,7 @@ export function GorutThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.dataset.gorutTheme = resolvedTheme;
+    return () => { delete document.documentElement.dataset.gorutTheme; };
   }, [resolvedTheme]);
 
   const value = useMemo<GorutThemeContextValue>(() => ({

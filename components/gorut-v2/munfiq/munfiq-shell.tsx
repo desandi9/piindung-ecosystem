@@ -4,12 +4,12 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import { gorutMunfiqData } from '@/features/gorut-v2/munfiq-mock-data';
 import type { GorutMunfiq } from '@/features/gorut-v2/types';
-import { bottomNavigation, mainNavigation, masterDataNavigation, mobileNavigation, operationalNavigation } from '@/features/gorut-v2/navigation';
+import { countActiveFilters, formatResultSummary } from '@/features/gorut-v2/operation-view';
 
-import { GorutSidebar } from '../gorut-sidebar';
-import { MobileSidebar } from '../mobile-sidebar';
-import { MobileBottomNav } from '../mobile-bottom-nav';
-import { GorutHeader } from '../gorut-header';
+import { GorutAppShell } from '../gorut-app-shell';
+import { DataSurface } from '../operations/data-surface';
+import { FilterShell } from '../operations/filter-shell';
+import { OperationPageHeader } from '../operations/operation-page-header';
 
 import { MunfiqSummary } from './munfiq-summary';
 import { MunfiqToolbar } from './munfiq-toolbar';
@@ -34,7 +34,6 @@ export function MunfiqShell() {
   const [pageSize, setPageSize] = useState(10);
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
   const [notice, setNotice] = useState('');
-  const [mobileMenu, setMobileMenu] = useState(false);
 
   // Modals state
   const [detailItem, setDetailItem] = useState<GorutMunfiq | null>(null);
@@ -79,6 +78,8 @@ export function MunfiqShell() {
     const start = (page - 1) * pageSize;
     return filteredItems.slice(start, start + pageSize);
   }, [filteredItems, page, pageSize]);
+  const activeFilterCount = countActiveFilters([filters.query, filters.kecamatan, filters.upzis, filters.plpk, filters.status]);
+  const resetFilters = () => { setFilters(initialMunfiqFilters); setPage(1); };
 
   // Bulk actions handlers
   const handleToggleRow = (id: string) => {
@@ -158,34 +159,25 @@ export function MunfiqShell() {
   };
 
   return (
-    <div className="gorut-viewport">
-      {loading ? (
-        <div className="gorut-app"><GorutSidebar target={target} /><div className="gorut-workspace"><GorutHeader title="Munfiq" onMenuOpen={() => setMobileMenu(true)} /><main className="gorut-main"><MunfiqSkeleton /></main></div></div>
-      ) : (
-        <div className="gorut-app">
-          <GorutSidebar target={target} />
-
-          <div className="gorut-workspace">
-            <GorutHeader title="Munfiq" onMenuOpen={() => setMobileMenu(true)} />
-
-            <main className="gorut-main gorut-munfiq-main">
-              <section className="gorut-munfiq-heading" aria-label="Judul Halaman">
-                <div>
-                  <p>DATA MASTER</p>
-                  <h1>Munfiq</h1>
-                  <span>Kelola data munfiq, wilayah, penanggung jawab, dan status penghimpunan.</span>
-                </div>
-
-                <MunfiqToolbar onCreate={() => { setFormItem(null); setFormOpen(true); }} onNotice={triggerNotice} />
-              </section>
-
+    <>
+      <GorutAppShell title="Munfiq" target={target} loading={loading}>
+        {loading ? <MunfiqSkeleton /> : (
+          <div className="gorut-munfiq-workspace">
+              <OperationPageHeader
+                eyebrow="Data master"
+                title="Direktori Munfiq"
+                description="Kelola identitas, wilayah, penanggung jawab, dan status penghimpunan dalam satu ruang kerja."
+                action={<MunfiqToolbar onCreate={() => { setFormItem(null); setFormOpen(true); }} onNotice={triggerNotice} />}
+              />
               <MunfiqSummary items={items} />
 
-              <MunfiqFilterBar
-                filters={filters}
-                onChange={setFilters}
-                onReset={() => { setFilters(initialMunfiqFilters); setPage(1); }}
-              />
+              <FilterShell
+                activeCount={activeFilterCount}
+                resultSummary={formatResultSummary(filteredItems.length, items.length, 'Munfiq')}
+                onReset={resetFilters}
+              >
+                <MunfiqFilterBar filters={filters} onChange={(next) => { setFilters(next); setPage(1); }} />
+              </FilterShell>
 
               {/* Bulk Actions Panel */}
               {checkedIds.length > 0 ? (
@@ -201,26 +193,13 @@ export function MunfiqShell() {
               ) : null}
 
               {filteredItems.length === 0 ? (
-                <MunfiqEmptyState onReset={() => { setFilters(initialMunfiqFilters); setPage(1); }} />
+                <MunfiqEmptyState onReset={resetFilters} />
               ) : (
-                <section className="gorut-munfiq-list-container">
-                  <MunfiqTable
-                    items={currentItems}
-                    checkedIds={checkedIds}
-                    onToggle={handleToggleRow}
-                    onToggleAll={handleToggleAll}
-                    onDetail={setDetailItem}
-                    onEdit={(item) => { setFormItem(item); setFormOpen(true); }}
-                    onDelete={setDeleteItem}
-                    onNotice={triggerNotice}
-                  />
-
-                  <MunfiqMobileList
-                    items={currentItems}
-                    onDetail={setDetailItem}
-                    onEdit={(item) => { setFormItem(item); setFormOpen(true); }}
-                    onDelete={setDeleteItem}
-                    onNotice={triggerNotice}
+                <section className="gorut-munfiq-results">
+                  <DataSurface
+                    label="Daftar Munfiq"
+                    desktop={<MunfiqTable items={currentItems} checkedIds={checkedIds} onToggle={handleToggleRow} onToggleAll={handleToggleAll} onDetail={setDetailItem} onEdit={(item) => { setFormItem(item); setFormOpen(true); }} onDelete={setDeleteItem} onNotice={triggerNotice} />}
+                    mobile={<MunfiqMobileList items={currentItems} onDetail={setDetailItem} onEdit={(item) => { setFormItem(item); setFormOpen(true); }} onDelete={setDeleteItem} onNotice={triggerNotice} />}
                   />
 
                   {/* Pagination footer */}
@@ -250,24 +229,12 @@ export function MunfiqShell() {
                   </footer>
                 </section>
               )}
-            </main>
           </div>
+        )}
+      </GorutAppShell>
 
-          <MobileSidebar
-            open={mobileMenu}
-            onClose={() => setMobileMenu(false)}
-            navigation={mainNavigation}
-            secondaryNavigation={operationalNavigation}
-            masterNavigation={masterDataNavigation}
-            bottomNavigation={bottomNavigation}
-            target={target}
-          />
+          {notice ? <div className="gorut-mobile-notice" role="status">{notice}</div> : null}
 
-          <MobileBottomNav navigation={mobileNavigation} onUnavailable={(label) => triggerNotice(`${label}: Segera tersedia`)} />
-
-          {notice ? <div className="gorut-mobile-notice">{notice}</div> : null}
-
-          {/* Details Drawer */}
           <MunfiqDetailDrawer
             open={Boolean(detailItem)}
             munfiq={detailItem}
@@ -276,7 +243,6 @@ export function MunfiqShell() {
             onNotice={triggerNotice}
           />
 
-          {/* Create / Edit Form Dialog */}
           <MunfiqFormDialog
              open={formOpen}
              munfiq={formItem}
@@ -286,14 +252,11 @@ export function MunfiqShell() {
              onViewDuplicate={(item) => { setFormOpen(false); setFormItem(null); setDetailItem(item); }}
            />
 
-          {/* Delete Dialog */}
           <DeleteMunfiqDialog
             munfiq={deleteItem}
             onClose={() => setDeleteItem(null)}
             onConfirm={handleDeleteConfirm}
           />
-        </div>
-      )}
-    </div>
+    </>
   );
 }
