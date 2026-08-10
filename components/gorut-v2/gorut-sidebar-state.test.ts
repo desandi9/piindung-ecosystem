@@ -14,3 +14,8 @@ test('first visit defaults to collapsed only on tablet-sized desktop shell', () 
   assert.equal(resolveSidebarCollapsed(null, false), false);
   assert.equal(resolveSidebarCollapsed('invalid', true), true);
 });
+
+test('malformed values never expand or collapse unpredictably', () => {
+  assert.equal(resolveSidebarCollapsed('', false), false);
+  assert.equal(resolveSidebarCollapsed('1', true), true);
+});
