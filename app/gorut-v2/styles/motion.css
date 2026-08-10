@@ -1,0 +1,92 @@
+.gorut-viewport {
+  --gorut-motion-press: 120ms;
+  --gorut-motion-fast: 160ms;
+  --gorut-motion-base: 240ms;
+  --gorut-ease-out: cubic-bezier(.22, 1, .36, 1);
+  --gorut-ease-in-out: cubic-bezier(.77, 0, .175, 1);
+  --gorut-ease-drawer: cubic-bezier(.32, .72, 0, 1);
+}
+
+@keyframes gorut-motion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gorut-motion-shimmer {
+  0%, 100% { opacity: .56; }
+  50% { opacity: 1; }
+}
+
+.gorut-motion-enter {
+  animation: gorut-motion-enter var(--gorut-motion-base) var(--gorut-ease-out) both;
+}
+
+.gorut-motion-list > * {
+  animation: gorut-motion-enter var(--gorut-motion-base) var(--gorut-ease-out) both;
+  animation-delay: calc(var(--gorut-motion-index, 0) * 45ms);
+}
+
+.gorut-pressed-feedback {
+  transition:
+    transform var(--gorut-motion-press) var(--gorut-ease-out),
+    background-color var(--gorut-motion-fast) ease,
+    border-color var(--gorut-motion-fast) ease,
+    color var(--gorut-motion-fast) ease;
+}
+
+.gorut-pressed-feedback:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.gorut-theme-trigger {
+  transition:
+    transform var(--gorut-motion-press) var(--gorut-ease-out),
+    background-color var(--gorut-motion-fast) ease,
+    border-color var(--gorut-motion-fast) ease,
+    color var(--gorut-motion-fast) ease,
+    box-shadow var(--gorut-motion-fast) ease;
+}
+
+.gorut-theme-trigger:active {
+  transform: scale(.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .gorut-theme-trigger:hover {
+    border-color: var(--gorut-line-strong);
+    background: var(--gorut-surface-raised);
+    color: var(--gorut-ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gorut-motion-enter,
+  .gorut-motion-list > * {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+    transform: none;
+  }
+
+  .gorut-pressed-feedback,
+  .gorut-theme-trigger {
+    transition-duration: 1ms;
+  }
+}
+
+html[data-animations="off"] .gorut-motion-enter,
+html[data-animations="off"] .gorut-motion-list > * {
+  animation: none;
+  transform: none;
+}
+
+html[data-animations="off"] .gorut-pressed-feedback,
+html[data-animations="off"] .gorut-theme-trigger {
+  transition: none;
+}
