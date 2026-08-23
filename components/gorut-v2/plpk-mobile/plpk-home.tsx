@@ -14,7 +14,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Bell } from 'lucide-react';
 
-import { formatNumber, formatRupiah, getInitials } from '@/features/gorut-v2/formatters';
+import { formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
 import { collectionHasAction, collectionMoneyLabel } from '@/features/gorut-v2/collection-api-view-model';
 import { summarizePlpkPeriod, type PlpkServiceScreen } from '@/features/gorut-v2/plpk-mobile-content';
 import { collectionProgress, formatPeriodLabel, isBatchLocked } from '@/features/gorut-v2/pengambilan-options';
@@ -63,11 +63,11 @@ export function PlpkHome({
   return (
     <div className="plpk-scroll plpk-home-screen">
       <header className="plpk-home-header">
-        <div className="plpk-home-avatar" aria-hidden="true">{getInitials(profile.name)}</div>
+        <div className="plpk-home-avatar" aria-hidden="true">{profile.identity.initials}</div>
         <div className="plpk-home-greeting">
           <span>Assalamu’alaikum</span>
           <strong>{profile.name}</strong>
-          <small>PLPK Desa {profile.village}</small>
+          <small>{profile.identity.assignmentLabel}</small>
         </div>
         <button type="button" className="plpk-icon-button plpk-notification-button" onClick={() => onNavigate('notifications')} aria-label={`Buka notifikasi, ${unreadCount} belum dibaca`}>
           <Bell size={21} aria-hidden="true" />

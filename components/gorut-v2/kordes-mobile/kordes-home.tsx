@@ -14,7 +14,7 @@ import {
 import { Bell } from 'lucide-react';
 
 import { MobileNewsPortal } from '@/components/gorut-v2/mobile-shared/mobile-news-portal';
-import { formatNumber, formatRupiah, getInitials } from '@/features/gorut-v2/formatters';
+import { formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
 import { isServerCollectionBatch } from '@/features/gorut-v2/collection-api-view-model';
 import type { KordesMobileScreen } from '@/features/gorut-v2/kordes-mobile-navigation';
 import type { CollectionBatch } from '@/features/gorut-v2/types';
@@ -22,14 +22,9 @@ import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 
 import { MobileServiceIcon } from '../plpk-mobile/mobile-service-icon';
 import { MobileSectionHeader, MobileServiceTile } from '../plpk-mobile/mobile-ui';
+import type { KordesMobileProfile } from '../../../lib/gorut/mobile-actor-access-pure';
 
-export interface KordesHomeProfile {
-  kordesId: string;
-  name: string;
-  village: string;
-  kecamatan: string;
-  upzis: string;
-}
+export type KordesHomeProfile = KordesMobileProfile;
 
 export function KordesHome({
   profile,
@@ -63,11 +58,11 @@ export function KordesHome({
   return (
     <div className="plpk-scroll plpk-home-screen kordes-home-screen">
       <header className="plpk-home-header kordes-home-header">
-        <div className="plpk-home-avatar" aria-hidden="true">{getInitials(profile.name)}</div>
+        <div className="plpk-home-avatar" aria-hidden="true">{profile.identity.initials}</div>
         <div className="plpk-home-greeting">
           <span>Assalamu’alaikum</span>
           <strong>{profile.name}</strong>
-          <small>Kordes Desa {profile.village} · {profile.upzis}</small>
+          <small>{profile.identity.assignmentLabel} · {profile.upzis}</small>
         </div>
         <button type="button" className="plpk-icon-button plpk-notification-button" onClick={() => onNavigate('notifications')} aria-label={`Buka notifikasi, ${unreadCount} belum dibaca`}>
           <Bell size={21} aria-hidden="true" />{unreadCount ? <i aria-hidden="true" /> : null}

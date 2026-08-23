@@ -7,9 +7,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
 import { collectionErrorMessage } from '@/features/gorut-v2/collection-api-client';
 import { collectionHasAction, collectionToBatch, isServerCollectionBatch } from '@/features/gorut-v2/collection-api-view-model';
-import { activeKordesProfile } from '@/features/gorut-v2/kordes-mock-data';
 import { summarizeKordesPeriod, type KordesDecisionAction, type KordesDecisionInput } from '@/features/gorut-v2/kordes-mobile';
 import type { KordesMobileScreen, KordesSubScreen, KordesTab } from '@/features/gorut-v2/kordes-mobile-navigation';
+import { useMobileLogout } from '@/features/gorut-v2/mobile-auth';
 import { plpkNotifications } from '@/features/gorut-v2/plpk-mobile-content';
 import { useCollectionApi } from '@/features/gorut-v2/use-collection-api';
 
@@ -19,7 +19,7 @@ import { PlpkNewsScreen } from '../plpk-mobile/plpk-news-screen';
 import { PlpkNotificationsScreen } from '../plpk-mobile/plpk-notifications-screen';
 import { PlpkPpobScreen } from '../plpk-mobile/plpk-ppob-screen';
 import { PlpkZiswafScreen } from '../plpk-mobile/plpk-ziswaf-screen';
-import { KordesHome } from './kordes-home';
+import { KordesHome, type KordesHomeProfile } from './kordes-home';
 import { KordesJournalTab } from './kordes-journal-tab';
 import { KordesMunfiqScreen } from './kordes-munfiq-screen';
 import { KordesPlpkDetail } from './kordes-plpk-detail';
@@ -38,7 +38,7 @@ const tabs: { key: KordesTab; label: string; icon: IconSvgElement }[] = [
   { key: 'profile', label: 'Profil', icon: UserIcon },
 ];
 
-export function KordesMobileServerApp() {
+export function KordesMobileServerApp({ profile }: { profile: KordesHomeProfile }) {
   const api = useCollectionApi({ page: 1, pageSize: 100, status: 'WAITING_KORDES_VERIFICATION' });
   const [tab, setTab] = useState<KordesTab>('home');
   const [subScreen, setSubScreen] = useState<KordesSubScreen | null>(null);
@@ -50,11 +50,6 @@ export function KordesMobileServerApp() {
   const [toast, setToast] = useState('');
 
   const batches = useMemo(() => api.collections.map(collectionToBatch), [api.collections]);
-  const profile = useMemo(() => batches[0] ? {
-    ...activeKordesProfile,
-    village: batches[0].village,
-    kecamatan: batches[0].kecamatan,
-  } : activeKordesProfile, [batches]);
   const period = useMemo(() => batches.map((batch) => batch.period).sort().at(-1) ?? new Date().toISOString().slice(0, 7), [batches]);
   const periodBatches = useMemo(() => batches.filter((batch) => batch.period === period), [batches, period]);
   const summary = useMemo(() => summarizeKordesPeriod(batches, { village: profile.village, kecamatan: profile.kecamatan, period }), [batches, period, profile.kecamatan, profile.village]);
@@ -68,6 +63,7 @@ export function KordesMobileServerApp() {
     setToast(message);
     window.setTimeout(() => setToast(''), 3200);
   }, []);
+  const { logout, logoutPending } = useMobileLogout('KORDES', showToast);
   const navigateTab = useCallback((next: KordesTab) => {
     setTab(next);
     setSubScreen(null);
@@ -150,7 +146,7 @@ export function KordesMobileServerApp() {
     {!subScreen && tab === 'verification' ? <KordesVerificationTab batches={periodBatches} period={period} onOpen={(batch) => void openVerification(batch.id)} onOpenF009={(batch) => setF009BatchId(batch.id)} onOpenJournal={() => navigateTab('journal')} /> : null}
     {!subScreen && tab === 'journal' ? <KordesJournalTab batches={batches} village={profile.village} kecamatan={profile.kecamatan} onOpenRecap={(nextPeriod) => { setRecapPeriod(nextPeriod); setSubScreen('recap'); }} /> : null}
     {!subScreen && tab === 'services' ? <KordesServicesTab unreadCount={unreadCount} onOpen={setSubScreen} /> : null}
-    {!subScreen && tab === 'profile' ? <KordesProfileTab profile={profile} phone={profile.phone} plpkCount={new Set(batches.map((batch) => batch.plpkId)).size} onNotice={showToast} /> : null}
+    {!subScreen && tab === 'profile' ? <KordesProfileTab profile={profile} plpkCount={new Set(batches.map((batch) => batch.plpkId)).size} onNotice={showToast} onLogout={logout} logoutPending={logoutPending} /> : null}
 
     <MobileBottomNav items={tabs.map((item) => ({ ...item, badge: item.key === 'verification' ? waitingCount : undefined, badgeLabel: item.key === 'verification' ? `${waitingCount} antrean menunggu` : undefined }))} activeKey={currentTab} ariaLabel="Navigasi utama Kordes" onSelect={navigateTab} />
 

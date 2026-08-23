@@ -121,8 +121,9 @@ export interface CollectionBatch {
   createdAt: string;
 }
 
-/** Identitas PLPK yang sedang memakai aplikasi mobile. Mock, bukan dari auth. */
+/** Public mobile identity resolved from the signed-in User and active PLPK assignment. */
 export interface PlpkProfile {
+  identity: MobileActorIdentity;
   plpkId: string;
   name: string;
   phone: string;
@@ -291,3 +292,4 @@ export type GorutDashboardData = {
     formattedMax: string;
   };
 };
+import type { MobileActorIdentity } from '../../lib/gorut/mobile-actor-access-pure';

@@ -2,7 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from 'react';
 
-import type { CollectionBatch, PlpkProfile } from './types';
+import type { CollectionBatch } from './types';
 import { currentCollectionPeriod } from './pengambilan-mock-data';
 import {
   getCollectionServerSnapshot,
@@ -10,18 +10,6 @@ import {
   hydrateCollectionStore,
   subscribeCollectionStore,
 } from './collection-store';
-
-/** PLPK yang sedang memakai aplikasi mobile. Mock — tidak menyentuh auth atau role. */
-export const activePlpkProfile: PlpkProfile = {
-  plpkId: 'PLPK-01',
-  name: 'Dede Rahmat',
-  phone: '081234500001',
-  village: 'Sukamentri',
-  kecamatan: 'Garut Kota',
-  kordesName: 'Kordes Sukamentri',
-  upzis: 'UPZIS Masjid Agung',
-  joinedAt: '2024-02-01',
-};
 
 /**
  * Batch efektif dengan hidrasi localStorage setelah mount.
@@ -45,7 +33,7 @@ export function batchesForPlpk(batches: CollectionBatch[], plpkId: string): Coll
  * kerjanya. Batch Perlu Koreksi tidak diambil di sini — perbaikan dimulai dari
  * Riwayat, supaya Beranda selalu menampilkan periode aktif.
  */
-export function activeBatchForPlpk(batches: CollectionBatch[], plpkId: string, village: string = activePlpkProfile.village): CollectionBatch | null {
+export function activeBatchForPlpk(batches: CollectionBatch[], plpkId: string, village: string): CollectionBatch | null {
   const mine = batchesForPlpk(batches, plpkId);
   const current = mine.find((batch) => batch.period === currentCollectionPeriod && batch.village === village && batch.status !== 'needs-correction');
   return current ?? null;

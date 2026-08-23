@@ -11,7 +11,7 @@ import {
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
-import { formatDateShort, formatPhoneNumber, getInitials } from '@/features/gorut-v2/formatters';
+import { formatDateShort, formatPhoneNumber } from '@/features/gorut-v2/formatters';
 import type { PlpkProfile } from '@/features/gorut-v2/types';
 
 import { MobileServiceIcon } from './mobile-service-icon';
@@ -19,7 +19,17 @@ import { MobilePageHeader, MobileSectionHeader } from './mobile-ui';
 
 type ProfileInfo = 'help' | 'privacy' | 'about' | null;
 
-export function PlpkProfileTab({ profile, onNotice }: { profile: PlpkProfile; onNotice: (message: string) => void }) {
+export function PlpkProfileTab({
+  profile,
+  onNotice,
+  onLogout,
+  logoutPending = false,
+}: {
+  profile: PlpkProfile;
+  onNotice: (message: string) => void;
+  onLogout: () => void;
+  logoutPending?: boolean;
+}) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [openInfo, setOpenInfo] = useState<ProfileInfo>(null);
 
@@ -36,7 +46,7 @@ export function PlpkProfileTab({ profile, onNotice }: { profile: PlpkProfile; on
       <MobilePageHeader title="Profil" subtitle="Akun dan pengaturan PLPK" />
       <div className="plpk-scroll">
         <section className="plpk-profile-hero">
-          <div className="plpk-profile-avatar" aria-hidden="true">{getInitials(profile.name)}</div>
+          <div className="plpk-profile-avatar" aria-hidden="true">{profile.identity.initials}</div>
           <div><h1>{profile.name}</h1><span>{profile.plpkId}</span><small>Aktif sejak {formatDateShort(profile.joinedAt)}</small></div>
           <span className="plpk-account-badge">Akun Aktif</span>
         </section>
@@ -45,7 +55,7 @@ export function PlpkProfileTab({ profile, onNotice }: { profile: PlpkProfile; on
         <section className="plpk-card">
           <dl className="plpk-profile-rows">
             <div><dt>ID PLPK</dt><dd>{profile.plpkId}</dd></div>
-            <div><dt>Wilayah tugas</dt><dd>Desa {profile.village}, {profile.kecamatan}</dd></div>
+            <div><dt>Wilayah tugas</dt><dd>{profile.village}, {profile.kecamatan}</dd></div>
             <div><dt>Nomor HP</dt><dd>{formatPhoneNumber(profile.phone)}</dd></div>
             <div><dt>Kordes</dt><dd>{profile.kordesName}</dd></div>
             <div><dt>Status akun</dt><dd><span className="plpk-account-inline">Aktif</span></dd></div>
@@ -67,7 +77,7 @@ export function PlpkProfileTab({ profile, onNotice }: { profile: PlpkProfile; on
         {info ? <section className="plpk-profile-info"><MobileServiceIcon icon={UserIcon} label={info.title} size={20} /><div><strong>{info.title}</strong><p>{info.description}</p></div></section> : null}
 
         <div className="plpk-app-version"><span>Versi aplikasi</span><strong>2.0.0-prototype</strong></div>
-        <button type="button" className="plpk-logout-button" onClick={() => onNotice('Fitur keluar dinonaktifkan pada prototipe ini.')}><MobileServiceIcon icon={Logout03Icon} label="Keluar" size={19} />Keluar</button>
+        <button type="button" className="plpk-logout-button" onClick={onLogout} disabled={logoutPending}><MobileServiceIcon icon={Logout03Icon} label="Keluar" size={19} />{logoutPending ? 'Sedang keluar…' : 'Keluar'}</button>
       </div>
     </>
   );

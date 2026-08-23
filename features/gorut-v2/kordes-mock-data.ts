@@ -3,17 +3,6 @@ import { getCollectionSnapshot } from './collection-store';
 
 const eligibleStatuses: CollectionBatch['status'][] = ['waiting-kordes-verification', 'verified-by-kordes', 'needs-correction'];
 
-/** Identitas Kordes aktif untuk prototipe mobile; cakupan wajib desa + kecamatan. */
-export const activeKordesProfile = {
-  kordesId: 'KORDES-03',
-  name: 'Cecep Suhendar',
-  phone: '081234500103',
-  village: 'Sindangpalay',
-  kecamatan: 'Karangpawitan',
-  upzis: 'UPZIS Karangpawitan',
-  accountStatus: 'Aktif',
-} as const;
-
 type VerificationSeed = Pick<KordesVerification, 'status' | 'moneyMatches' | 'hasDamagedMoney' | 'cashReceived' | 'notes' | 'verifiedAt' | 'returnedForCorrectionAt' | 'verifiedByKordesName'>;
 
 const verificationSeeds: Record<string, VerificationSeed> = {

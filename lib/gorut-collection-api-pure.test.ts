@@ -67,12 +67,29 @@ void test("strict commands reject client-controlled identity, timestamp, and pol
     idempotencyKey: "create-1",
   })
   assert.equal(parseCollectionCreateBody({ period: "2026-08", expectedVersion: 0, idempotencyKey: "create-1", plpkId: "forged" }), null)
+  assert.equal(parseCollectionCreateBody({ period: "2026-08", expectedVersion: 0, idempotencyKey: "create-1", userId: "forged" }), null)
   assert.equal(parseCollectionCreateBody({ period: "2026-13", expectedVersion: 0, idempotencyKey: "create-1" }), null)
   assert.equal(parseCollectionActionBody({
     action: "CONFIRM_AND_SUBMIT",
     expectedVersion: 2,
     idempotencyKey: "confirm-1",
     confirmedByPlpkAt: "2026-08-20T00:00:00.000Z",
+  }), null)
+  assert.equal(parseCollectionActionBody({
+    action: "CONFIRM_AND_SUBMIT",
+    expectedVersion: 2,
+    idempotencyKey: "confirm-2",
+    actorUserId: "forged",
+  }), null)
+  assert.equal(parseCollectionActionBody({
+    action: "VERIFY_BY_KORDES",
+    expectedVersion: 3,
+    idempotencyKey: "verify-forged-kordes",
+    moneyMatches: true,
+    hasDamagedMoney: false,
+    cashReceived: true,
+    note: null,
+    kordesId: "forged",
   }), null)
   assert.equal(parseCollectionActionBody({
     action: "VERIFY_BY_KORDES",

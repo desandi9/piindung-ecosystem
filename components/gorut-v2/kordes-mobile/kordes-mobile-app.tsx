@@ -7,9 +7,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
 import { resolveCollectionFrontendMode } from '@/features/gorut-v2/collection-api-client';
 import { saveCollectionBatch } from '@/features/gorut-v2/collection-store';
-import { activeKordesProfile } from '@/features/gorut-v2/kordes-mock-data';
 import { applyKordesDecision, buildKordesQueue, summarizeKordesPeriod, type KordesDecisionAction, type KordesDecisionInput } from '@/features/gorut-v2/kordes-mobile';
 import type { KordesMobileScreen, KordesSubScreen, KordesTab } from '@/features/gorut-v2/kordes-mobile-navigation';
+import { useMobileLogout } from '@/features/gorut-v2/mobile-auth';
 import { currentCollectionPeriod } from '@/features/gorut-v2/pengambilan-mock-data';
 import { plpkNotifications } from '@/features/gorut-v2/plpk-mobile-content';
 import { useCollectionBatches } from '@/features/gorut-v2/plpk-mobile-data';
@@ -20,7 +20,7 @@ import { PlpkNewsScreen } from '../plpk-mobile/plpk-news-screen';
 import { PlpkNotificationsScreen } from '../plpk-mobile/plpk-notifications-screen';
 import { PlpkPpobScreen } from '../plpk-mobile/plpk-ppob-screen';
 import { PlpkZiswafScreen } from '../plpk-mobile/plpk-ziswaf-screen';
-import { KordesHome } from './kordes-home';
+import { KordesHome, type KordesHomeProfile } from './kordes-home';
 import { KordesJournalTab } from './kordes-journal-tab';
 import { KordesMunfiqScreen } from './kordes-munfiq-screen';
 import { KordesPlpkDetail } from './kordes-plpk-detail';
@@ -40,13 +40,12 @@ const tabs: { key: KordesTab; label: string; icon: IconSvgElement }[] = [
   { key: 'profile', label: 'Profil', icon: UserIcon },
 ];
 
-export function KordesMobileApp() {
-  return resolveCollectionFrontendMode() === 'demo' ? <KordesMobileDemoApp /> : <KordesMobileServerApp />;
+export function KordesMobileApp({ profile }: { profile: KordesHomeProfile }) {
+  return resolveCollectionFrontendMode() === 'demo' ? <KordesMobileDemoApp profile={profile} /> : <KordesMobileServerApp profile={profile} />;
 }
 
-export function KordesMobileDemoApp() {
+export function KordesMobileDemoApp({ profile }: { profile: KordesHomeProfile }) {
   const batches = useCollectionBatches();
-  const profile = activeKordesProfile;
   const [tab, setTab] = useState<KordesTab>('home');
   const [subScreen, setSubScreen] = useState<KordesSubScreen | null>(null);
   const [recapPeriod, setRecapPeriod] = useState(currentCollectionPeriod);
@@ -66,6 +65,7 @@ export function KordesMobileDemoApp() {
   const waitingCount = queue.filter((item) => item.status === 'waiting-kordes-verification').length;
 
   const showToast = useCallback((message: string) => { setToast(message); window.setTimeout(() => setToast(''), 2800); }, []);
+  const { logout, logoutPending } = useMobileLogout('KORDES', showToast);
   const navigateTab = useCallback((next: KordesTab) => { setTab(next); setSubScreen(null); setNewsArticleId(undefined); setVerificationBatchId(null); setVerificationView('detail'); }, []);
   const navigate = useCallback((screen: KordesMobileScreen) => {
     if (tabs.some((item) => item.key === screen)) { navigateTab(screen as KordesTab); return; }
@@ -103,7 +103,7 @@ export function KordesMobileDemoApp() {
     {!subScreen && tab === 'verification' ? <KordesVerificationTab batches={periodBatches.filter((batch) => ['waiting-kordes-verification','verified-by-kordes','needs-correction'].includes(batch.status))} period={currentCollectionPeriod} onOpen={(batch) => openVerification(batch.id)} onOpenF009={(batch) => setF009BatchId(batch.id)} onOpenJournal={() => navigateTab('journal')} /> : null}
     {!subScreen && tab === 'journal' ? <KordesJournalTab batches={scoped} village={profile.village} kecamatan={profile.kecamatan} onOpenRecap={openRecap} /> : null}
     {!subScreen && tab === 'services' ? <KordesServicesTab unreadCount={unreadCount} onOpen={setSubScreen} /> : null}
-    {!subScreen && tab === 'profile' ? <KordesProfileTab profile={profile} phone={profile.phone} plpkCount={new Set(scoped.map((batch) => batch.plpkId)).size} onNotice={showToast} /> : null}
+    {!subScreen && tab === 'profile' ? <KordesProfileTab profile={profile} plpkCount={new Set(scoped.map((batch) => batch.plpkId)).size} onNotice={showToast} onLogout={logout} logoutPending={logoutPending} /> : null}
 
     <MobileBottomNav
       items={tabs.map((item) => ({

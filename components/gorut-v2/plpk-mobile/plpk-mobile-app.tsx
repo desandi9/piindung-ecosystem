@@ -7,10 +7,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
 import { resolveCollectionFrontendMode } from '@/features/gorut-v2/collection-api-client';
 import { saveCollectionBatch } from '@/features/gorut-v2/collection-store';
+import { useMobileLogout } from '@/features/gorut-v2/mobile-auth';
 import { plpkNotifications, type PlpkServiceScreen } from '@/features/gorut-v2/plpk-mobile-content';
-import { activeBatchForPlpk, activePlpkProfile, historyForPlpk, useCollectionBatches } from '@/features/gorut-v2/plpk-mobile-data';
+import { activeBatchForPlpk, historyForPlpk, useCollectionBatches } from '@/features/gorut-v2/plpk-mobile-data';
 import { calculatePlpkFee, isEligibleForPlpkFee, submitPlpkBatch, summarizeEntries } from '@/features/gorut-v2/pengambilan-options';
-import type { CollectionBatch, CollectionEntry } from '@/features/gorut-v2/types';
+import type { CollectionBatch, CollectionEntry, PlpkProfile } from '@/features/gorut-v2/types';
 
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { PlpkCollectionTab } from './plpk-collection-tab';
@@ -39,14 +40,14 @@ const tabs: { key: TabKey; label: string; icon: IconSvgElement }[] = [
   { key: 'profile', label: 'Profil', icon: UserIcon },
 ];
 
-/** Shell prototipe PLPK. Alur simpan, kunci, dan sinkronisasi Kordes tetap memakai store yang sama. */
-export function PlpkMobileApp() {
-  return resolveCollectionFrontendMode() === 'demo' ? <PlpkMobileDemoApp /> : <PlpkMobileServerApp />;
+export function PlpkMobileApp({ profile }: { profile: PlpkProfile }) {
+  return resolveCollectionFrontendMode() === 'demo'
+    ? <PlpkMobileDemoApp profile={profile} />
+    : <PlpkMobileServerApp profile={profile} />;
 }
 
-export function PlpkMobileDemoApp() {
+export function PlpkMobileDemoApp({ profile }: { profile: PlpkProfile }) {
   const batches = useCollectionBatches();
-  const profile = activePlpkProfile;
   const [tab, setTab] = useState<TabKey>('home');
   const [subScreen, setSubScreen] = useState<PlpkServiceScreen | null>(null);
   const [newsArticleId, setNewsArticleId] = useState<string | undefined>();
@@ -56,7 +57,7 @@ export function PlpkMobileDemoApp() {
   const [workingBatchId, setWorkingBatchId] = useState<string | null>(null);
   const [f009BatchId, setF009BatchId] = useState<string | null>(null);
 
-  const periodBatch = useMemo(() => activeBatchForPlpk(batches, profile.plpkId), [batches, profile.plpkId]);
+  const periodBatch = useMemo(() => activeBatchForPlpk(batches, profile.plpkId, profile.village), [batches, profile.plpkId, profile.village]);
   const history = useMemo(() => historyForPlpk(batches, profile.plpkId), [batches, profile.plpkId]);
   const activeBatch = useMemo(() => {
     if (!workingBatchId) return periodBatch;
@@ -67,6 +68,7 @@ export function PlpkMobileDemoApp() {
     setToast(message);
     window.setTimeout(() => setToast(''), 2800);
   }, []);
+  const { logout, logoutPending } = useMobileLogout('PLPK', showToast);
 
   const navigateTab = useCallback((nextTab: TabKey) => {
     setSubScreen(null);
@@ -138,7 +140,7 @@ export function PlpkMobileDemoApp() {
       {!subScreen && tab === 'collection' ? <PlpkCollectionTab batch={activeBatch} onOpenEntry={setOpenEntryId} onReview={() => setReviewOpen(true)} /> : null}
       {!subScreen && tab === 'journal' ? <PlpkJournalTab batches={history} onFixCorrection={(batchId) => { setWorkingBatchId(batchId); setTab('collection'); }} onOpenF009={setF009BatchId} /> : null}
       {!subScreen && tab === 'services' ? <PlpkServicesTab unreadCount={unreadCount} onOpen={setSubScreen} /> : null}
-      {!subScreen && tab === 'profile' ? <PlpkProfileTab profile={profile} onNotice={showToast} /> : null}
+      {!subScreen && tab === 'profile' ? <PlpkProfileTab profile={profile} onNotice={showToast} onLogout={logout} logoutPending={logoutPending} /> : null}
 
       <MobileBottomNav
         items={tabs.map((item) => ({
