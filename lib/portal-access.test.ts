@@ -1,9 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import {
+  canAccessPortalAccessApiRoute,
   roleHasPortalPermission,
   hasEffectiveModuleEntry,
-  canAccessLandingPageRoute
+  canAccessLandingPageRoute,
+  resolveEffectivePortalModules,
 } from "./portal-access"
 
 void test("portal-access: Basic permissions", () => {
@@ -129,6 +131,42 @@ void test("portal-access: Module entry rules", () => {
 
   // Unknown module key denied
   assert.equal(hasEffectiveModuleEntry("super_admin_pc", true, "unknown_module", true), false)
+})
+
+void test("portal-access proxy: authenticated users may self-read exact GET /me", () => {
+  for (const role of ["admin_upzis", "admin_kordes", "admin_pc", "super_admin_pc"] as const) {
+    assert.equal(canAccessPortalAccessApiRoute(role, "GET", "/api/portal-access/me"), true)
+  }
+})
+
+void test("portal-access proxy: unauthenticated and unknown users cannot read /me", () => {
+  assert.equal(canAccessPortalAccessApiRoute(null, "GET", "/api/portal-access/me"), false)
+  assert.equal(canAccessPortalAccessApiRoute(undefined, "GET", "/api/portal-access/me"), false)
+  assert.equal(canAccessPortalAccessApiRoute("unknown_role", "GET", "/api/portal-access/me"), false)
+})
+
+void test("portal-access proxy: non-super-admin management access stays denied", () => {
+  assert.equal(canAccessPortalAccessApiRoute("admin_upzis", "GET", "/api/portal-access/grants"), false)
+
+  for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+    assert.equal(canAccessPortalAccessApiRoute("admin_upzis", method, "/api/portal-access/grants"), false)
+    assert.equal(canAccessPortalAccessApiRoute("admin_upzis", method, "/api/portal-access/me"), false)
+  }
+
+  assert.equal(canAccessPortalAccessApiRoute("admin_upzis", "GET", "/api/portal-access/me/other"), false)
+})
+
+void test("portal-access proxy: super admin management access stays allowed", () => {
+  for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
+    assert.equal(canAccessPortalAccessApiRoute("super_admin_pc", method, "/api/portal-access/grants"), true)
+  }
+})
+
+void test("portal-access /me: enabled GORUT grant appears only for its effective user", () => {
+  const fixtureGrant = [{ moduleKey: "gorut", enabled: true }]
+  assert.deepEqual(resolveEffectivePortalModules("admin_upzis", true, fixtureGrant).map((module) => module.key), ["gorut"])
+  assert.deepEqual(resolveEffectivePortalModules("admin_upzis", true, [{ moduleKey: "gorut", enabled: false }]), [])
+  assert.deepEqual(resolveEffectivePortalModules("admin_upzis", false, fixtureGrant), [])
 })
 
 void test("portal-access: landing page route policy", () => {

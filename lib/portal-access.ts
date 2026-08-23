@@ -62,6 +62,31 @@ export function hasEffectiveModuleEntry(role: string, active: boolean, moduleKey
   return role === "super_admin_pc" || grantEnabled
 }
 
+export function resolveEffectivePortalModules(
+  role: string,
+  active: boolean,
+  grants: readonly { moduleKey: string; enabled: boolean }[],
+) {
+  return registeredModules.filter((module) =>
+    hasEffectiveModuleEntry(
+      role,
+      active,
+      module.key,
+      grants.some((grant) => grant.moduleKey === module.key && grant.enabled),
+    ),
+  )
+}
+
+export function canAccessPortalAccessApiRoute(
+  role: string | null | undefined,
+  method: string,
+  pathname: string,
+) {
+  if (!pathname.startsWith("/api/portal-access") || !role || !(role in capabilities)) return false
+  if (role === "super_admin_pc") return true
+  return method.toUpperCase() === "GET" && pathname === "/api/portal-access/me"
+}
+
 export function canAccessLandingPageRoute(role: string, pathname: string) {
   if (!(role in capabilities)) return false
   if (pathname === "/dashboard/landing-page" || pathname.startsWith("/dashboard/landing-page/artikel")) return roleHasPortalPermission(role, "articles.manage") || role === "super_admin_pc"

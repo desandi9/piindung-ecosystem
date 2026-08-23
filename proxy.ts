@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { canAccessAdminDashboard, isSuperAdminOnlyRoute } from "@/features/auth"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
-import { canAccessLandingPageRoute } from "@/lib/portal-access"
+import { canAccessLandingPageRoute, canAccessPortalAccessApiRoute } from "@/lib/portal-access"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
@@ -183,7 +183,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (pathname.startsWith("/api/portal-access") && session.role !== "super_admin_pc") {
+    if (pathname.startsWith("/api/portal-access") && !canAccessPortalAccessApiRoute(session.role, request.method, pathname)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
