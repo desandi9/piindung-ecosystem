@@ -6,6 +6,7 @@ import { ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { formatDateShort, formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
+import { collectionMoneyLabel, isServerCollectionBatch } from '@/features/gorut-v2/collection-api-view-model';
 import { formatKordesSubmissionAge } from '@/features/gorut-v2/kordes-mobile';
 import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 import type { CollectionBatch, CollectionStatus } from '@/features/gorut-v2/types';
@@ -44,6 +45,7 @@ export function KordesVerificationTab({
     correction: batches.filter((batch) => batch.status === 'needs-correction').length,
     gross: batches.reduce((total, batch) => total + batch.grossAmount, 0),
   }), [batches]);
+  const financialReady = batches.every((batch) => !isServerCollectionBatch(batch) || batch.canonical.financial.status === 'READY');
   const filterCounts: Record<FilterKey, number> = {
     all: batches.length,
     'waiting-kordes-verification': counts.waiting,
@@ -70,7 +72,7 @@ export function KordesVerificationTab({
         <div className="kordes-verification-meta"><strong>{formatPeriodLabel(period)}</strong><span>{counts.waiting} menunggu</span></div>
 
         <section className="kordes-verification-summary" aria-label="Ringkasan verifikasi">
-          <article className="kordes-total-card"><span><MobileServiceIcon icon={MoneyBag02Icon} label="Total Perolehan" size={20} /></span><div><small>Total Perolehan</small><strong>{formatRupiah(counts.gross)}</strong><p>Dari {formatNumber(batches.length)} laporan PLPK periode ini</p></div></article>
+          <article className="kordes-total-card"><span><MobileServiceIcon icon={MoneyBag02Icon} label="Total Perolehan" size={20} /></span><div><small>Total Perolehan</small><strong>{financialReady ? formatRupiah(counts.gross) : 'Belum siap'}</strong><p>Dari {formatNumber(batches.length)} laporan PLPK periode ini</p></div></article>
           <div className="kordes-summary-mini-grid">
             <SummaryMini icon={ClipboardCheckIcon} label="Menunggu" value={counts.waiting} tone="waiting" />
             <SummaryMini icon={CheckmarkCircle02Icon} label="Terverifikasi" value={counts.verified} tone="verified" />
@@ -106,15 +108,16 @@ function VerificationCard({ batch, onOpen, onOpenF009 }: { batch: CollectionBatc
     draft: 'Lihat Data', scheduled: 'Lihat Data', collecting: 'Lihat Data', 'collection-completed': 'Lihat Data',
     'waiting-kordes-verification': 'Verifikasi Sekarang', 'verified-by-kordes': 'Lihat Hasil', 'needs-correction': 'Lihat Koreksi',
   };
-  const submittedAt = batch.submittedToKordesAt ?? batch.createdAt;
+  const submittedAt = batch.submittedToKordesAt;
   const initials = batch.plpkName.split(' ').map((part) => part[0]).slice(0, 2).join('');
   return (
     <article className={batch.status === 'waiting-kordes-verification' ? 'kordes-queue-card is-priority' : 'kordes-queue-card'}>
-      <div className="kordes-queue-head"><span className="kordes-queue-avatar" aria-hidden="true">{initials}</span><div><strong>{batch.plpkName}</strong><span>{batch.plpkId}</span></div><MobileStatusBadge status={batch.status} /></div>
-      <p className="kordes-submitted"><span>{formatKordesSubmissionAge(submittedAt)}</span><small>{formatDateShort(submittedAt)}</small></p>
-      <div className="kordes-queue-period"><span>Periode</span><strong>{formatPeriodLabel(batch.period)}</strong></div>
-      <div className="kordes-queue-counts"><div><small>Munfiq aktif</small><strong>{formatNumber(batch.activeCanCount)}</strong></div><div><small>Terjemput</small><strong>{formatNumber(batch.collectedCanCount)}</strong></div><div><small>Tidak terjemput</small><strong>{formatNumber(batch.uncollectedCanCount)}</strong></div><div><small>Nominal kotor</small><strong>{formatRupiah(batch.grossAmount)}</strong></div></div>
-      <div className="kordes-queue-net"><span>Jumlah bersih diterima Kordes</span><strong>{formatRupiah(batch.netAmount)}</strong></div>
+      <div className="kordes-queue-head"><span className="kordes-queue-avatar" aria-hidden="true">{initials}</span><div><strong>{batch.plpkName}</strong><span>{batch.plpkId} · {batch.id}</span></div><MobileStatusBadge status={batch.status} /></div>
+      <p className="kordes-submitted"><span>{formatKordesSubmissionAge(submittedAt)}</span><small>{submittedAt ? formatDateShort(submittedAt) : 'Belum dikirim'}</small></p>
+      <div className="kordes-queue-period"><span>Periode · {batch.village}</span><strong>{formatPeriodLabel(batch.period)}</strong></div>
+      <div className="kordes-queue-counts"><div><small>Munfiq aktif</small><strong>{formatNumber(batch.activeCanCount)}</strong></div><div><small>Terjemput</small><strong>{formatNumber(batch.collectedCanCount)}</strong></div><div><small>Bisyaroh</small><strong>{collectionMoneyLabel(batch, 'totalPlpkFee')}</strong></div><div><small>Nominal kotor</small><strong>{collectionMoneyLabel(batch, 'grossAmount')}</strong></div></div>
+      <div className="kordes-queue-net"><span>Jumlah bersih diterima Kordes</span><strong>{collectionMoneyLabel(batch, 'netAmount')}</strong></div>
+      {isServerCollectionBatch(batch) ? <p className="plpk-hint">Revisi {batch.canonical.identity.revision} · versi {batch.canonical.version}{batch.canonical.corrections.length ? ` · ${batch.canonical.corrections.length} koreksi` : ''}</p> : null}
       <div className="kordes-card-actions"><button type="button" className="kordes-outline-button" onClick={() => onOpenF009(batch)}>Lihat F.009</button><button type="button" className="kordes-primary-button" onClick={() => onOpen(batch)}><MobileServiceIcon icon={ClipboardCheckIcon} label={actionLabel[batch.status]} size={18} />{actionLabel[batch.status]}<ChevronRight size={16} aria-hidden="true" /></button></div>
     </article>
   );

@@ -4,7 +4,7 @@ import { UserGroupIcon } from '@hugeicons/core-free-icons';
 import { ChevronRight, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { formatRupiah } from '@/features/gorut-v2/formatters';
+import { collectionMoneyLabel } from '@/features/gorut-v2/collection-api-view-model';
 import type { CollectionBatch } from '@/features/gorut-v2/types';
 
 import { MobileEmptyState, MobilePageHeader, MobileStatusBadge } from '../plpk-mobile/mobile-ui';
@@ -33,7 +33,7 @@ export function KordesPlpkDetail({ batches, onBack, onOpen }: { batches: Collect
             {latest.map((batch) => (
               <button key={batch.plpkId} type="button" onClick={() => onOpen(batch)}>
                 <span className="kordes-plpk-avatar" aria-hidden="true">{batch.plpkName.split(' ').map((part) => part[0]).slice(0, 2).join('')}</span>
-                <span><strong>{batch.plpkName}</strong><small>{batch.plpkId} · {batch.activeCanCount} Munfiq</small><b>{formatRupiah(batch.grossAmount)}</b></span>
+                <span><strong>{batch.plpkName}</strong><small>{batch.plpkId} · {batch.activeCanCount} Munfiq</small><b>{collectionMoneyLabel(batch, 'grossAmount')}</b></span>
                 <MobileStatusBadge status={batch.status} />
                 <ChevronRight size={18} aria-hidden="true" />
               </button>

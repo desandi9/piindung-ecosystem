@@ -15,6 +15,7 @@ import {
 import { Bell } from 'lucide-react';
 
 import { formatNumber, formatRupiah, getInitials } from '@/features/gorut-v2/formatters';
+import { collectionHasAction, collectionMoneyLabel } from '@/features/gorut-v2/collection-api-view-model';
 import { summarizePlpkPeriod, type PlpkServiceScreen } from '@/features/gorut-v2/plpk-mobile-content';
 import { collectionProgress, formatPeriodLabel, isBatchLocked } from '@/features/gorut-v2/pengambilan-options';
 import type { CollectionBatch, PlpkProfile } from '@/features/gorut-v2/types';
@@ -40,7 +41,8 @@ export function PlpkHome({
 }) {
   const metrics = summarizePlpkPeriod(batch);
   const progress = batch ? collectionProgress(batch) : 0;
-  const locked = batch ? isBatchLocked(batch) : false;
+  const serverCanRecord = batch ? collectionHasAction(batch, 'RECORD_ENTRY') : undefined;
+  const locked = batch ? (serverCanRecord === undefined ? isBatchLocked(batch) : !serverCanRecord) : false;
   const actionLabel = batch?.status === 'needs-correction'
     ? 'Perbaiki Data'
     : batch && batch.visitedCount > 0
@@ -112,7 +114,7 @@ export function PlpkHome({
           <span className="plpk-amount-icon"><MobileServiceIcon icon={Coins01Icon} label="Nominal infak" size={21} /></span>
           <div>
             <small>Nominal Infak Periode Ini</small>
-            <strong id="summary-title">{formatRupiah(metrics.grossAmount)}</strong>
+            <strong id="summary-title">{batch ? collectionMoneyLabel(batch, 'grossAmount') : formatRupiah(metrics.grossAmount)}</strong>
             <span>Jumlah kotor yang telah terinput</span>
           </div>
         </article>

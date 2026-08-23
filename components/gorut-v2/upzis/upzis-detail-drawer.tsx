@@ -44,7 +44,7 @@ export function UpzisDetailDrawer({ open, recap, onClose, onRecap, onMinutes }: 
             <div className="gorut-summary-grid upzis-verification-modal-summary">
               <Metric label="Total Koin" value={formatRupiah(recap.totalCollected)} />
               <Metric label="Jumlah Munfiq" value={`${formatNumber(recap.munfiqCount)} Munfiq`} />
-              <Metric label="Total Upah PLPK" value={formatRupiah(recap.totalPlpkFee)} />
+              <Metric label="Bisyaroh PLPK" value={formatRupiah(recap.totalPlpkFee)} />
               <Metric label="Jumlah Bersih" value={formatRupiah(netAmount)} highlighted />
             </div>
           </Section>
@@ -61,16 +61,16 @@ export function UpzisDetailDrawer({ open, recap, onClose, onRecap, onMinutes }: 
                     <div><dt>Jumlah Munfiq</dt><dd>{formatNumber(item.munfiqCount)} Munfiq</dd></div>
                     <div><dt>Total Koin</dt><dd>{formatRupiah(item.totalCollected)}</dd></div>
                     <div><dt>Munfiq Memenuhi Syarat</dt><dd>{formatNumber(item.eligibleMunfiqCount)} Munfiq</dd></div>
-                    <div><dt>Upah PLPK</dt><dd>{formatRupiah(item.totalPlpkFee)}</dd></div>
+                    <div><dt>Bisyaroh PLPK</dt><dd>{formatRupiah(item.totalPlpkFee)}</dd></div>
                   </dl>
                 </div>
               ))}
             </div>
           </Section>
 
-          <Section title="Informasi Formula / Upah">
+          <Section title="Informasi Formula Bisyaroh PLPK">
             <p className="gorut-drawer-notes-text upzis-verification-formula-note">
-              Upah PLPK {formatRupiah(PLPK_FEE_AMOUNT)} berlaku untuk setiap Munfiq dengan nominal di atas {formatRupiah(PLPK_FEE_THRESHOLD)}.
+              Bisyaroh PLPK {formatRupiah(PLPK_FEE_AMOUNT)} berlaku untuk setiap Munfiq dengan nominal di atas {formatRupiah(PLPK_FEE_THRESHOLD)}.
             </p>
           </Section>
         </div>

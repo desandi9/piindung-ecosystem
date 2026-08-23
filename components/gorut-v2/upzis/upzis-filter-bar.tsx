@@ -1,11 +1,12 @@
 'use client';
 
-import { CalendarDays, ListFilter, Map, MapPinned, X } from 'lucide-react';
+import { CalendarDays, ListFilter, Map, MapPinned, RotateCcw } from 'lucide-react';
 
 import type { UpzisRecapStatus } from '@/features/gorut-v2/types';
 import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 import { upzisKecamatanOptions, upzisPeriodOptions, upzisStatusLabels } from '@/features/gorut-v2/upzis-options';
 import { upzisVillageOptions } from '@/features/gorut-v2/upzis-mock-data';
+import { PenghimpunanFilterHeading } from '../penghimpunan-filter-heading';
 import type { UpzisFilters } from './upzis-view';
 
 export function UpzisFilterBar({ filters, onChange, onReset }: { filters: UpzisFilters; onChange: (filters: UpzisFilters) => void; onReset: () => void }) {
@@ -14,6 +15,10 @@ export function UpzisFilterBar({ filters, onChange, onReset }: { filters: UpzisF
 
   return (
     <section className="pjm-filters upzis-verification-filters" aria-label="Filter verifikasi UPZIS">
+      <PenghimpunanFilterHeading
+        description="Persempit rekap berdasarkan periode, wilayah, dan kesiapan verifikasi."
+        action={<button type="button" className="gorut-collect-reset" onClick={onReset} disabled={!activeFilters}><RotateCcw size={13} />Reset</button>}
+      />
       <div className="pjm-filter">
         <label className="pjm-filter-label" htmlFor="upzis-verification-period"><CalendarDays size={14} aria-hidden="true" />Periode</label>
         <select id="upzis-verification-period" value={filters.period} onChange={(event) => set('period', event.target.value)}>
@@ -34,7 +39,6 @@ export function UpzisFilterBar({ filters, onChange, onReset }: { filters: UpzisF
 
       <div className="upzis-verification-filter-footer">
         <span>{activeFilters ? `${activeFilters} filter aktif` : 'Menampilkan seluruh kondisi rekap yang tersedia'}</span>
-        <button type="button" className="gorut-collect-reset" onClick={onReset}><X size={13} />Reset Filter</button>
       </div>
     </section>
   );

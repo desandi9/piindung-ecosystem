@@ -5,6 +5,7 @@ import { ChevronRight, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
+import { collectionBlockingReasonLabel, collectionMoneyLabel, collectionPolicyLabel, isServerCollectionBatch } from '@/features/gorut-v2/collection-api-view-model';
 import { formatKordesSubmissionAge } from '@/features/gorut-v2/kordes-mobile';
 import { collectionVisitStatusLabels, formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 import type { CollectionBatch } from '@/features/gorut-v2/types';
@@ -12,7 +13,7 @@ import type { CollectionBatch } from '@/features/gorut-v2/types';
 import { MobileServiceIcon } from '../plpk-mobile/mobile-service-icon';
 import { MobilePageHeader, MobileStatusBadge } from '../plpk-mobile/mobile-ui';
 
-export function KordesVerificationDetail({ batch, onBack, onOpenF009, onContinue }: { batch: CollectionBatch; onBack: () => void; onOpenF009: () => void; onContinue: () => void }) {
+export function KordesVerificationDetail({ batch, onBack, onOpenF009, onContinue, canDecide }: { batch: CollectionBatch; onBack: () => void; onOpenF009: () => void; onContinue: () => void; canDecide?: boolean }) {
   const [query, setQuery] = useState('');
   const visibleEntries = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -20,9 +21,10 @@ export function KordesVerificationDetail({ batch, onBack, onOpenF009, onContinue
   }, [batch.entries, query]);
   const progress = batch.activeCanCount ? Math.min(100, Math.round((batch.collectedCanCount / batch.activeCanCount) * 100)) : 0;
   const actionLabel = batch.status === 'waiting-kordes-verification' ? 'Mulai Verifikasi' : batch.status === 'verified-by-kordes' ? 'Lihat Hasil Verifikasi' : 'Lihat Catatan Koreksi';
-  const submittedAt = batch.submittedToKordesAt ?? batch.createdAt;
-  const submittedDate = new Date(submittedAt);
-  const submittedLabel = Number.isNaN(submittedDate.getTime()) ? 'Waktu tidak tersedia' : new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(submittedDate);
+  const submittedAt = batch.submittedToKordesAt;
+  const submittedDate = submittedAt ? new Date(submittedAt) : null;
+  const submittedLabel = !submittedDate || Number.isNaN(submittedDate.getTime()) ? 'Waktu tidak tersedia' : new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(submittedDate);
+  const policyVersion = collectionPolicyLabel(batch);
 
   return (
     <section className="plpk-sheet kordes-operational-screen kordes-verification-detail" aria-label={`Detail penjemputan ${batch.plpkName}`}>
@@ -36,8 +38,9 @@ export function KordesVerificationDetail({ batch, onBack, onOpenF009, onContinue
 
         <section className="kordes-detail-amount">
           <span><MobileServiceIcon icon={MoneyBag02Icon} label="Jumlah Bersih" size={21} /></span>
-          <div><small>Jumlah Bersih Diterima</small><strong>{formatRupiah(batch.netAmount)}</strong></div>
-          <dl><div><dt>Jumlah kotor</dt><dd>{formatRupiah(batch.grossAmount)}</dd></div><div><dt>Bisyaroh</dt><dd>− {formatRupiah(batch.totalPlpkFee)}</dd></div></dl>
+          <div><small>Jumlah Bersih Diterima</small><strong>{collectionMoneyLabel(batch, 'netAmount')}</strong></div>
+          <dl><div><dt>Jumlah kotor</dt><dd>{collectionMoneyLabel(batch, 'grossAmount')}</dd></div><div><dt>Bisyaroh</dt><dd>− {collectionMoneyLabel(batch, 'totalPlpkFee')}</dd></div></dl>
+          {policyVersion ? <p className="plpk-hint">Kebijakan sementara UAT · {policyVersion}</p> : null}
         </section>
 
         <div className="kordes-detail-stats"><div><small>Munfiq Aktif</small><strong>{formatNumber(batch.activeCanCount)}</strong></div><div><small>Terjemput</small><strong>{formatNumber(batch.collectedCanCount)}</strong></div><div><small>Tidak Terjemput</small><strong>{formatNumber(batch.uncollectedCanCount)}</strong></div></div>
@@ -50,10 +53,14 @@ export function KordesVerificationDetail({ batch, onBack, onOpenF009, onContinue
         <div className="plpk-section-head"><div><h2>Daftar Munfiq</h2><p>Data kunjungan bersifat read-only untuk Kordes.</p></div><span className="kordes-entry-count"><MobileServiceIcon icon={UserGroupIcon} label="Jumlah Munfiq" size={16} />{formatNumber(batch.entries.length)}</span></div>
         {batch.entries.length > 6 ? <div className="plpk-search kordes-entry-search"><Search size={17} aria-hidden="true" /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari Munfiq atau kode kaleng" aria-label="Cari Munfiq atau kode kaleng" /></div> : null}
         <div className="kordes-entry-list">
-          {visibleEntries.map((entry) => <details key={entry.id} className="kordes-entry-row"><summary><span><b>{entry.canCode}</b><strong>{entry.munfiqName}</strong><small>{entry.address}</small></span><span><i className={`is-${entry.visitStatus}`}>{collectionVisitStatusLabels[entry.visitStatus]}</i><b>{entry.visitStatus === 'collected' ? formatRupiah(entry.amount) : 'Rp0'}</b></span><ChevronRight size={17} aria-hidden="true" /></summary><div><span>RT {entry.rt}/RW {entry.rw}</span><span>{entry.notes ?? 'Tidak ada catatan kunjungan.'}</span></div></details>)}
+          {visibleEntries.map((entry) => {
+            const canonicalEntry = isServerCollectionBatch(batch) ? batch.canonical.entries.find((item) => item.munfiq.code === entry.id) : null;
+            return <details key={entry.id} className="kordes-entry-row"><summary><span><b>{entry.canCode}</b><strong>{entry.munfiqName}</strong><small>{entry.address}</small></span><span><i className={`is-${entry.visitStatus}`}>{collectionVisitStatusLabels[entry.visitStatus]}</i><b>{entry.visitStatus === 'collected' ? formatRupiah(entry.amount) : 'Rp0'}</b></span><ChevronRight size={17} aria-hidden="true" /></summary><div><span>{entry.notes ?? 'Tidak ada catatan kunjungan.'}</span>{canonicalEntry?.fee.amount !== null ? <span>Snapshot bisyaroh: {canonicalEntry?.fee.amount ? formatRupiah(Number(canonicalEntry.fee.amount)) : 'Rp0'} · {canonicalEntry?.fee.eligible ? 'eligible' : 'tidak eligible'}</span> : null}</div></details>;
+          })}
         </div>
+        {isServerCollectionBatch(batch) ? <section className="plpk-card"><div className="plpk-review-row"><span>Versi canonical</span><strong>{batch.canonical.version} · revisi {batch.canonical.identity.revision}</strong></div><div className="plpk-review-row"><span>Dikonfirmasi PLPK</span><strong>{batch.canonical.confirmation.confirmedByPlpkAt ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(batch.canonical.confirmation.confirmedByPlpkAt)) : 'Belum'}</strong></div><div className="plpk-review-row"><span>Riwayat koreksi</span><strong>{batch.canonical.corrections.length}</strong></div>{batch.canonical.corrections.map((correction) => <p key={`${correction.target.code}-${correction.requestRevision}`} className="plpk-hint">{correction.target.code} · {correction.reason} · revisi {correction.requestRevision}</p>)}{batch.canonical.blockingReasons.length ? <p className="plpk-hint">{batch.canonical.blockingReasons.map(collectionBlockingReasonLabel).join(' ')}</p> : null}</section> : null}
       </div>
-      <footer className="kordes-detail-actions"><button type="button" className="kordes-outline-button" onClick={onOpenF009}><MobileServiceIcon icon={FileVerifiedIcon} label="Lihat F.009" size={18} />Lihat F.009</button><button type="button" className="kordes-primary-button" onClick={onContinue}>{actionLabel}<ChevronRight size={17} aria-hidden="true" /></button></footer>
+      <footer className="kordes-detail-actions"><button type="button" className="kordes-outline-button" onClick={onOpenF009}><MobileServiceIcon icon={FileVerifiedIcon} label="Lihat F.009" size={18} />Lihat F.009</button><button type="button" className="kordes-primary-button" onClick={onContinue}>{canDecide === false ? 'Lihat Status Canonical' : actionLabel}<ChevronRight size={17} aria-hidden="true" /></button></footer>
     </section>
   );
 }

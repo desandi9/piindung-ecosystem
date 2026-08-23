@@ -36,7 +36,7 @@ export function UpzisMobileList({ recaps, onDetail, onRecap, onMinutes }: { reca
             <div><dt>Kordes</dt><dd>{recap.kordesName}</dd></div>
             <div><dt>Jumlah PLPK</dt><dd>{formatNumber(recap.plpkCount)} PLPK</dd></div>
             <div><dt>Jumlah Munfiq</dt><dd>{formatNumber(recap.munfiqCount)} Munfiq</dd></div>
-            <div><dt>Total Upah PLPK</dt><dd>{formatRupiah(recap.totalPlpkFee)}</dd></div>
+            <div><dt>Bisyaroh PLPK</dt><dd>{formatRupiah(recap.totalPlpkFee)}</dd></div>
             <div><dt>Berita Acara</dt><dd>{recap.minutesNumber ?? 'Belum terbit'}</dd></div>
           </dl>
         </article>

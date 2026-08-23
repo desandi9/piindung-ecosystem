@@ -4,6 +4,7 @@ import { CalendarDays, Map, MapPinned, UserRound } from 'lucide-react';
 
 import type { MonitoringFilters, MonitoringOptions } from '@/features/gorut-v2/penjemputan-monitoring';
 import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
+import { PenghimpunanFilterHeading } from '../penghimpunan-filter-heading';
 
 /**
  * Filter halaman monitoring: UPZIS (kecamatan), Ranting (desa), PLPK, Periode.
@@ -21,15 +22,16 @@ export function PenjemputanFilterBar({
 
   return (
     <section className="pjm-filters" aria-label="Filter monitoring penjemputan">
+      <PenghimpunanFilterHeading description="Pilih wilayah, petugas, dan periode pemantauan penjemputan." />
       <div className="pjm-filter">
-        <label className="pjm-filter-label" htmlFor="pjm-upzis"><MapPinned size={14} aria-hidden="true" />UPZIS</label>
+        <label className="pjm-filter-label" htmlFor="pjm-upzis"><MapPinned size={14} aria-hidden="true" />Kecamatan / UPZIS</label>
         <select id="pjm-upzis" value={filters.upzis} onChange={(event) => set('upzis', event.target.value)}>
           {options.upzis.map((value) => <option key={value} value={value}>{value}</option>)}
         </select>
       </div>
 
       <div className="pjm-filter">
-        <label className="pjm-filter-label" htmlFor="pjm-ranting"><Map size={14} aria-hidden="true" />Ranting</label>
+        <label className="pjm-filter-label" htmlFor="pjm-ranting"><Map size={14} aria-hidden="true" />Desa / Ranting</label>
         <select id="pjm-ranting" value={filters.ranting} onChange={(event) => set('ranting', event.target.value)}>
           {options.ranting.map((value) => <option key={value} value={value}>Desa {value}</option>)}
         </select>

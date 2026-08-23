@@ -3,7 +3,8 @@
 import { AlertTriangle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 import type { CollectionBatch } from '@/features/gorut-v2/types';
-import { formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
+import { collectionBlockingReasonLabel, collectionMoneyLabel, collectionPolicyLabel } from '@/features/gorut-v2/collection-api-view-model';
+import { formatNumber } from '@/features/gorut-v2/formatters';
 import { canConfirmCollection, collectionVisitStatusLabels, formatPeriodLabel, incompleteEntries } from '@/features/gorut-v2/pengambilan-options';
 
 /**
@@ -12,10 +13,11 @@ import { canConfirmCollection, collectionVisitStatusLabels, formatPeriodLabel, i
  * F.009 tidak ditampilkan di sini: dokumen dibuat otomatis oleh sistem setelah
  * konfirmasi dan hanya dibuka Kordes/admin.
  */
-export function PlpkReviewSheet({ batch, onClose, onConfirm }: { batch: CollectionBatch; onClose: () => void; onConfirm: () => void }) {
+export function PlpkReviewSheet({ batch, onClose, onConfirm, canConfirm, pending = false, blockingReasons = [] }: { batch: CollectionBatch; onClose: () => void; onConfirm: () => void; canConfirm?: boolean; pending?: boolean; blockingReasons?: string[] }) {
   const incomplete = incompleteEntries(batch);
-  const ready = canConfirmCollection(batch);
+  const ready = canConfirm ?? canConfirmCollection(batch);
   const isResubmission = batch.status === 'needs-correction';
+  const policyVersion = collectionPolicyLabel(batch);
 
   return (
     <div className="plpk-sheet" role="dialog" aria-modal="true" aria-label="Periksa hasil penjemputan">
@@ -52,16 +54,17 @@ export function PlpkReviewSheet({ batch, onClose, onConfirm }: { batch: Collecti
         <section className="plpk-card" aria-label="Ringkasan nominal">
           <div className="plpk-review-row">
             <span>Jumlah kotor</span>
-            <strong>{formatRupiah(batch.grossAmount)}</strong>
+            <strong>{collectionMoneyLabel(batch, 'grossAmount')}</strong>
           </div>
           <div className="plpk-review-row">
             <span>Bisyaroh PLPK</span>
-            <strong>{formatRupiah(batch.totalPlpkFee)}</strong>
+            <strong>{collectionMoneyLabel(batch, 'totalPlpkFee')}</strong>
           </div>
           <div className="plpk-review-row is-total">
             <span>Jumlah bersih</span>
-            <strong>{formatRupiah(batch.netAmount)}</strong>
+            <strong>{collectionMoneyLabel(batch, 'netAmount')}</strong>
           </div>
+          {policyVersion ? <p className="plpk-hint">Kebijakan sementara UAT · {policyVersion}</p> : null}
         </section>
 
         {incomplete.length ? (
@@ -91,7 +94,7 @@ export function PlpkReviewSheet({ batch, onClose, onConfirm }: { batch: Collecti
               <AlertTriangle size={16} aria-hidden="true" />
               <span>
                 <strong>Belum dapat dikonfirmasi</strong>
-                Seluruh Munfiq harus memiliki hasil kunjungan yang lengkap sebelum penjemputan dikonfirmasi.
+                {blockingReasons.length ? blockingReasons.map(collectionBlockingReasonLabel).join(' ') : 'Seluruh Munfiq harus memiliki hasil kunjungan yang lengkap sebelum penjemputan dikonfirmasi.'}
               </span>
             </div>
           )}
@@ -99,9 +102,9 @@ export function PlpkReviewSheet({ batch, onClose, onConfirm }: { batch: Collecti
       </div>
 
       <div className="plpk-footer">
-        <button type="button" className="plpk-btn plpk-btn-primary" onClick={onConfirm} disabled={!ready}>
+        <button type="button" className="plpk-btn plpk-btn-primary" onClick={onConfirm} disabled={!ready || pending} aria-busy={pending}>
           <CheckCircle2 size={17} aria-hidden="true" />
-          {isResubmission ? 'Kirim Ulang ke Kordes' : 'Konfirmasi Penjemputan Selesai'}
+          {pending ? 'Mengirim…' : isResubmission ? 'Kirim Ulang ke Kordes' : 'Konfirmasi Penjemputan Selesai'}
         </button>
       </div>
     </div>

@@ -4,11 +4,9 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 
 import { gorutMunfiqData } from '@/features/gorut-v2/munfiq-mock-data';
 import type { GorutMunfiq } from '@/features/gorut-v2/types';
-import { countActiveFilters, formatResultSummary } from '@/features/gorut-v2/operation-view';
 
 import { GorutAppShell } from '../gorut-app-shell';
 import { DataSurface } from '../operations/data-surface';
-import { FilterShell } from '../operations/filter-shell';
 import { OperationPageHeader } from '../operations/operation-page-header';
 
 import { MunfiqSummary } from './munfiq-summary';
@@ -24,15 +22,12 @@ import { MunfiqSkeleton } from './munfiq-skeleton';
 
 export type MunfiqDraft = Pick<GorutMunfiq, 'name' | 'phone' | 'email' | 'address' | 'kecamatan' | 'village' | 'upzis' | 'plpkName' | 'status' | 'notes'>;
 
-const target = { current: 'Rp1,42 M', max: 'Rp2 M', percentage: 71 };
-
 export function MunfiqShell() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<GorutMunfiq[]>(gorutMunfiqData);
   const [filters, setFilters] = useState<MunfiqFilters>(initialMunfiqFilters);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [checkedIds, setCheckedIds] = useState<string[]>([]);
   const [notice, setNotice] = useState('');
 
   // Modals state
@@ -64,11 +59,11 @@ export function MunfiqShell() {
         item.address.toLowerCase().includes(query) ||
         item.plpkName.toLowerCase().includes(query);
       const matchKecamatan = deferredFilters.kecamatan === 'all' || item.kecamatan === deferredFilters.kecamatan;
-      const matchUpzis = deferredFilters.upzis === 'all' || item.upzis === deferredFilters.upzis;
+      const matchVillage = deferredFilters.village === 'all' || item.village === deferredFilters.village;
       const matchPlpk = deferredFilters.plpk === 'all' || item.plpkId === deferredFilters.plpk || item.plpkName === deferredFilters.plpk;
       const matchStatus = deferredFilters.status === 'all' || item.status === deferredFilters.status;
 
-      return matchQuery && matchKecamatan && matchUpzis && matchPlpk && matchStatus;
+      return matchQuery && matchKecamatan && matchVillage && matchPlpk && matchStatus;
     });
   }, [items, deferredFilters]);
 
@@ -78,34 +73,7 @@ export function MunfiqShell() {
     const start = (page - 1) * pageSize;
     return filteredItems.slice(start, start + pageSize);
   }, [filteredItems, page, pageSize]);
-  const activeFilterCount = countActiveFilters([filters.query, filters.kecamatan, filters.upzis, filters.plpk, filters.status]);
   const resetFilters = () => { setFilters(initialMunfiqFilters); setPage(1); };
-
-  // Bulk actions handlers
-  const handleToggleRow = (id: string) => {
-    setCheckedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  };
-
-  const handleToggleAll = () => {
-    const ids = currentItems.map((x) => x.id);
-    const allSelected = ids.every((id) => checkedIds.includes(id));
-    if (allSelected) {
-      setCheckedIds((prev) => prev.filter((id) => !ids.includes(id)));
-    } else {
-      setCheckedIds((prev) => [...new Set([...prev, ...ids])]);
-    }
-  };
-
-  const handleBulkStatusChange = (status: GorutMunfiq['status']) => {
-    setItems((prev) => prev.map((x) => checkedIds.includes(x.id) ? { ...x, status } : x));
-    setCheckedIds([]);
-    triggerNotice(`Status ${checkedIds.length} Munfiq berhasil diperbarui`);
-  };
-
-  const handleBulkExport = () => {
-    triggerNotice(`Mengekspor ${checkedIds.length} data Munfiq terpilih`);
-    setCheckedIds([]);
-  };
 
   // Form submit (create or update)
   const handleSaveMunfiq = (draft: MunfiqDraft) => {
@@ -152,7 +120,6 @@ export function MunfiqShell() {
       if (detailItem?.id === deleteItem.id) {
         setDetailItem(null);
       }
-      setCheckedIds((prev) => prev.filter((id) => id !== deleteItem.id));
       triggerNotice('Data Munfiq berhasil dihapus');
       setDeleteItem(null);
     }
@@ -160,46 +127,37 @@ export function MunfiqShell() {
 
   return (
     <>
-      <GorutAppShell title="Munfiq" target={target} loading={loading}>
+      <GorutAppShell title="Munfiq" loading={loading}>
         {loading ? <MunfiqSkeleton /> : (
           <div className="gorut-munfiq-workspace">
               <OperationPageHeader
                 eyebrow="Data master"
                 title="Direktori Munfiq"
-                description="Kelola identitas, wilayah, penanggung jawab, dan status penghimpunan dalam satu ruang kerja."
+                description="Kelola data Munfiq, penugasan PLPK, dan informasi penghimpunan."
                 action={<MunfiqToolbar onCreate={() => { setFormItem(null); setFormOpen(true); }} onNotice={triggerNotice} />}
               />
               <MunfiqSummary items={items} />
 
-              <FilterShell
-                activeCount={activeFilterCount}
-                resultSummary={formatResultSummary(filteredItems.length, items.length, 'Munfiq')}
+              <MunfiqFilterBar
+                filters={filters}
+                items={items}
+                resultCount={filteredItems.length}
+                onChange={(next) => { setFilters(next); setPage(1); }}
                 onReset={resetFilters}
-              >
-                <MunfiqFilterBar filters={filters} onChange={(next) => { setFilters(next); setPage(1); }} />
-              </FilterShell>
-
-              {/* Bulk Actions Panel */}
-              {checkedIds.length > 0 ? (
-                <div className="gorut-munfiq-bulk" role="toolbar" aria-label="Aksi massal">
-                  <span><strong>{checkedIds.length}</strong> Munfiq dipilih</span>
-                  <div className="gorut-munfiq-bulk-actions">
-                    <button type="button" className="gorut-button gorut-secondary-button" onClick={() => handleBulkStatusChange('active')}>Set Aktif</button>
-                    <button type="button" className="gorut-button gorut-secondary-button" onClick={() => handleBulkStatusChange('inactive')}>Set Nonaktif</button>
-                    <button type="button" className="gorut-button gorut-secondary-button" onClick={handleBulkExport}>Ekspor</button>
-                    <button type="button" className="gorut-button gorut-secondary-button" onClick={() => setCheckedIds([])}>Batal</button>
-                  </div>
-                </div>
-              ) : null}
+              />
 
               {filteredItems.length === 0 ? (
                 <MunfiqEmptyState onReset={resetFilters} />
               ) : (
                 <section className="gorut-munfiq-results">
+                  <header className="gorut-munfiq-table-toolbar">
+                    <div><h2>Daftar Munfiq</h2><p>Menampilkan {filteredItems.length} Munfiq</p></div>
+                    <label className="gorut-pagination-size"><span>Jumlah baris</span><select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label>
+                  </header>
                   <DataSurface
                     label="Daftar Munfiq"
-                    desktop={<MunfiqTable items={currentItems} checkedIds={checkedIds} onToggle={handleToggleRow} onToggleAll={handleToggleAll} onDetail={setDetailItem} onEdit={(item) => { setFormItem(item); setFormOpen(true); }} onDelete={setDeleteItem} onNotice={triggerNotice} />}
-                    mobile={<MunfiqMobileList items={currentItems} onDetail={setDetailItem} onEdit={(item) => { setFormItem(item); setFormOpen(true); }} onDelete={setDeleteItem} onNotice={triggerNotice} />}
+                    desktop={<MunfiqTable items={currentItems} onDetail={setDetailItem} />}
+                    mobile={<MunfiqMobileList items={currentItems} onDetail={setDetailItem} />}
                   />
 
                   {/* Pagination footer */}
@@ -209,15 +167,6 @@ export function MunfiqShell() {
                     </div>
 
                     <div className="gorut-pagination-controls">
-                      <label className="gorut-pagination-size">
-                        <span>Baris per halaman:</span>
-                        <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                        </select>
-                      </label>
-
                       <div className="gorut-pagination-buttons">
                         <button type="button" disabled={page === 1} onClick={() => setPage(1)}>Awal</button>
                         <button type="button" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Sebelumnya</button>
@@ -240,6 +189,7 @@ export function MunfiqShell() {
             munfiq={detailItem}
             onClose={() => setDetailItem(null)}
             onEdit={() => { if (detailItem) { setFormItem(detailItem); setFormOpen(true); } }}
+            onDelete={() => { if (detailItem) { setDeleteItem(detailItem); setDetailItem(null); } }}
             onNotice={triggerNotice}
           />
 

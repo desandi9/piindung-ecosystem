@@ -3,19 +3,23 @@
 import { AlertCircle, ArrowLeft, Lock } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { canonicalRupiahInput } from '@/features/gorut-v2/collection-api-client';
+import { entryHasRecordAction } from '@/features/gorut-v2/collection-api-view-model';
 import type { CollectionBatch, CollectionEntry, CollectionVisitOutcome } from '@/features/gorut-v2/types';
 import { formatPhoneNumber, formatRupiah } from '@/features/gorut-v2/formatters';
 import {
-  calculatePlpkFee,
   collectionVisitOutcomes,
   collectionVisitStatusLabels,
-  isEligibleForPlpkFee,
   isEntryEditable,
-  normalizeAmount,
-  parseAmount,
   quickAmountOptions,
   requiresNotes,
 } from '@/features/gorut-v2/pengambilan-options';
+
+export type PlpkEntryDraft = {
+  visitStatus: CollectionVisitOutcome;
+  amount: string;
+  note: string | null;
+};
 
 /**
  * Form hasil kunjungan satu Munfiq.
@@ -30,20 +34,22 @@ export function PlpkVisitForm({
   entry,
   onClose,
   onSave,
+  pending = false,
 }: {
   batch: CollectionBatch;
   entry: CollectionEntry;
   onClose: () => void;
-  onSave: (entry: CollectionEntry, mode: 'save' | 'next') => void;
+  onSave: (draft: PlpkEntryDraft, mode: 'save' | 'next') => string | null | Promise<string | null>;
+  pending?: boolean;
 }) {
-  const editable = isEntryEditable(batch, entry.id);
+  const editable = entryHasRecordAction(batch, entry.id) ?? isEntryEditable(batch, entry.id);
   /** Status pending tidak boleh jadi hasil akhir, jadi form dibuka dengan Terjemput. */
   const [status, setStatus] = useState<CollectionVisitOutcome>(entry.visitStatus === 'pending' ? 'collected' : entry.visitStatus);
   const [amount, setAmount] = useState(entry.visitStatus === 'collected' && entry.amount ? String(entry.amount) : '');
   const [notes, setNotes] = useState(entry.notes ?? '');
   const [error, setError] = useState('');
 
-  const parsedAmount = parseAmount(amount);
+  const canonicalAmount = canonicalRupiahInput(amount);
   const needsNotes = requiresNotes(status);
   const hasMorePending = useMemo(
     () => batch.entries.some((item) => item.id !== entry.id && item.visitStatus === 'pending'),
@@ -57,13 +63,13 @@ export function PlpkVisitForm({
     if (next !== 'collected') setAmount('');
   };
 
-  const build = (): CollectionEntry | null => {
+  const build = (): PlpkEntryDraft | null => {
     if (status === 'collected') {
-      if (parsedAmount === null) {
+      if (canonicalAmount === null) {
         setError('Nominal belum diisi. Isi nominal atau ubah hasil kunjungan.');
         return null;
       }
-      if (parsedAmount <= 0) {
+      if (canonicalAmount === '0.00') {
         setError('Nominal harus lebih dari Rp0 untuk status Terjemput.');
         return null;
       }
@@ -73,21 +79,19 @@ export function PlpkVisitForm({
       return null;
     }
 
-    const finalAmount = normalizeAmount(parsedAmount ?? 0, status);
     return {
-      ...entry,
-      amount: finalAmount,
       visitStatus: status,
-      collectedAt: new Date().toISOString().slice(0, 10),
-      eligibleForPlpkFee: isEligibleForPlpkFee(finalAmount, status),
-      plpkFee: calculatePlpkFee(finalAmount, status),
-      notes: notes.trim() || undefined,
+      amount: status === 'collected' ? canonicalAmount! : '0.00',
+      note: notes.trim() || null,
     };
   };
 
-  const submit = (mode: 'save' | 'next') => {
+  const submit = async (mode: 'save' | 'next') => {
+    if (pending) return;
     const next = build();
-    if (next) onSave(next, mode);
+    if (!next) return;
+    const saveError = await onSave(next, mode);
+    if (saveError) setError(saveError);
   };
 
   return (
@@ -223,11 +227,11 @@ export function PlpkVisitForm({
 
       {editable ? (
         <div className="plpk-footer">
-          <button type="button" className="plpk-btn plpk-btn-primary plpk-btn-block" onClick={() => submit('save')}>
-            Simpan Hasil
+          <button type="button" className="plpk-btn plpk-btn-primary plpk-btn-block" onClick={() => void submit('save')} disabled={pending} aria-busy={pending}>
+            {pending ? 'Menyimpan…' : 'Simpan Hasil'}
           </button>
           {hasMorePending ? (
-            <button type="button" className="plpk-btn plpk-btn-quiet plpk-btn-block" onClick={() => submit('next')}>
+            <button type="button" className="plpk-btn plpk-btn-quiet plpk-btn-block" onClick={() => void submit('next')} disabled={pending}>
               Simpan dan Lanjut Munfiq Berikutnya
             </button>
           ) : null}

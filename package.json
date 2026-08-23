@@ -7,6 +7,7 @@
     "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
+    "uat:seed:gorut-v2": "node scripts/seed-gorut-v2-uat.mjs",
     "uploads:cleanup": "node scripts/cleanup-orphan-uploads.mjs",
     "uploads:cleanup:delete": "node scripts/cleanup-orphan-uploads.mjs --delete"
   },

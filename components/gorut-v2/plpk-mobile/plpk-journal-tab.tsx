@@ -5,6 +5,7 @@ import { ChevronRight, Filter } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
+import { collectionBlockingReasonLabel, collectionHasAction, collectionMoneyLabel, isServerCollectionBatch } from '@/features/gorut-v2/collection-api-view-model';
 import { buildPlpkJournal } from '@/features/gorut-v2/plpk-mobile-content';
 import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 import type { CollectionBatch } from '@/features/gorut-v2/types';
@@ -34,6 +35,7 @@ export function PlpkJournalTab({ batches, onFixCorrection, onOpenF009 }: { batch
         <div className="plpk-journal-list">
           {visible.map((item) => {
             const expanded = item.batchId === expandedId;
+            const source = batches.find((batch) => batch.id === item.batchId);
             return (
               <article key={item.batchId} className="plpk-journal-card">
                 <div className="plpk-journal-head">
@@ -42,7 +44,7 @@ export function PlpkJournalTab({ batches, onFixCorrection, onOpenF009 }: { batch
                 </div>
                 <div className="plpk-journal-amount">
                   <span><MobileServiceIcon icon={Coins01Icon} label="Jumlah kotor" size={19} /></span>
-                  <div><small>Jumlah kotor</small><strong>{formatRupiah(item.grossAmount)}</strong></div>
+                  <div><small>Jumlah kotor</small><strong>{source ? collectionMoneyLabel(source, 'grossAmount') : formatRupiah(item.grossAmount)}</strong></div>
                 </div>
                 <div className="plpk-journal-stats">
                   <div><MobileServiceIcon icon={UserGroupIcon} label="Munfiq aktif" size={18} /><small>Aktif</small><strong>{formatNumber(item.activeMunfiq)}</strong></div>
@@ -51,11 +53,14 @@ export function PlpkJournalTab({ batches, onFixCorrection, onOpenF009 }: { batch
                 </div>
                 {expanded ? (
                   <dl className="plpk-journal-details">
-                    <div><dt>Jumlah kotor</dt><dd>{formatRupiah(item.grossAmount)}</dd></div>
-                    <div><dt>Bisyaroh PLPK</dt><dd>{formatRupiah(item.plpkFee)}</dd></div>
-                    <div className="is-total"><dt>Jumlah bersih</dt><dd>{formatRupiah(item.netAmount)}</dd></div>
+                    <div><dt>Jumlah kotor</dt><dd>{source ? collectionMoneyLabel(source, 'grossAmount') : formatRupiah(item.grossAmount)}</dd></div>
+                    <div><dt>Bisyaroh PLPK</dt><dd>{source ? collectionMoneyLabel(source, 'totalPlpkFee') : formatRupiah(item.plpkFee)}</dd></div>
+                    <div className="is-total"><dt>Jumlah bersih</dt><dd>{source ? collectionMoneyLabel(source, 'netAmount') : formatRupiah(item.netAmount)}</dd></div>
+                    {source && isServerCollectionBatch(source) ? <div><dt>Revisi server</dt><dd>{source.canonical.identity.revision} · versi {source.canonical.version}</dd></div> : null}
                   </dl>
                 ) : null}
+                {source?.status === 'needs-correction' ? <div className="plpk-callout"><span><strong>Koreksi Kordes</strong>{source.kordesNotes ?? 'Perbaiki hanya Munfiq yang ditandai server.'}</span></div> : null}
+                {source && isServerCollectionBatch(source) && source.canonical.blockingReasons.length ? <p className="plpk-hint">{source.canonical.blockingReasons.map(collectionBlockingReasonLabel).join(' ')}</p> : null}
                 <button type="button" className="plpk-card-action" onClick={() => setExpandedId(expanded ? null : item.batchId)}>
                   <MobileServiceIcon icon={Notebook01Icon} label="Ringkasan jurnal" size={18} />
                   {expanded ? 'Tutup Ringkasan' : 'Lihat Ringkasan'}
@@ -68,7 +73,7 @@ export function PlpkJournalTab({ batches, onFixCorrection, onOpenF009 }: { batch
                     <ChevronRight size={18} aria-hidden="true" />
                   </button>
                 ) : null}
-                {item.status === 'needs-correction' ? (
+                {item.status === 'needs-correction' && (source ? collectionHasAction(source, 'RECORD_ENTRY') !== false : true) ? (
                   <button type="button" className="plpk-btn plpk-btn-secondary" onClick={() => onFixCorrection(item.batchId)}>Perbaiki Data</button>
                 ) : null}
               </article>

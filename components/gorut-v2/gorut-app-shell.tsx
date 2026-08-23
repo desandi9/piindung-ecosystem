@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import {
   bottomNavigation,
@@ -9,6 +11,7 @@ import {
   mobileNavigation as defaultMobileNavigation,
   operationalNavigation,
 } from '@/features/gorut-v2/navigation';
+import { GORUT_ENTRY_SOURCE_KEY, GORUT_ENTRY_SOURCE_PIINDUNG, gorutPageVariants, type GorutEntranceState } from '@/features/gorut-v2/motion';
 import type { GorutNavigationItem } from '@/features/gorut-v2/types';
 
 import { GorutHeader } from './gorut-header';
@@ -25,7 +28,7 @@ export type GorutShellTarget = {
 
 type GorutAppShellProps = {
   title: string;
-  target: GorutShellTarget;
+  target?: GorutShellTarget;
   children: ReactNode;
   loading?: boolean;
   mobileNavigation?: GorutNavigationItem[];
@@ -34,15 +37,31 @@ type GorutAppShellProps = {
 
 export function GorutAppShell({
   title,
-  target,
+  target = { current: '', max: '', percentage: 0 },
   children,
   loading = false,
   mobileNavigation = defaultMobileNavigation,
   onUnavailable,
 }: GorutAppShellProps) {
   const { resolvedTheme } = useGorutTheme();
+  const pathname = usePathname();
+  const initialPath = useRef(pathname);
+  const entranceResolved = useRef(false);
+  const reduced = useReducedMotion();
+  const pageVariants = useMemo(() => gorutPageVariants(Boolean(reduced)), [reduced]);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [notice, setNotice] = useState('');
+  const [initialEntrance, setInitialEntrance] = useState<GorutEntranceState>('hidden');
+
+  useEffect(() => {
+    if (entranceResolved.current) return;
+    entranceResolved.current = true;
+    const source = window.sessionStorage.getItem(GORUT_ENTRY_SOURCE_KEY);
+    window.sessionStorage.removeItem(GORUT_ENTRY_SOURCE_KEY);
+    setInitialEntrance(source === GORUT_ENTRY_SOURCE_PIINDUNG ? 'portal' : 'internal');
+  }, []);
+
+  const entranceState: GorutEntranceState = pathname === initialPath.current ? initialEntrance : 'internal';
 
   const handleUnavailable = (label: string) => {
     if (onUnavailable) {
@@ -58,12 +77,12 @@ export function GorutAppShell({
     <div className={`gorut-viewport gorut-theme-${resolvedTheme}`}>
       <a className="gorut-skip-link" href="#gorut-main-content">Lewati ke konten utama</a>
       <div className="gorut-app">
-        <GorutSidebar target={target} />
+        <GorutSidebar target={target} entranceState={entranceState} />
         <div className="gorut-workspace">
-          <GorutHeader title={title} onMenuOpen={() => setMobileMenu(true)} />
-          <main id="gorut-main-content" className="gorut-main" aria-busy={loading || undefined}>
+          <GorutHeader title={title} entranceState={entranceState} onMenuOpen={() => setMobileMenu(true)} />
+          <motion.main key={pathname} id="gorut-main-content" className="gorut-main" aria-busy={loading || undefined} initial="hidden" animate={entranceState} variants={pageVariants}>
             {children}
-          </main>
+          </motion.main>
         </div>
       </div>
       <MobileSidebar

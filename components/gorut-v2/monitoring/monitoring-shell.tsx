@@ -1,24 +1,20 @@
 'use client';
 
 import {
-  Activity,
-  AlertTriangle,
   ArrowRight,
-  Banknote,
   CalendarDays,
   CheckCircle2,
-  Clock3,
   FileText,
-  HandCoins,
   Info,
   ListFilter,
   Map,
   MapPinned,
+  RotateCcw,
   Rows3,
   SearchX,
-  UsersRound,
-  Wallet,
 } from 'lucide-react';
+import { Alert02Icon, BanknoteIcon, CheckmarkCircle02Icon, Clock01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import Link from 'next/link';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 
@@ -44,6 +40,8 @@ import { GorutHeader } from '../gorut-header';
 import { GorutSidebar } from '../gorut-sidebar';
 import { MobileBottomNav } from '../mobile-bottom-nav';
 import { MobileSidebar } from '../mobile-sidebar';
+import { OperationPageHeader } from '../operations/operation-page-header';
+import { SummaryBand } from '../operations/summary-band';
 
 const target = { current: 'Rp1,42 M', max: 'Rp2 M', percentage: 71 };
 
@@ -129,96 +127,77 @@ export function MonitoringShell() {
           <GorutHeader title="Monitoring" onMenuOpen={() => setMobileMenu(true)} />
 
           <main className="gorut-main gorut-collect-main gorut-monitoring-main">
-            <section className="gorut-collect-heading" aria-label="Judul halaman">
-              <div>
-                <p>OPERASIONAL</p>
-                <h1>Monitoring Penghimpunan</h1>
-                <span>Control room operasional dari batch collection, status proses, dan rekap wilayah yang tersedia di frontend.</span>
-              </div>
-            </section>
+            <div className="gorut-munfiq-workspace gorut-monitoring-workspace">
+              <OperationPageHeader
+                eyebrow="Operasional"
+                title="Monitoring Penghimpunan"
+                description="Control room operasional untuk memantau batch collection, status proses, dan rekap per wilayah."
+              />
 
-            <section className={`pjm-filters gorut-monitoring-filters${filtersActive ? ' is-active' : ''}`} aria-label="Filter monitoring">
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="mon-period"><CalendarDays size={14} aria-hidden="true" />Periode</label>
-                <select id="mon-period" value={filters.period} onChange={(event) => changeFilter('period', event.target.value)}>
-                  <option value="all">Semua Periode</option>
-                  {options.periods.map((period) => <option key={period} value={period}>{formatPeriodLabel(period)}</option>)}
-                </select>
-              </div>
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="mon-kecamatan"><MapPinned size={14} aria-hidden="true" />Kecamatan/UPZIS</label>
-                <select id="mon-kecamatan" value={filters.kecamatan} onChange={(event) => changeFilter('kecamatan', event.target.value)}>
-                  <option value="all">Semua Kecamatan</option>
-                  {options.kecamatan.map((item) => <option key={item} value={item}>{item}</option>)}
-                </select>
-              </div>
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="mon-village"><Map size={14} aria-hidden="true" />Desa/Ranting</label>
-                <select id="mon-village" value={filters.village} onChange={(event) => changeFilter('village', event.target.value)}>
-                  <option value="all">Semua Desa</option>
-                  {options.villages.map((item) => <option key={item} value={item}>{item}</option>)}
-                </select>
-              </div>
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="mon-status"><ListFilter size={14} aria-hidden="true" />Status Proses</label>
-                <select id="mon-status" value={filters.status} onChange={(event) => changeFilter('status', event.target.value)}>
-                  <option value="all">Semua Status</option>
-                  {options.statuses.map((status) => (
-                    <option key={status} value={status}>{collectionStatusLabels[status as CollectionStatus]}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="gorut-monitoring-filter-footer">
-                <span>{filtersActive ? `${formatNumber(filtered.length)} batch cocok dengan filter aktif` : 'Filter menampilkan seluruh batch collection yang tersedia.'}</span>
-                <button type="button" className="gorut-collect-reset" onClick={resetFilters} disabled={!filtersActive}>Reset Filter</button>
-              </div>
-            </section>
+              <SummaryBand
+                label="Ringkasan penghimpunan"
+                metrics={[
+                  { id: 'gross', label: 'Total Kotor', value: formatRupiah(summary.grossAmount), detail: 'Jumlah bruto batch terfilter', icon: <HugeiconsIcon icon={BanknoteIcon} size={18} strokeWidth={1.8} /> },
+                  { id: 'fee', label: 'Bisyaroh PLPK', value: formatRupiah(summary.totalPlpkFee), detail: 'Bisyaroh PLPK terhitung', icon: <HugeiconsIcon icon={BanknoteIcon} size={18} strokeWidth={1.8} /> },
+                  { id: 'net', label: 'Jumlah Bersih', value: formatRupiah(summary.netAmount), detail: 'Kotor dikurangi bisyaroh', tone: 'positive', icon: <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} strokeWidth={1.8} /> },
+                  { id: 'batch', label: 'Total Batch / PLPK', value: `${formatNumber(summary.batchCount)} / ${formatNumber(summary.plpkCount)}`, detail: 'Batch dan PLPK unik', icon: <HugeiconsIcon icon={UserGroupIcon} size={18} strokeWidth={1.8} /> },
+                ]}
+              />
 
-            <section className="pjm-summary gorut-monitoring-summary" aria-label="Ringkasan utama">
-              <article>
-                <div className="pjm-summary-heading"><span><HandCoins size={15} aria-hidden="true" /></span><p>Total Kotor</p></div>
-                <strong>{formatRupiah(summary.grossAmount)}</strong>
-                <small>Jumlah bruto batch terfilter</small>
-              </article>
-              <article>
-                <div className="pjm-summary-heading"><span><Wallet size={15} aria-hidden="true" /></span><p>Total Bisyaroh</p></div>
-                <strong>{formatRupiah(summary.totalPlpkFee)}</strong>
-                <small>Upah PLPK terhitung</small>
-              </article>
-              <article className="is-highlighted">
-                <div className="pjm-summary-heading"><span><Banknote size={15} aria-hidden="true" /></span><p>Jumlah Bersih</p></div>
-                <strong>{formatRupiah(summary.netAmount)}</strong>
-                <small>Kotor − bisyaroh</small>
-              </article>
-              <article>
-                <div className="pjm-summary-heading"><span><UsersRound size={15} aria-hidden="true" /></span><p>Total Batch / PLPK</p></div>
-                <strong>{formatNumber(summary.batchCount)} / {formatNumber(summary.plpkCount)}</strong>
-                <small>Batch dan PLPK unik</small>
-              </article>
-            </section>
+              <section className={`gorut-operation-filters gorut-munfiq-filters gorut-monitoring-filters${filtersActive ? ' is-active' : ''}`} aria-labelledby="gorut-monitoring-filter-title">
+                <header>
+                  <div><h2 id="gorut-monitoring-filter-title">Filter Data</h2><p>Persempit monitoring berdasarkan periode, wilayah, dan status proses.</p></div>
+                  <button type="button" onClick={resetFilters} disabled={!filtersActive}><RotateCcw size={14} aria-hidden="true" />Reset</button>
+                </header>
+                <div className="gorut-munfiq-filter-card">
+                  <div className="gorut-munfiq-selects gorut-monitoring-filter-grid">
+                    <div className="pjm-filter">
+                      <label className="pjm-filter-label" htmlFor="mon-period"><CalendarDays size={14} aria-hidden="true" />Periode</label>
+                      <select id="mon-period" value={filters.period} onChange={(event) => changeFilter('period', event.target.value)}>
+                        <option value="all">Semua Periode</option>
+                        {options.periods.map((period) => <option key={period} value={period}>{formatPeriodLabel(period)}</option>)}
+                      </select>
+                    </div>
+                    <div className="pjm-filter">
+                      <label className="pjm-filter-label" htmlFor="mon-kecamatan"><MapPinned size={14} aria-hidden="true" />Kecamatan / UPZIS</label>
+                      <select id="mon-kecamatan" value={filters.kecamatan} onChange={(event) => changeFilter('kecamatan', event.target.value)}>
+                        <option value="all">Semua Kecamatan / UPZIS</option>
+                        {options.kecamatan.map((item) => <option key={item} value={item}>{item}</option>)}
+                      </select>
+                    </div>
+                    <div className="pjm-filter">
+                      <label className="pjm-filter-label" htmlFor="mon-village"><Map size={14} aria-hidden="true" />Desa / Ranting</label>
+                      <select id="mon-village" value={filters.village} onChange={(event) => changeFilter('village', event.target.value)}>
+                        <option value="all">Semua Desa / Ranting</option>
+                        {options.villages.map((item) => <option key={item} value={item}>{item}</option>)}
+                      </select>
+                    </div>
+                    <div className="pjm-filter">
+                      <label className="pjm-filter-label" htmlFor="mon-status"><ListFilter size={14} aria-hidden="true" />Status Proses</label>
+                      <select id="mon-status" value={filters.status} onChange={(event) => changeFilter('status', event.target.value)}>
+                        <option value="all">Semua Status</option>
+                        {options.statuses.map((status) => (
+                          <option key={status} value={status}>{collectionStatusLabels[status as CollectionStatus]}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <footer>
+                  <p aria-live="polite">Menampilkan <strong>{formatNumber(filtered.length)}</strong> batch sesuai filter</p>
+                  <span>{filtersActive ? 'Filter aktif diterapkan' : 'Belum ada filter aktif'}</span>
+                </footer>
+              </section>
 
-            <section className="pjm-summary gorut-monitoring-process" aria-label="Metrik proses">
-              <article>
-                <div className="pjm-summary-heading"><span><Clock3 size={15} aria-hidden="true" /></span><p>Belum Lengkap</p></div>
-                <strong>{formatNumber(summary.incomplete)}</strong>
-                <small>Draft–penjemputan selesai</small>
-              </article>
-              <article>
-                <div className="pjm-summary-heading"><span><Activity size={15} aria-hidden="true" /></span><p>Menunggu Kordes</p></div>
-                <strong>{formatNumber(summary.waitingKordes)}</strong>
-                <small>Status waiting-kordes-verification</small>
-              </article>
-              <article>
-                <div className="pjm-summary-heading"><span><AlertTriangle size={15} aria-hidden="true" /></span><p>Perlu Koreksi</p></div>
-                <strong>{formatNumber(summary.needsCorrection)}</strong>
-                <small>Status needs-correction</small>
-              </article>
-              <article className="is-highlighted">
-                <div className="pjm-summary-heading"><span><CheckCircle2 size={15} aria-hidden="true" /></span><p>Terverifikasi Kordes</p></div>
-                <strong>{formatNumber(summary.verifiedByKordes)}</strong>
-                <small>Status verified-by-kordes</small>
-              </article>
-            </section>
+              <SummaryBand
+                label="Ringkasan proses"
+                metrics={[
+                  { id: 'incomplete', label: 'Belum Lengkap', value: formatNumber(summary.incomplete), detail: 'Draft–penjemputan selesai', icon: <HugeiconsIcon icon={Clock01Icon} size={18} strokeWidth={1.8} /> },
+                  { id: 'waiting', label: 'Menunggu Kordes', value: formatNumber(summary.waitingKordes), detail: 'Menunggu verifikasi Kordes', tone: 'warning', icon: <HugeiconsIcon icon={Clock01Icon} size={18} strokeWidth={1.8} /> },
+                  { id: 'correction', label: 'Perlu Koreksi', value: formatNumber(summary.needsCorrection), detail: 'Memerlukan tindak lanjut', tone: 'warning', icon: <HugeiconsIcon icon={Alert02Icon} size={18} strokeWidth={1.8} /> },
+                  { id: 'verified', label: 'Terverifikasi Kordes', value: formatNumber(summary.verifiedByKordes), detail: 'Verifikasi Kordes selesai', tone: 'positive', icon: <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} strokeWidth={1.8} /> },
+                ]}
+              />
 
             <p className="gorut-collect-readonly-note gorut-monitoring-note">
               <Info size={14} aria-hidden="true" />
@@ -319,7 +298,7 @@ export function MonitoringShell() {
                           <th>PLPK</th>
                           <th>Batch</th>
                           <th className="is-amount">Jumlah Kotor</th>
-                          <th className="is-amount">Bisyaroh</th>
+                          <th className="is-amount">Bisyaroh PLPK</th>
                           <th className="is-amount">Jumlah Bersih</th>
                           <th>Tahap Proses</th>
                           <th className="is-action">Aksi</th>
@@ -362,7 +341,7 @@ export function MonitoringShell() {
                           <div><dt>PLPK</dt><dd>{formatNumber(row.plpkCount)}</dd></div>
                           <div><dt>Batch</dt><dd>{formatNumber(row.batchCount)}</dd></div>
                           <div><dt>Kotor</dt><dd>{formatRupiah(row.grossAmount)}</dd></div>
-                          <div><dt>Bisyaroh</dt><dd>{formatRupiah(row.totalPlpkFee)}</dd></div>
+                          <div><dt>Bisyaroh PLPK</dt><dd>{formatRupiah(row.totalPlpkFee)}</dd></div>
                           <div className="is-wide"><dt>Bersih</dt><dd>{formatRupiah(row.netAmount)}</dd></div>
                         </dl>
                         <footer>
@@ -435,6 +414,7 @@ export function MonitoringShell() {
                   ))}
                 </div>
               </section>
+            </div>
             </div>
           </main>
         </div>

@@ -23,6 +23,7 @@ import { GorutSidebar } from '../gorut-sidebar';
 import { MobileSidebar } from '../mobile-sidebar';
 import { MobileBottomNav } from '../mobile-bottom-nav';
 import { GorutHeader } from '../gorut-header';
+import { PenghimpunanPageHeader } from '../penghimpunan-page-header';
 import { PenghimpunanTabs } from '../penghimpunan-tabs';
 
 import { PenjemputanFilterBar } from './penjemputan-filter-bar';
@@ -109,29 +110,26 @@ export function PengambilanShell() {
     <div className="gorut-viewport">
       {loading ? (
         <div className="gorut-app">
-          <GorutSidebar target={target} />
+          <GorutSidebar />
           <div className="gorut-workspace">
             <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
-            <main className="gorut-main"><PengambilanSkeleton /></main>
+            <main className="gorut-main gorut-collection-workspace"><PengambilanSkeleton /></main>
           </div>
         </div>
       ) : (
         <div className="gorut-app">
-          <GorutSidebar target={target} />
+          <GorutSidebar />
 
           <div className="gorut-workspace">
             <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
 
-            <main className="gorut-main gorut-collect-main">
-              <PenghimpunanTabs />
+            <main className="gorut-main gorut-collect-main gorut-collection-workspace">
+              <PenghimpunanPageHeader
+                title="Monitoring Penjemputan PLPK"
+                description="Pantau hasil penjemputan setiap Munfiq berdasarkan UPZIS, ranting, PLPK, dan periode."
+              />
 
-              <section className="gorut-collect-heading" aria-label="Judul halaman">
-                <div>
-                  <p>PENGHIMPUNAN</p>
-                  <h1>Monitoring Penjemputan PLPK</h1>
-                  <span>Pantau hasil penjemputan setiap Munfiq berdasarkan UPZIS, ranting, PLPK, dan periode.</span>
-                </div>
-              </section>
+              <PenghimpunanTabs />
 
               <PenjemputanFilterBar filters={filters} options={options} onChange={changeFilters} />
 
@@ -144,16 +142,19 @@ export function PengambilanShell() {
 
               <section className="pjm-panel">
                 <header className="pjm-toolbar">
-                  <label className="pjm-search">
-                    <Search size={16} aria-hidden="true" />
-                    <input
-                      type="search"
-                      value={query}
-                      onChange={(event) => { setQuery(event.target.value); setPage(1); }}
-                      placeholder="Cari Munfiq, kode kaleng, atau alamat"
-                      aria-label="Cari Munfiq, kode kaleng, atau alamat"
-                    />
-                  </label>
+                  <div className="pjm-toolbar-primary">
+                    <div className="pjm-toolbar-heading"><h2>Daftar penjemputan Munfiq</h2><p>Menampilkan {formatNumber(visibleRows.length)} Munfiq</p></div>
+                    <label className="pjm-search">
+                      <Search size={16} aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={query}
+                        onChange={(event) => { setQuery(event.target.value); setPage(1); }}
+                        placeholder="Cari Munfiq, kode kaleng, atau alamat"
+                        aria-label="Cari Munfiq, kode kaleng, atau alamat"
+                      />
+                    </label>
+                  </div>
 
                   <div className="pjm-toolbar-actions">
                     <label className="pjm-page-size">

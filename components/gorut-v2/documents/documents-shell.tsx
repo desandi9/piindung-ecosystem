@@ -1,25 +1,22 @@
 'use client';
 
 import {
-  CalendarDays,
   Download,
   Eye,
   FileText,
   FileWarning,
   Info,
   ListFilter,
-  Map,
-  MapPinned,
-  Printer,
+  RotateCcw,
   Rows3,
   Search,
   SearchX,
-  CheckCircle2,
-  Hourglass,
-  Ban,
+  X,
 } from 'lucide-react';
+import { Alert02Icon, CheckmarkCircle02Icon, Clock01Icon, FileValidationIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import Link from 'next/link';
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { KordesDocumentViewer } from '@/components/gorut-v2/documents/kordes-document-viewer';
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
@@ -46,6 +43,8 @@ import { GorutHeader } from '../gorut-header';
 import { GorutSidebar } from '../gorut-sidebar';
 import { MobileBottomNav } from '../mobile-bottom-nav';
 import { MobileSidebar } from '../mobile-sidebar';
+import { OperationPageHeader } from '../operations/operation-page-header';
+import { SummaryBand } from '../operations/summary-band';
 
 const target = { current: 'Rp1,42 M', max: 'Rp2 M', percentage: 71 };
 
@@ -97,6 +96,15 @@ export function DocumentsShell() {
     || filters.readiness !== 'all'
     || Boolean(filters.query.trim());
 
+  const activeFilterChips = [
+    filters.period !== 'all' ? { key: 'period', label: formatPeriodLabel(filters.period) } : null,
+    filters.kind !== 'all' ? { key: 'kind', label: documentKindLabels[filters.kind as DocumentKind] } : null,
+    filters.kecamatan !== 'all' ? { key: 'kecamatan', label: filters.kecamatan } : null,
+    filters.village !== 'all' ? { key: 'village', label: filters.village } : null,
+    filters.readiness !== 'all' ? { key: 'readiness', label: documentReadinessLabels[filters.readiness as DocumentReadiness] } : null,
+    filters.query.trim() ? { key: 'query', label: `Pencarian: ${filters.query.trim()}` } : null,
+  ].filter((chip): chip is { key: keyof DocumentCatalogFilters; label: string } => Boolean(chip));
+
   const resetFilters = () => {
     setFilters(initialDocumentFilters);
     setPage(1);
@@ -104,6 +112,11 @@ export function DocumentsShell() {
 
   const changeFilter = <K extends keyof DocumentCatalogFilters>(key: K, value: DocumentCatalogFilters[K]) => {
     setFilters((current) => ({ ...current, [key]: value }));
+    setPage(1);
+  };
+
+  const removeFilter = (key: keyof DocumentCatalogFilters) => {
+    setFilters((current) => ({ ...current, [key]: key === 'query' ? '' : 'all' }));
     setPage(1);
   };
 
@@ -145,81 +158,63 @@ export function DocumentsShell() {
           <GorutHeader title="Dokumen Administrasi" onMenuOpen={() => setMobileMenu(true)} />
 
           <main className="gorut-main gorut-collect-main gorut-documents-main">
-            <section className="gorut-collect-heading" aria-label="Judul halaman">
-              <div>
-                <p>OPERASIONAL</p>
-                <h1>Dokumen Administrasi</h1>
-                <span>Pusat dokumen operasional F.009, F.010, F.015, dan F.016 berdasarkan data penghimpunan yang tersedia.</span>
-              </div>
-            </section>
+            <div className="gorut-munfiq-workspace gorut-documents-workspace">
+              <OperationPageHeader
+                eyebrow="Operasional"
+                title="Dokumen Administrasi"
+                description="Pusat dokumen F.009, F.010, F.015, dan F.016 berdasarkan data penghimpunan yang tersedia."
+              />
 
-            <section className={`pjm-filters gorut-documents-filters${filtersActive ? ' is-active' : ''}`} aria-label="Filter dokumen administrasi">
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="doc-period"><CalendarDays size={14} aria-hidden="true" />Periode</label>
-                <select id="doc-period" value={filters.period} onChange={(event) => changeFilter('period', event.target.value)}>
-                  <option value="all">Semua Periode</option>
-                  {options.periods.map((period) => <option key={period} value={period}>{formatPeriodLabel(period)}</option>)}
-                </select>
-              </div>
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="doc-kind"><FileText size={14} aria-hidden="true" />Jenis Dokumen</label>
-                <select id="doc-kind" value={filters.kind} onChange={(event) => changeFilter('kind', event.target.value)}>
-                  <option value="all">Semua Jenis</option>
-                  {(Object.keys(documentKindLabels) as DocumentKind[]).map((kind) => (
-                    <option key={kind} value={kind}>{documentKindLabels[kind]}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="doc-kecamatan"><MapPinned size={14} aria-hidden="true" />Kecamatan/UPZIS</label>
-                <select id="doc-kecamatan" value={filters.kecamatan} onChange={(event) => changeFilter('kecamatan', event.target.value)}>
-                  <option value="all">Semua Kecamatan</option>
-                  {options.kecamatan.map((item) => <option key={item} value={item}>{item}</option>)}
-                </select>
-              </div>
-              <div className="pjm-filter">
-                <label className="pjm-filter-label" htmlFor="doc-village"><Map size={14} aria-hidden="true" />Desa/Ranting</label>
-                <select id="doc-village" value={filters.village} onChange={(event) => changeFilter('village', event.target.value)}>
-                  <option value="all">Semua Desa</option>
-                  {options.villages.map((item) => <option key={item} value={item}>{item}</option>)}
-                </select>
-              </div>
-              <div className="gorut-documents-filter-footer">
-                <span>{filtersActive ? `${formatNumber(filtered.length)} dokumen cocok dengan filter aktif` : 'Filter menampilkan seluruh dokumen yang dapat diturunkan dari data existing.'}</span>
-                <button type="button" className="gorut-collect-reset" onClick={resetFilters} disabled={!filtersActive}>Reset Filter</button>
-              </div>
-            </section>
+              <SummaryBand
+                label="Ringkasan dokumen administrasi"
+                metrics={[
+                  { id: 'total', label: 'Total Dokumen', value: formatNumber(summary.total), detail: 'Dari filter aktif', icon: <HugeiconsIcon icon={FileValidationIcon} size={18} strokeWidth={1.8} /> },
+                  { id: 'ready', label: 'Siap Dilihat', value: formatNumber(summary.ready), detail: 'Preview HTML tersedia', tone: 'positive', icon: <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} strokeWidth={1.8} /> },
+                  { id: 'waiting', label: 'Menunggu Data', value: formatNumber(summary.waiting), detail: 'Belum memenuhi syarat', tone: 'warning', icon: <HugeiconsIcon icon={Clock01Icon} size={18} strokeWidth={1.8} /> },
+                  { id: 'unavailable', label: 'Belum Tersedia', value: formatNumber(summary.unavailable), detail: 'Termasuk F.016 scaffold', icon: <HugeiconsIcon icon={Alert02Icon} size={18} strokeWidth={1.8} /> },
+                ]}
+              />
 
-            <section className="pjm-summary gorut-documents-summary" aria-label="Ringkasan dokumen">
-              <article>
-                <div className="pjm-summary-heading"><span><FileText size={15} aria-hidden="true" /></span><p>Total Dokumen</p></div>
-                <strong>{formatNumber(summary.total)}</strong>
-                <small>Dari filter aktif</small>
-              </article>
-              <article className="is-highlighted">
-                <div className="pjm-summary-heading"><span><CheckCircle2 size={15} aria-hidden="true" /></span><p>Siap Dilihat</p></div>
-                <strong>{formatNumber(summary.ready)}</strong>
-                <small>Preview HTML tersedia</small>
-              </article>
-              <article>
-                <div className="pjm-summary-heading"><span><Hourglass size={15} aria-hidden="true" /></span><p>Menunggu Data</p></div>
-                <strong>{formatNumber(summary.waiting)}</strong>
-                <small>Belum memenuhi syarat</small>
-              </article>
-              <article>
-                <div className="pjm-summary-heading"><span><Ban size={15} aria-hidden="true" /></span><p>Belum Tersedia</p></div>
-                <strong>{formatNumber(summary.unavailable)}</strong>
-                <small>Termasuk F.016 scaffold</small>
-              </article>
-            </section>
+              <section className={`gorut-operation-filters gorut-munfiq-filters gorut-documents-filters${filtersActive ? ' is-active' : ''}`} aria-labelledby="gorut-documents-filter-title">
+                <header>
+                  <div><h2 id="gorut-documents-filter-title">Filter Data</h2><p>Persempit dokumen berdasarkan periode, jenis, dan wilayah.</p></div>
+                  <button type="button" onClick={resetFilters} disabled={!filtersActive}><RotateCcw size={14} aria-hidden="true" />Reset</button>
+                </header>
+                <div className="gorut-munfiq-filter-card">
+                  <div className="gorut-munfiq-selects gorut-documents-filter-grid">
+                    <DocumentFilterSelect label="Periode" value={filters.period} onChange={(value) => changeFilter('period', value)}>
+                      <option value="all">Semua Periode</option>
+                      {options.periods.map((period) => <option key={period} value={period}>{formatPeriodLabel(period)}</option>)}
+                    </DocumentFilterSelect>
+                    <DocumentFilterSelect label="Jenis Dokumen" value={filters.kind} onChange={(value) => changeFilter('kind', value)}>
+                      <option value="all">Semua Jenis</option>
+                      {(Object.keys(documentKindLabels) as DocumentKind[]).map((kind) => <option key={kind} value={kind}>{documentKindLabels[kind]}</option>)}
+                    </DocumentFilterSelect>
+                    <DocumentFilterSelect label="Kecamatan / UPZIS" value={filters.kecamatan} onChange={(value) => changeFilter('kecamatan', value)}>
+                      <option value="all">Semua Kecamatan / UPZIS</option>
+                      {options.kecamatan.map((item) => <option key={item} value={item}>{item}</option>)}
+                    </DocumentFilterSelect>
+                    <DocumentFilterSelect label="Desa / Ranting" value={filters.village} onChange={(value) => changeFilter('village', value)}>
+                      <option value="all">Semua Desa / Ranting</option>
+                      {options.villages.map((item) => <option key={item} value={item}>{item}</option>)}
+                    </DocumentFilterSelect>
+                  </div>
+                </div>
+                <footer>
+                  <p aria-live="polite">Menampilkan <strong>{formatNumber(filtered.length)}</strong> dari <strong>{formatNumber(catalog.length)}</strong> dokumen</p>
+                  {activeFilterChips.length ? (
+                    <div className="gorut-munfiq-active-filters"><span>Filter aktif:</span><div>{activeFilterChips.map((chip) => <button type="button" key={chip.key} onClick={() => removeFilter(chip.key)}>{chip.label}<X size={12} aria-hidden="true" /></button>)}</div></div>
+                  ) : <span>Belum ada filter aktif</span>}
+                </footer>
+              </section>
 
-            <p className="gorut-collect-readonly-note gorut-documents-note">
-              <Info size={14} aria-hidden="true" />
-              Dokumen pada halaman ini masih menggunakan preview frontend. Penyimpanan PDF dan pencetakan resmi akan tersedia setelah layanan dokumen diaktifkan.
-            </p>
+              <p className="gorut-collect-readonly-note gorut-documents-note">
+                <Info size={14} aria-hidden="true" />
+                Dokumen pada halaman ini masih menggunakan preview frontend. Penyimpanan PDF dan pencetakan resmi akan tersedia setelah layanan dokumen diaktifkan.
+              </p>
 
-            <section className="pjm-panel gorut-collect-panel gorut-documents-panel">
-              <header className="pjm-toolbar gorut-documents-toolbar">
+              <section className="pjm-panel gorut-collect-panel gorut-munfiq-results gorut-documents-panel">
+                <header className="pjm-toolbar gorut-munfiq-table-toolbar gorut-documents-toolbar">
                 <label className="pjm-search">
                   <Search size={16} aria-hidden="true" />
                   <input
@@ -256,8 +251,8 @@ export function DocumentsShell() {
               </header>
 
               {pageRows.length === 0 ? (
-                <div className="gorut-collect-empty">
-                  <SearchX size={28} />
+                <div className="gorut-collect-empty" role="status" aria-live="polite">
+                  <SearchX size={28} aria-hidden="true" />
                   <h2>Belum ada dokumen yang cocok</h2>
                   <p>{filtersActive ? 'Ubah kata kunci atau reset filter untuk melihat data lainnya.' : 'Belum ada batch atau rekap yang dapat diturunkan menjadi dokumen.'}</p>
                   {filtersActive ? <button type="button" className="gorut-button gorut-secondary-button" onClick={resetFilters}>Reset Filter</button> : null}
@@ -302,7 +297,7 @@ export function DocumentsShell() {
                               <div className="gorut-documents-actions">
                                 <button
                                   type="button"
-                                  className="gorut-documents-action"
+                                  className="gorut-documents-action is-primary"
                                   disabled={!row.canPreview}
                                   title={row.canPreview ? 'Lihat preview sementara' : 'Preview belum siap'}
                                   onClick={() => openPreview(row)}
@@ -314,9 +309,6 @@ export function DocumentsShell() {
                                 </button>
                                 <button type="button" className="gorut-documents-action is-disabled" disabled title="Belum tersedia">
                                   <Download size={14} aria-hidden="true" />Simpan PDF
-                                </button>
-                                <button type="button" className="gorut-documents-action is-disabled" disabled title="Segera tersedia">
-                                  <Printer size={14} aria-hidden="true" />Cetak
                                 </button>
                               </div>
                             </td>
@@ -343,7 +335,7 @@ export function DocumentsShell() {
                           <div className="is-wide"><dt>Status Data</dt><dd>{row.dataStatus}</dd></div>
                         </dl>
                         <footer>
-                          <button type="button" className="gorut-documents-action" disabled={!row.canPreview} onClick={() => openPreview(row)}>
+                          <button type="button" className="gorut-documents-action is-primary" disabled={!row.canPreview} title={row.canPreview ? 'Lihat preview sementara' : 'Preview belum siap'} onClick={() => openPreview(row)}>
                             <Eye size={14} aria-hidden="true" />Preview
                           </button>
                           <button type="button" className="gorut-documents-action" onClick={() => setDetail(row)}>Detail</button>
@@ -369,6 +361,7 @@ export function DocumentsShell() {
                 </>
               )}
             </section>
+            </div>
           </main>
         </div>
 
@@ -388,13 +381,13 @@ export function DocumentsShell() {
 
         {detail ? (
           <div className="gorut-documents-detail-backdrop" role="presentation" onClick={() => setDetail(null)}>
-            <aside className="gorut-documents-detail" role="dialog" aria-modal="true" aria-label="Detail dokumen" onClick={(event) => event.stopPropagation()}>
+            <aside className="gorut-documents-detail" role="dialog" aria-modal="true" aria-labelledby="gorut-document-detail-title" aria-describedby="gorut-document-detail-note" onClick={(event) => event.stopPropagation()}>
               <header>
                 <div>
                   <p>{detail.kindLabel}</p>
-                  <h2>{detail.documentNumber}</h2>
+                  <h2 id="gorut-document-detail-title">{detail.documentNumber}</h2>
                 </div>
-                <button type="button" className="gorut-documents-detail-close" onClick={() => setDetail(null)} aria-label="Tutup detail">×</button>
+                <button type="button" className="gorut-documents-detail-close" onClick={() => setDetail(null)} aria-label="Tutup detail"><X size={18} aria-hidden="true" /></button>
               </header>
               <dl>
                 <div><dt>Periode</dt><dd>{detail.periodLabel}</dd></div>
@@ -404,7 +397,7 @@ export function DocumentsShell() {
                 <div><dt>Status Dokumen</dt><dd>{detail.readinessLabel}</dd></div>
                 <div><dt>Diperbarui</dt><dd>{detail.updatedAt ? formatDateShort(detail.updatedAt) : '—'}</dd></div>
               </dl>
-              <p className="gorut-documents-detail-note">
+              <p className="gorut-documents-detail-note" id="gorut-document-detail-note">
                 <FileWarning size={14} aria-hidden="true" />
                 {detail.kind === 'f016'
                   ? 'F.016 belum memiliki builder atau sumber data executable di frontend. Nomor dokumen palsu tidak dibuat.'
@@ -416,6 +409,7 @@ export function DocumentsShell() {
                   type="button"
                   className="gorut-button gorut-primary-button"
                   disabled={!detail.canPreview}
+                  title={detail.canPreview ? 'Lihat preview sementara' : 'Preview belum siap'}
                   onClick={() => { openPreview(detail); setDetail(null); }}
                 >
                   Lihat Preview
@@ -437,4 +431,8 @@ export function DocumentsShell() {
       </div>
     </div>
   );
+}
+
+function DocumentFilterSelect({ label, value, children, onChange }: { label: string; value: string; children: ReactNode; onChange: (value: string) => void }) {
+  return <label className="gorut-munfiq-filter-field"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)}>{children}</select></label>;
 }

@@ -13,12 +13,17 @@ const priorityMeta = {
 export function DashboardPriorityQueue({ items }: { items: DashboardAttention[] }) {
   return (
     <section className="gorut-command-priority" aria-labelledby="gorut-priority-title">
+      <div className="gorut-purity-priority-chart" aria-hidden="true">
+        {[58, 38, 24, 52, 88, 72, 83, 49, 31].map((height, index) => (
+          <i key={index} style={{ '--gorut-priority-bar': `${height}%` } as CSSProperties} />
+        ))}
+      </div>
       <header className="gorut-command-section-head">
         <div>
-          <h2 id="gorut-priority-title">Tindakan yang perlu didahulukan</h2>
-          <p>Urutan otomatis berdasarkan dampak dan status operasional terkini.</p>
+          <h2 id="gorut-priority-title">Tindakan prioritas</h2>
+          <p><strong>{items.length} antrean</strong> perlu ditangani pada periode aktif.</p>
         </div>
-        <Link href="/gorut-v2/monitoring">Lihat monitoring <ArrowUpRight size={15} aria-hidden="true" /></Link>
+        <Link href="/gorut-v2/monitoring" aria-label="Lihat seluruh antrean di monitoring"><ArrowUpRight size={15} aria-hidden="true" /></Link>
       </header>
 
       {items.length ? (

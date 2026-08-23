@@ -5,6 +5,7 @@ import { Check, ChevronRight, Search, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
+import { collectionMoneyLabel, collectionPolicyLabel } from '@/features/gorut-v2/collection-api-view-model';
 import { type KordesDecisionAction, type KordesDecisionInput, validateKordesAction } from '@/features/gorut-v2/kordes-mobile';
 import { collectionVisitStatusLabels, formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 import type { CollectionBatch } from '@/features/gorut-v2/types';
@@ -12,7 +13,7 @@ import type { CollectionBatch } from '@/features/gorut-v2/types';
 import { MobileServiceIcon } from '../plpk-mobile/mobile-service-icon';
 import { MobilePageHeader, MobileStatusBadge } from '../plpk-mobile/mobile-ui';
 
-export function KordesVerificationForm({ batch, onBack, onOpenF009, onSubmit }: { batch: CollectionBatch; onBack: () => void; onOpenF009: () => void; onSubmit: (input: KordesDecisionInput, action: KordesDecisionAction) => string | null }) {
+export function KordesVerificationForm({ batch, onBack, onOpenF009, onSubmit, allowedActions, pending = false }: { batch: CollectionBatch; onBack: () => void; onOpenF009: () => void; onSubmit: (input: KordesDecisionInput, action: KordesDecisionAction) => string | null | Promise<string | null>; allowedActions?: KordesDecisionAction[]; pending?: boolean }) {
   const [input, setInput] = useState<KordesDecisionInput>({ moneyMatches: batch.kordesMoneyMatches, hasDamagedMoney: batch.kordesHasDamagedMoney, cashReceived: batch.kordesCashReceived, notes: batch.kordesNotes ?? '', correctionEntryIds: batch.correctionEntryIds ?? [] });
   const [receivedAmount, setReceivedAmount] = useState('');
   const [damagedAmount, setDamagedAmount] = useState('');
@@ -22,8 +23,9 @@ export function KordesVerificationForm({ batch, onBack, onOpenF009, onSubmit }: 
   const selected = useMemo(() => new Set(input.correctionEntryIds ?? []), [input.correctionEntryIds]);
   const received = Number(receivedAmount || 0);
   const difference = batch.netAmount - received;
-  const verifyEnabled = validateKordesAction(input, 'verify') === null;
-  const correctionEnabled = validateKordesAction(input, 'correction') === null;
+  const verifyEnabled = validateKordesAction(input, 'verify') === null && (allowedActions === undefined || allowedActions.includes('verify'));
+  const correctionEnabled = validateKordesAction(input, 'correction') === null && (allowedActions === undefined || allowedActions.includes('correction'));
+  const policyVersion = collectionPolicyLabel(batch);
   const filteredEntries = useMemo(() => {
     const needle = correctionQuery.trim().toLowerCase();
     return batch.entries.filter((entry) => !needle || `${entry.canCode} ${entry.munfiqName}`.toLowerCase().includes(needle));
@@ -36,9 +38,9 @@ export function KordesVerificationForm({ batch, onBack, onOpenF009, onSubmit }: 
     if (validation) { setError(validation); return; }
     setConfirmAction(action);
   };
-  const submit = () => {
-    if (!confirmAction) return;
-    const submitError = onSubmit(input, confirmAction);
+  const submit = async () => {
+    if (!confirmAction || pending) return;
+    const submitError = await onSubmit(input, confirmAction);
     if (submitError) { setError(submitError); setConfirmAction(null); }
   };
 
@@ -50,8 +52,9 @@ export function KordesVerificationForm({ batch, onBack, onOpenF009, onSubmit }: 
 
         <section className="kordes-receipt-card" aria-labelledby="receipt-title">
           <div className="kordes-form-section-title"><span><MobileServiceIcon icon={MoneyBag02Icon} label="Ringkasan penerimaan" size={19} /></span><div><h2 id="receipt-title">Ringkasan Penerimaan</h2><p>Nominal yang seharusnya diterima Kordes</p></div></div>
-          <strong className="kordes-expected-amount">{formatRupiah(batch.netAmount)}</strong>
-          <dl><div><dt>Jumlah kotor</dt><dd>{formatRupiah(batch.grossAmount)}</dd></div><div><dt>Bisyaroh PLPK</dt><dd>− {formatRupiah(batch.totalPlpkFee)}</dd></div><div><dt>Kaleng terjemput</dt><dd>{formatNumber(batch.collectedCanCount)}</dd></div><div><dt>Nomor F.009</dt><dd>{batch.f009DocumentNumber ?? batch.documentNumber}</dd></div></dl>
+          <strong className="kordes-expected-amount">{collectionMoneyLabel(batch, 'netAmount')}</strong>
+          <dl><div><dt>Jumlah kotor</dt><dd>{collectionMoneyLabel(batch, 'grossAmount')}</dd></div><div><dt>Bisyaroh PLPK</dt><dd>− {collectionMoneyLabel(batch, 'totalPlpkFee')}</dd></div><div><dt>Kaleng terjemput</dt><dd>{formatNumber(batch.collectedCanCount)}</dd></div><div><dt>Nomor F.009</dt><dd>{batch.f009DocumentNumber ?? batch.documentNumber}</dd></div></dl>
+          {policyVersion ? <p className="plpk-hint">Kebijakan sementara UAT · {policyVersion}</p> : null}
           <button type="button" className="kordes-outline-button is-full" onClick={onOpenF009}><MobileServiceIcon icon={FileVerifiedIcon} label="Lihat F.009" size={18} />Lihat F.009</button>
         </section>
 
@@ -78,9 +81,9 @@ export function KordesVerificationForm({ batch, onBack, onOpenF009, onSubmit }: 
         {error ? <p className="kordes-form-error" role="alert">{error}</p> : null}
       </div>
 
-      <footer className="kordes-form-footer"><button type="button" className="kordes-correction-button" disabled={!correctionEnabled} onClick={() => requestSubmit('correction')}>Kembalikan untuk Koreksi</button><button type="button" className="kordes-primary-button" disabled={!verifyEnabled} onClick={() => requestSubmit('verify')}>Verifikasi Data</button></footer>
+      <footer className="kordes-form-footer"><button type="button" className="kordes-correction-button" disabled={!correctionEnabled || pending} onClick={() => requestSubmit('correction')}>Kembalikan untuk Koreksi</button><button type="button" className="kordes-primary-button" disabled={!verifyEnabled || pending} onClick={() => requestSubmit('verify')}>Verifikasi Data</button></footer>
 
-      {confirmAction ? <div className="kordes-confirm-backdrop" role="presentation"><section className="kordes-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title"><button type="button" className="kordes-confirm-close" onClick={() => setConfirmAction(null)} aria-label="Tutup konfirmasi"><X size={18} aria-hidden="true" /></button><span className={confirmAction === 'verify' ? 'is-verify' : 'is-correction'}><MobileServiceIcon icon={confirmAction === 'verify' ? CheckmarkCircle02Icon : Alert02Icon} label="Konfirmasi keputusan" size={25} /></span><h2 id="confirm-title">{confirmAction === 'verify' ? 'Verifikasi data ini?' : 'Kembalikan ke PLPK?'}</h2><p>{confirmAction === 'verify' ? 'Data akan dikunci dan tidak dapat diverifikasi ulang.' : `${selected.size} data Munfiq akan dibuka kembali untuk diperbaiki PLPK.`}</p><div><button type="button" className="kordes-outline-button" onClick={() => setConfirmAction(null)}>Batal</button><button type="button" className={confirmAction === 'verify' ? 'kordes-primary-button' : 'kordes-correction-button'} onClick={submit}>{confirmAction === 'verify' ? 'Ya, Verifikasi' : 'Ya, Kembalikan'}</button></div></section></div> : null}
+      {confirmAction ? <div className="kordes-confirm-backdrop" role="presentation"><section className="kordes-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-busy={pending}><button type="button" className="kordes-confirm-close" onClick={() => setConfirmAction(null)} aria-label="Tutup konfirmasi" disabled={pending}><X size={18} aria-hidden="true" /></button><span className={confirmAction === 'verify' ? 'is-verify' : 'is-correction'}><MobileServiceIcon icon={confirmAction === 'verify' ? CheckmarkCircle02Icon : Alert02Icon} label="Konfirmasi keputusan" size={25} /></span><h2 id="confirm-title">{confirmAction === 'verify' ? 'Verifikasi data ini?' : 'Kembalikan ke PLPK?'}</h2><p>{confirmAction === 'verify' ? 'Server akan memvalidasi dan memperbarui status canonical.' : `${selected.size} data Munfiq akan diajukan untuk diperbaiki PLPK.`}</p><div><button type="button" className="kordes-outline-button" onClick={() => setConfirmAction(null)} disabled={pending}>Batal</button><button type="button" className={confirmAction === 'verify' ? 'kordes-primary-button' : 'kordes-correction-button'} onClick={() => void submit()} disabled={pending}>{pending ? 'Memproses…' : confirmAction === 'verify' ? 'Ya, Verifikasi' : 'Ya, Kembalikan'}</button></div></section></div> : null}
     </section>
   );
 }
@@ -90,7 +93,7 @@ export function KordesVerificationResult({ batch, onBack, onViewDetail }: { batc
   const decidedAt = verified ? batch.verifiedByKordesAt : batch.returnedForCorrectionAt;
   const decidedDate = decidedAt ? new Date(decidedAt) : null;
   const decidedLabel = decidedDate && !Number.isNaN(decidedDate.getTime()) ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeStyle: 'short' }).format(decidedDate) : 'Waktu keputusan tidak tersedia';
-  return <section className="plpk-sheet kordes-operational-screen kordes-result-screen" aria-label={verified ? 'Hasil verifikasi' : 'Hasil koreksi'}><MobilePageHeader title={verified ? 'Hasil Verifikasi' : 'Catatan Koreksi'} subtitle={formatPeriodLabel(batch.period)} onBack={onBack} /><div className="plpk-scroll"><section className={verified ? 'kordes-result-card is-success' : 'kordes-result-card is-correction'}><span><MobileServiceIcon icon={verified ? CheckmarkCircle02Icon : Alert02Icon} label={verified ? 'Berhasil diverifikasi' : 'Dikembalikan ke PLPK'} size={34} /></span><p>{verified ? 'VERIFIKASI SELESAI' : 'PERLU KOREKSI'}</p><h1>{verified ? 'Data Berhasil Diverifikasi' : 'Dikembalikan ke PLPK'}</h1><small>{verified ? 'Data sudah dikunci dan masuk ke rekap ranting.' : `${formatNumber(batch.correctionEntryIds?.length ?? 0)} entry perlu diperbaiki oleh PLPK.`}</small><dl><div><dt>Nama PLPK</dt><dd>{batch.plpkName}</dd></div><div><dt>Periode</dt><dd>{formatPeriodLabel(batch.period)}</dd></div><div><dt>Jumlah bersih</dt><dd>{formatRupiah(batch.netAmount)}</dd></div><div><dt>{verified ? 'Diverifikasi' : 'Dikembalikan'}</dt><dd>{decidedLabel}</dd></div>{!verified ? <div className="is-note"><dt>Catatan Kordes</dt><dd>{batch.kordesNotes}</dd></div> : null}</dl><div><button type="button" className="plpk-btn plpk-btn-primary" onClick={onBack}>Kembali ke Antrean</button><button type="button" className="plpk-btn plpk-btn-quiet" onClick={onViewDetail}>{verified ? 'Lihat Hasil' : 'Lihat Detail Koreksi'}<ChevronRight size={17} aria-hidden="true" /></button></div></section></div></section>;
+  return <section className="plpk-sheet kordes-operational-screen kordes-result-screen" aria-label={verified ? 'Hasil verifikasi' : 'Hasil koreksi'}><MobilePageHeader title={verified ? 'Hasil Verifikasi' : 'Catatan Koreksi'} subtitle={formatPeriodLabel(batch.period)} onBack={onBack} /><div className="plpk-scroll"><section className={verified ? 'kordes-result-card is-success' : 'kordes-result-card is-correction'}><span><MobileServiceIcon icon={verified ? CheckmarkCircle02Icon : Alert02Icon} label={verified ? 'Berhasil diverifikasi' : 'Dikembalikan ke PLPK'} size={34} /></span><p>{verified ? 'VERIFIKASI SELESAI' : 'PERLU KOREKSI'}</p><h1>{verified ? 'Data Berhasil Diverifikasi' : 'Dikembalikan ke PLPK'}</h1><small>{verified ? 'Status canonical sudah diperbarui oleh server.' : `${formatNumber(batch.correctionEntryIds?.length ?? 0)} entry perlu diperbaiki oleh PLPK.`}</small><dl><div><dt>Nama PLPK</dt><dd>{batch.plpkName}</dd></div><div><dt>Periode</dt><dd>{formatPeriodLabel(batch.period)}</dd></div><div><dt>Jumlah bersih</dt><dd>{collectionMoneyLabel(batch, 'netAmount')}</dd></div><div><dt>{verified ? 'Diverifikasi' : 'Dikembalikan'}</dt><dd>{decidedLabel}</dd></div>{!verified ? <div className="is-note"><dt>Catatan Kordes</dt><dd>{batch.kordesNotes}</dd></div> : null}</dl><div><button type="button" className="plpk-btn plpk-btn-primary" onClick={onBack}>Kembali ke Antrean</button><button type="button" className="plpk-btn plpk-btn-quiet" onClick={onViewDetail}>{verified ? 'Lihat Hasil' : 'Lihat Detail Koreksi'}<ChevronRight size={17} aria-hidden="true" /></button></div></section></div></section>;
 }
 
 function BooleanQuestion({ index, label, value, onChange }: { index: number; label: string; value?: boolean; onChange: (value: boolean) => void }) {

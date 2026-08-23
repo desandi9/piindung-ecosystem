@@ -15,6 +15,7 @@ import { Bell } from 'lucide-react';
 
 import { MobileNewsPortal } from '@/components/gorut-v2/mobile-shared/mobile-news-portal';
 import { formatNumber, formatRupiah, getInitials } from '@/features/gorut-v2/formatters';
+import { isServerCollectionBatch } from '@/features/gorut-v2/collection-api-view-model';
 import type { KordesMobileScreen } from '@/features/gorut-v2/kordes-mobile-navigation';
 import type { CollectionBatch } from '@/features/gorut-v2/types';
 import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
@@ -57,6 +58,7 @@ export function KordesHome({
     { title: 'Pentasyarufan', icon: CharityIcon, destination: 'distribution' as const },
     { title: 'Notifikasi', icon: Notification02Icon, destination: 'notifications' as const, badge: unreadCount ? String(unreadCount) : undefined },
   ];
+  const financialReady = periodBatches.every((batch) => !isServerCollectionBatch(batch) || batch.canonical.financial.status === 'READY');
 
   return (
     <div className="plpk-scroll plpk-home-screen kordes-home-screen">
@@ -87,7 +89,7 @@ export function KordesHome({
 
       <section className="plpk-home-section">
         <MobileSectionHeader title="Informasi Utama" description="Ringkasan seluruh PLPK dalam ranting" />
-        <article className="plpk-amount-card"><span className="plpk-amount-icon"><MobileServiceIcon icon={Coins01Icon} label="Total perolehan" size={21} /></span><div><small>Total Perolehan</small><strong>{formatRupiah(summary.grossAmount)}</strong><span>{formatNumber(periodBatches.reduce((n, batch) => n + batch.collectedCanCount, 0))} kaleng terjemput</span></div></article>
+        <article className="plpk-amount-card"><span className="plpk-amount-icon"><MobileServiceIcon icon={Coins01Icon} label="Total perolehan" size={21} /></span><div><small>Total Perolehan</small><strong>{financialReady ? formatRupiah(summary.grossAmount) : 'Belum siap'}</strong><span>{formatNumber(periodBatches.reduce((n, batch) => n + batch.collectedCanCount, 0))} kaleng terjemput</span></div></article>
         <div className="plpk-home-stat-grid">
           <article><span><MobileServiceIcon icon={Notification02Icon} label="Menunggu verifikasi" size={19} /></span><small>Menunggu</small><strong>{summary.waiting}</strong></article>
           <article><span><MobileServiceIcon icon={CheckListIcon} label="Terverifikasi" size={19} /></span><small>Terverifikasi</small><strong>{summary.verified}</strong></article>

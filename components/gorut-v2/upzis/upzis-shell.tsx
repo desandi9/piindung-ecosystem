@@ -13,6 +13,7 @@ import { GorutSidebar } from '../gorut-sidebar';
 import { MobileSidebar } from '../mobile-sidebar';
 import { MobileBottomNav } from '../mobile-bottom-nav';
 import { GorutHeader } from '../gorut-header';
+import { PenghimpunanPageHeader } from '../penghimpunan-page-header';
 import { PenghimpunanTabs } from '../penghimpunan-tabs';
 
 import { UpzisSummary } from './upzis-summary';
@@ -84,29 +85,26 @@ export function UpzisShell() {
     <div className="gorut-viewport">
       {loading ? (
         <div className="gorut-app">
-          <GorutSidebar target={target} />
+          <GorutSidebar />
           <div className="gorut-workspace">
             <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
-            <main className="gorut-main"><UpzisSkeleton /></main>
+            <main className="gorut-main gorut-collection-workspace"><UpzisSkeleton /></main>
           </div>
         </div>
       ) : (
         <div className="gorut-app">
-          <GorutSidebar target={target} />
+          <GorutSidebar />
 
           <div className="gorut-workspace">
             <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
 
-            <main className="gorut-main gorut-collect-main">
-              <PenghimpunanTabs />
+            <main className="gorut-main gorut-collect-main gorut-collection-workspace">
+              <PenghimpunanPageHeader
+                title="Verifikasi UPZIS"
+                description="Periksa kelengkapan rekap penghimpunan setiap ranting/desa sebelum diteruskan ke tingkat PC."
+              />
 
-              <section className="gorut-collect-heading" aria-label="Judul halaman">
-                <div>
-                  <p>PENGHIMPUNAN</p>
-                  <h1>Verifikasi UPZIS</h1>
-                  <span>Periksa kelengkapan rekap penghimpunan setiap ranting/desa sebelum diteruskan ke tingkat PC.</span>
-                </div>
-              </section>
+              <PenghimpunanTabs />
 
               <UpzisFilterBar filters={filters} onChange={(next) => { setFilters(next); setPage(1); }} onReset={resetFilters} />
 
@@ -119,16 +117,19 @@ export function UpzisShell() {
 
               <section className="pjm-panel gorut-collect-panel upzis-verification-panel">
                 <header className="pjm-toolbar upzis-verification-toolbar">
-                  <label className="pjm-search">
-                    <Search size={16} aria-hidden="true" />
-                    <input
-                      type="search"
-                      value={filters.query}
-                      onChange={(event) => { setFilters((current) => ({ ...current, query: event.target.value })); setPage(1); }}
-                      placeholder="Cari desa/ranting, Kordes, atau wilayah"
-                      aria-label="Cari desa atau ranting, Kordes, atau wilayah"
-                    />
-                  </label>
+                  <div className="pjm-toolbar-primary">
+                    <div className="pjm-toolbar-heading"><h2>Daftar rekap desa</h2><p>Menampilkan {formatNumber(filtered.length)} desa</p></div>
+                    <label className="pjm-search">
+                      <Search size={16} aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={filters.query}
+                        onChange={(event) => { setFilters((current) => ({ ...current, query: event.target.value })); setPage(1); }}
+                        placeholder="Cari desa/ranting, Kordes, atau wilayah"
+                        aria-label="Cari desa atau ranting, Kordes, atau wilayah"
+                      />
+                    </label>
+                  </div>
 
                   <div className="pjm-toolbar-actions upzis-verification-toolbar-actions">
                     <label className="upzis-verification-kordes-filter">

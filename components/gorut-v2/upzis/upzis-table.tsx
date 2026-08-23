@@ -25,7 +25,7 @@ export function UpzisTable({ recaps, onDetail, onRecap, onMinutes }: { recaps: U
             <th>Jumlah PLPK</th>
             <th>Jumlah Munfiq</th>
             <th className="is-amount">Total Koin</th>
-            <th className="is-amount">Total Upah PLPK</th>
+            <th className="is-amount">Bisyaroh PLPK</th>
             <th className="is-status">Status</th>
             <th>Berita Acara</th>
             <th className="is-action">Aksi</th>

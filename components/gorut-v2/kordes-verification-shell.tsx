@@ -1,6 +1,8 @@
 'use client';
 
-import { AlertTriangle, Banknote, CalendarDays, CheckCircle2, Clock3, Download, Eye, FileText, Filter, Info, ListFilter, Map, MapPin, MapPinned, Rows3, Search, SearchX, X } from 'lucide-react';
+import { Alert02Icon, BanknoteIcon, CheckmarkCircle02Icon, Clock01Icon, FileValidationIcon, Location01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CalendarDays, Download, Eye, FileText, Filter, Info, ListFilter, Map, MapPinned, Rows3, Search, SearchX, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { KordesDocumentViewer } from '@/components/gorut-v2/documents/kordes-document-viewer';
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
@@ -16,6 +18,8 @@ import { GorutSidebar } from './gorut-sidebar';
 import { MobileSidebar } from './mobile-sidebar';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { GorutHeader } from './gorut-header';
+import { PenghimpunanFilterHeading } from './penghimpunan-filter-heading';
+import { PenghimpunanPageHeader } from './penghimpunan-page-header';
 import { PenghimpunanTabs } from './penghimpunan-tabs';
 
 const target = { current: 'Rp1,42 M', max: 'Rp2 M', percentage: 71 };
@@ -75,6 +79,18 @@ export function KordesVerificationShell() {
     const timer = window.setTimeout(() => setLoading(false), 420);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (documentPreview || f009Preview || (!wizard && !detail && !villageDetail)) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (wizard) setWizard(null);
+      else if (detail) setDetail(null);
+      else setVillageDetail(null);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [detail, documentPreview, f009Preview, villageDetail, wizard]);
 
   const triggerNotice = (message: string) => {
     setNotice(message);
@@ -153,32 +169,28 @@ export function KordesVerificationShell() {
     <div className="gorut-viewport">
       {loading ? (
         <div className="gorut-app">
-          <GorutSidebar target={target} />
+          <GorutSidebar />
           <div className="gorut-workspace">
             <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
-            <main className="gorut-main">
+            <main className="gorut-main gorut-collection-workspace">
               <div className="gorut-placeholder-skeleton" />
             </main>
           </div>
         </div>
       ) : (
         <div className="gorut-app">
-          <GorutSidebar target={target} />
+          <GorutSidebar />
 
           <div className="gorut-workspace">
             <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
 
-            <main className="gorut-main gorut-collect-main">
-              <PenghimpunanTabs />
-
+            <main className="gorut-main gorut-collect-main gorut-collection-workspace">
               <div className="kordes-shell">
-                <div className="gorut-collect-heading">
-                  <div>
-                    <p>PENGHIMPUNAN</p>
-                    <h1>Verifikasi Kordes</h1>
-                    <span>Periksa hasil penjemputan PLPK yang sudah dikonfirmasi, lalu verifikasi kesesuaian data penghimpunan pada tingkat ranting/desa.</span>
-                  </div>
-                </div>
+                <PenghimpunanPageHeader
+                  title="Verifikasi Kordes"
+                  description="Periksa hasil penjemputan PLPK yang sudah dikonfirmasi, lalu verifikasi kesesuaian data penghimpunan pada tingkat ranting/desa."
+                />
+                <PenghimpunanTabs />
                 <div className="kordes-tabs" role="tablist" aria-label="Tahap verifikasi Kordes">
                   <button
                     type="button"
@@ -203,19 +215,19 @@ export function KordesVerificationShell() {
                   <>
                     <div className="kordes-summary kordes-verification-mobile-summary">
                       <article>
-                        <div><Clock3 size={15} /><span>Menunggu Verifikasi</span></div>
+                        <div><HugeiconsIcon icon={Clock01Icon} size={17} strokeWidth={1.8} /><span>Menunggu Verifikasi</span></div>
                         <strong>{summary.waiting}</strong>
                       </article>
                       <article>
-                        <div><CheckCircle2 size={15} /><span>Terverifikasi Kordes</span></div>
+                        <div><HugeiconsIcon icon={CheckmarkCircle02Icon} size={17} strokeWidth={1.8} /><span>Terverifikasi Kordes</span></div>
                         <strong>{summary.verified}</strong>
                       </article>
                       <article>
-                        <div><Banknote size={15} /><span>Jumlah Bersih</span></div>
+                        <div><HugeiconsIcon icon={BanknoteIcon} size={17} strokeWidth={1.8} /><span>Jumlah Bersih</span></div>
                         <strong>{formatRupiah(summary.totalNet)}</strong>
                       </article>
                       <article>
-                        <div><AlertTriangle size={15} /><span>Perlu Koreksi</span></div>
+                        <div><HugeiconsIcon icon={Alert02Icon} size={17} strokeWidth={1.8} /><span>Perlu Koreksi</span></div>
                         <strong>{summary.corrections}</strong>
                       </article>
                     </div>
@@ -238,19 +250,19 @@ export function KordesVerificationShell() {
 
                     <section className="pjm-summary kordes-verification-summary" aria-label="Ringkasan verifikasi Kordes">
                       <article>
-                        <div className="pjm-summary-heading"><span><Clock3 size={15} aria-hidden="true" /></span><p>Menunggu Verifikasi</p></div>
+                        <div className="pjm-summary-heading"><span><HugeiconsIcon icon={Clock01Icon} size={17} strokeWidth={1.8} aria-hidden="true" /></span><p>Menunggu Verifikasi</p></div>
                         <strong>{summary.waiting}</strong>
                       </article>
                       <article>
-                        <div className="pjm-summary-heading"><span><CheckCircle2 size={15} aria-hidden="true" /></span><p>Terverifikasi Kordes</p></div>
+                        <div className="pjm-summary-heading"><span><HugeiconsIcon icon={CheckmarkCircle02Icon} size={17} strokeWidth={1.8} aria-hidden="true" /></span><p>Terverifikasi Kordes</p></div>
                         <strong>{summary.verified}</strong>
                       </article>
                       <article className="is-highlighted">
-                        <div className="pjm-summary-heading"><span><Banknote size={15} aria-hidden="true" /></span><p>Jumlah Bersih</p></div>
+                        <div className="pjm-summary-heading"><span><HugeiconsIcon icon={BanknoteIcon} size={17} strokeWidth={1.8} aria-hidden="true" /></span><p>Jumlah Bersih</p></div>
                         <strong>{formatRupiah(summary.totalNet)}</strong>
                       </article>
                       <article>
-                        <div className="pjm-summary-heading"><span><AlertTriangle size={15} aria-hidden="true" /></span><p>Perlu Koreksi</p></div>
+                        <div className="pjm-summary-heading"><span><HugeiconsIcon icon={Alert02Icon} size={17} strokeWidth={1.8} aria-hidden="true" /></span><p>Perlu Koreksi</p></div>
                         <strong>{summary.corrections}</strong>
                       </article>
                     </section>
@@ -262,16 +274,19 @@ export function KordesVerificationShell() {
 
                     <section className="pjm-panel gorut-collect-panel kordes-panel kordes-verification-panel">
                       <header className="pjm-toolbar kordes-verification-toolbar">
-                        <label className="pjm-search">
-                          <Search size={16} aria-hidden="true" />
-                          <input
-                            type="search"
-                            value={query}
-                            onChange={(event) => { setQuery(event.target.value); setPage(1); }}
-                            placeholder="Cari PLPK, ID, atau wilayah"
-                            aria-label="Cari PLPK, ID, atau wilayah"
-                          />
-                        </label>
+                        <div className="pjm-toolbar-primary">
+                          <div className="pjm-toolbar-heading"><h2>Daftar verifikasi PLPK</h2><p>Menampilkan {formatNumber(filtered.length)} data</p></div>
+                          <label className="pjm-search">
+                            <Search size={16} aria-hidden="true" />
+                            <input
+                              type="search"
+                              value={query}
+                              onChange={(event) => { setQuery(event.target.value); setPage(1); }}
+                              placeholder="Cari PLPK, ID, atau wilayah"
+                              aria-label="Cari PLPK, ID, atau wilayah"
+                            />
+                          </label>
+                        </div>
 
                         <div className="pjm-toolbar-actions">
                           <label className="pjm-page-size">
@@ -425,6 +440,7 @@ function PlpkFilterBar({
   return (
     <>
       <section className="pjm-filters kordes-verification-filters" aria-label="Filter verifikasi Kordes">
+        <PenghimpunanFilterHeading description="Persempit antrean verifikasi berdasarkan periode, wilayah, dan status." />
         <div className="pjm-filter">
           <label className="pjm-filter-label" htmlFor="kordes-period"><CalendarDays size={14} aria-hidden="true" />Periode</label>
           <select id="kordes-period" value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value)}>
@@ -433,7 +449,7 @@ function PlpkFilterBar({
           </select>
         </div>
         <div className="pjm-filter">
-          <label className="pjm-filter-label" htmlFor="kordes-kecamatan"><MapPinned size={14} aria-hidden="true" />Kecamatan</label>
+          <label className="pjm-filter-label" htmlFor="kordes-kecamatan"><MapPinned size={14} aria-hidden="true" />Kecamatan / UPZIS</label>
           <select id="kordes-kecamatan" value={kecamatanFilter} onChange={(event) => setKecamatanFilter(event.target.value)}>
             <option value="all">Semua Kecamatan</option>
             {kecamatans.map((kecamatan) => <option key={kecamatan} value={kecamatan}>{kecamatan}</option>)}
@@ -608,19 +624,19 @@ function VillageTab({
       </div>
       <div className="kordes-summary">
         <article>
-          <div><Clock3 size={15} /><span>Desa Menunggu Kelengkapan</span></div>
+          <div><HugeiconsIcon icon={Clock01Icon} size={17} strokeWidth={1.8} /><span>Desa Menunggu Kelengkapan</span></div>
           <strong>{villageSummary.waiting}</strong>
         </article>
         <article>
-          <div><MapPin size={15} /><span>Desa Siap F.015</span></div>
+          <div><HugeiconsIcon icon={Location01Icon} size={17} strokeWidth={1.8} /><span>Desa Siap F.015</span></div>
           <strong>{villageSummary.ready}</strong>
         </article>
         <article>
-          <div><FileText size={15} /><span>F.015 Siap</span></div>
+          <div><HugeiconsIcon icon={FileValidationIcon} size={17} strokeWidth={1.8} /><span>F.015 Siap</span></div>
           <strong>{villageSummary.f015Ready}</strong>
         </article>
         <article>
-          <div><Banknote size={15} /><span>Total Uang Tingkat Desa</span></div>
+          <div><HugeiconsIcon icon={BanknoteIcon} size={17} strokeWidth={1.8} /><span>Total Uang Tingkat Desa</span></div>
           <strong>{formatRupiah(villageSummary.totalNet)}</strong>
         </article>
       </div>
@@ -636,7 +652,7 @@ function VillageTab({
                 <th>Terjemput</th>
                 <th>Tidak Terjemput</th>
                 <th>Jumlah Kotor</th>
-                <th>Total Bisyaroh</th>
+                <th>Bisyaroh PLPK</th>
                 <th>Jumlah Bersih</th>
                 <th>Status Rekap</th>
                 <th>Aksi</th>
@@ -780,8 +796,8 @@ function PlpkDetailDrawer({
   const decisionAt = item.status === 'needs-correction' ? item.returnedForCorrectionAt : item.verifiedAt;
   const decisionDateLabel = item.status === 'needs-correction' ? 'Tanggal Dikembalikan' : 'Tanggal Verifikasi';
   return (
-    <aside className="kordes-drawer" aria-label="Detail Verifikasi PLPK">
-      <button type="button" className="kordes-close" onClick={onClose}><X size={18} /></button>
+    <aside className="kordes-drawer" role="dialog" aria-modal="true" aria-label="Detail Verifikasi PLPK">
+      <button type="button" className="kordes-close" onClick={onClose} aria-label="Tutup detail verifikasi PLPK"><X size={18} aria-hidden="true" /></button>
 
       <div className="kordes-drawer-head">
         <div>
@@ -886,8 +902,8 @@ function VillageDrawer({
   const ready = isF015Ready(item);
 
   return (
-    <aside className="kordes-drawer kordes-recap-drawer" aria-label="Rekap Desa">
-      <button type="button" className="kordes-close" onClick={onClose}><X size={18} /></button>
+    <aside className="kordes-drawer kordes-recap-drawer" role="dialog" aria-modal="true" aria-label="Rekap Desa">
+      <button type="button" className="kordes-close" onClick={onClose} aria-label="Tutup rekap Desa"><X size={18} aria-hidden="true" /></button>
 
       <div className="kordes-drawer-head">
         <div>
@@ -906,7 +922,7 @@ function VillageDrawer({
                 <th>PLPK</th>
                 <th>Kaleng</th>
                 <th>Bruto</th>
-                <th>Upah</th>
+                <th>Bisyaroh PLPK</th>
                 <th>Bersih</th>
 
                 <th>Status</th>
@@ -940,7 +956,7 @@ function VillageDrawer({
               ['Total Kaleng Terjemput', total.collectedCanCount],
               ['Total Tidak Terjemput', total.uncollectedCanCount],
               ['Total Jumlah Kotor', formatRupiah(total.grossAmount)],
-              ['Total Upah PLPK', formatRupiah(total.totalPlpkFee)],
+              ['Bisyaroh PLPK', formatRupiah(total.totalPlpkFee)],
               ['Total Jumlah Bersih', formatRupiah(total.netAmount)],
 
               ['Nomor F.015', item.f015Number],

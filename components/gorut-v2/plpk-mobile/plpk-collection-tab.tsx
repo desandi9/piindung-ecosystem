@@ -4,6 +4,7 @@ import { ChevronRight, ClipboardCheck, Inbox, Lock, Search, SearchX } from 'luci
 import { useDeferredValue, useMemo, useState } from 'react';
 
 import type { CollectionBatch, CollectionVisitStatus } from '@/features/gorut-v2/types';
+import { collectionBlockingReasonLabel, collectionHasAction, entryHasRecordAction, isServerCollectionBatch } from '@/features/gorut-v2/collection-api-view-model';
 import { formatNumber, formatPhoneNumber, formatRupiah } from '@/features/gorut-v2/formatters';
 import { canConfirmCollection, collectionStatusLabels, collectionVisitStatusLabels, formatPeriodLabel, isBatchLocked, isEntryEditable } from '@/features/gorut-v2/pengambilan-options';
 
@@ -24,7 +25,7 @@ function matchesFilter(status: CollectionVisitStatus, filter: FilterKey): boolea
 }
 
 /** Daftar Munfiq wilayah PLPK — kartu, bukan tabel. */
-export function PlpkCollectionTab({ batch, onOpenEntry, onReview }: { batch: CollectionBatch | null; onOpenEntry: (entryId: string) => void; onReview: () => void }) {
+export function PlpkCollectionTab({ batch, onOpenEntry, onReview, onCreate, createPending = false, activePeriod }: { batch: CollectionBatch | null; onOpenEntry: (entryId: string) => void; onReview: () => void; onCreate?: () => void; createPending?: boolean; activePeriod?: string }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
   const deferredQuery = useDeferredValue(query);
@@ -52,6 +53,7 @@ export function PlpkCollectionTab({ batch, onOpenEntry, onReview }: { batch: Col
               <Inbox size={30} aria-hidden="true" />
               <strong>Belum ada penjemputan aktif</strong>
               <p>Anda akan melihat daftar Munfiq di sini saat periode penjemputan dibuka.</p>
+              {onCreate ? <button type="button" className="plpk-btn plpk-btn-primary" onClick={onCreate} disabled={createPending} aria-busy={createPending}>{createPending ? 'Membuat…' : `Buat Collection ${activePeriod ?? ''}`.trim()}</button> : null}
             </div>
           </div>
         </div>
@@ -59,8 +61,9 @@ export function PlpkCollectionTab({ batch, onOpenEntry, onReview }: { batch: Col
     );
   }
 
-  const locked = isBatchLocked(batch);
-  const readyToConfirm = canConfirmCollection(batch);
+  const serverCanRecord = collectionHasAction(batch, 'RECORD_ENTRY');
+  const locked = serverCanRecord === undefined ? isBatchLocked(batch) : !serverCanRecord;
+  const readyToConfirm = collectionHasAction(batch, 'CONFIRM_AND_SUBMIT') ?? canConfirmCollection(batch);
   const correctionMode = batch.status === 'needs-correction';
 
   return (
@@ -78,6 +81,13 @@ export function PlpkCollectionTab({ batch, onOpenEntry, onReview }: { batch: Col
           <div className="plpk-warning" style={{ marginBottom: 14 }}>
             <Lock size={16} aria-hidden="true" />
             <span>Data periode ini sudah dikunci setelah dikonfirmasi. Anda tidak dapat mengubah hasil kunjungan.</span>
+          </div>
+        ) : null}
+
+        {isServerCollectionBatch(batch) && batch.canonical.blockingReasons.length ? (
+          <div className="plpk-callout" style={{ marginBottom: 14 }}>
+            <ClipboardCheck size={16} aria-hidden="true" />
+            <span><strong>Catatan server</strong>{batch.canonical.blockingReasons.map(collectionBlockingReasonLabel).join(' ')}</span>
           </div>
         ) : null}
 
@@ -119,7 +129,8 @@ export function PlpkCollectionTab({ batch, onOpenEntry, onReview }: { batch: Col
         {visible.length ? (
           <div className="plpk-list">
             {visible.map((entry) => {
-              const flagged = correctionMode && isEntryEditable(batch, entry.id);
+              const editable = entryHasRecordAction(batch, entry.id) ?? isEntryEditable(batch, entry.id);
+              const flagged = correctionMode && editable;
               return (
                 <button
                   key={entry.id}

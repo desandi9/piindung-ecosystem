@@ -5,6 +5,7 @@ import type { IconSvgElement } from '@hugeicons/react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
+import { resolveCollectionFrontendMode } from '@/features/gorut-v2/collection-api-client';
 import { saveCollectionBatch } from '@/features/gorut-v2/collection-store';
 import { activeKordesProfile } from '@/features/gorut-v2/kordes-mock-data';
 import { applyKordesDecision, buildKordesQueue, summarizeKordesPeriod, type KordesDecisionAction, type KordesDecisionInput } from '@/features/gorut-v2/kordes-mobile';
@@ -29,6 +30,7 @@ import { KordesServicesTab } from './kordes-services-tab';
 import { KordesVerificationDetail } from './kordes-verification-detail';
 import { KordesVerificationForm, KordesVerificationResult } from './kordes-verification-form';
 import { KordesVerificationTab } from './kordes-verification-tab';
+import { KordesMobileServerApp } from './kordes-mobile-server-app';
 
 const tabs: { key: KordesTab; label: string; icon: IconSvgElement }[] = [
   { key: 'home', label: 'Beranda', icon: Home01Icon },
@@ -39,6 +41,10 @@ const tabs: { key: KordesTab; label: string; icon: IconSvgElement }[] = [
 ];
 
 export function KordesMobileApp() {
+  return resolveCollectionFrontendMode() === 'demo' ? <KordesMobileDemoApp /> : <KordesMobileServerApp />;
+}
+
+export function KordesMobileDemoApp() {
   const batches = useCollectionBatches();
   const profile = activeKordesProfile;
   const [tab, setTab] = useState<KordesTab>('home');

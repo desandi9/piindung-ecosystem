@@ -5,10 +5,11 @@ import type { IconSvgElement } from '@hugeicons/react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { F009Preview } from '@/components/gorut-v2/pengambilan/f009-preview';
+import { resolveCollectionFrontendMode } from '@/features/gorut-v2/collection-api-client';
 import { saveCollectionBatch } from '@/features/gorut-v2/collection-store';
 import { plpkNotifications, type PlpkServiceScreen } from '@/features/gorut-v2/plpk-mobile-content';
 import { activeBatchForPlpk, activePlpkProfile, historyForPlpk, useCollectionBatches } from '@/features/gorut-v2/plpk-mobile-data';
-import { submitPlpkBatch, summarizeEntries } from '@/features/gorut-v2/pengambilan-options';
+import { calculatePlpkFee, isEligibleForPlpkFee, submitPlpkBatch, summarizeEntries } from '@/features/gorut-v2/pengambilan-options';
 import type { CollectionBatch, CollectionEntry } from '@/features/gorut-v2/types';
 
 import { MobileBottomNav } from './mobile-bottom-nav';
@@ -25,6 +26,8 @@ import { PlpkReviewSheet } from './plpk-review-sheet';
 import { PlpkServicesTab } from './plpk-services-tab';
 import { PlpkVisitForm } from './plpk-visit-form';
 import { PlpkZiswafScreen } from './plpk-ziswaf-screen';
+import { PlpkMobileServerApp } from './plpk-mobile-server-app';
+import type { PlpkEntryDraft } from './plpk-visit-form';
 
 type TabKey = 'home' | 'collection' | 'journal' | 'services' | 'profile';
 
@@ -38,6 +41,10 @@ const tabs: { key: TabKey; label: string; icon: IconSvgElement }[] = [
 
 /** Shell prototipe PLPK. Alur simpan, kunci, dan sinkronisasi Kordes tetap memakai store yang sama. */
 export function PlpkMobileApp() {
+  return resolveCollectionFrontendMode() === 'demo' ? <PlpkMobileDemoApp /> : <PlpkMobileServerApp />;
+}
+
+export function PlpkMobileDemoApp() {
   const batches = useCollectionBatches();
   const profile = activePlpkProfile;
   const [tab, setTab] = useState<TabKey>('home');
@@ -149,7 +156,17 @@ export function PlpkMobileApp() {
           batch={activeBatch}
           entry={openEntry}
           onClose={() => setOpenEntryId(null)}
-          onSave={(entry, mode) => {
+          onSave={(draft: PlpkEntryDraft, mode) => {
+            const amount = Number(draft.amount);
+            const entry: CollectionEntry = {
+              ...openEntry,
+              amount,
+              visitStatus: draft.visitStatus,
+              collectedAt: new Date().toISOString().slice(0, 10),
+              eligibleForPlpkFee: isEligibleForPlpkFee(amount, draft.visitStatus),
+              plpkFee: calculatePlpkFee(amount, draft.visitStatus),
+              notes: draft.note ?? undefined,
+            };
             saveEntry(entry);
             if (mode === 'next') {
               const remaining = activeBatch.entries.filter((item) => item.id !== entry.id && item.visitStatus === 'pending');
@@ -157,14 +174,15 @@ export function PlpkMobileApp() {
               if (nextEntry) {
                 setOpenEntryId(nextEntry.id);
                 showToast('Hasil disimpan. Lanjut ke Munfiq berikutnya.');
-                return;
+                return null;
               }
               setOpenEntryId(null);
               showToast('Semua Munfiq sudah punya hasil kunjungan.');
-              return;
+              return null;
             }
             setOpenEntryId(null);
             showToast('Hasil kunjungan disimpan.');
+            return null;
           }}
         />
       ) : null}

@@ -1,5 +1,6 @@
 'use client';
 
+import { MotionConfig } from 'motion/react';
 import {
   createContext,
   useContext,
@@ -55,7 +56,7 @@ export function GorutThemeProvider({ children }: { children: ReactNode }) {
     },
   }), [mode, resolvedTheme]);
 
-  return <GorutThemeContext.Provider value={value}>{children}</GorutThemeContext.Provider>;
+  return <GorutThemeContext.Provider value={value}><MotionConfig reducedMotion="user">{children}</MotionConfig></GorutThemeContext.Provider>;
 }
 
 export function useGorutTheme() {

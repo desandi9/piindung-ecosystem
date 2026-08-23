@@ -22,6 +22,7 @@ import { canAccessAdminDashboard } from "@/features/auth/route-access"
 import type { AuthUser } from "@/types/auth"
 import { usePublicProducts } from "@/lib/public-products"
 import { cn } from "@/lib/utils"
+import { GORUT_ENTRY_SOURCE_KEY, GORUT_ENTRY_SOURCE_PIINDUNG } from "@/features/gorut-v2/motion"
 
 export type PortalHubModule = { key: string; name: string; route: string; description: string }
 export type PortalHubNotification = { id: string; title: string; body: string; createdAt?: string; readAt: string | null }
@@ -511,7 +512,8 @@ function EcosystemCard({ app, variants, reduced }: { app: EcosystemApp; variants
           {app.status === "available" ? (
             <Link
               href={app.route}
-              className="group/cta inline-flex min-h-10 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#07965d] to-[#0bbf78] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(7,150,93,0.24)] transition-all duration-300 hover:shadow-[0_12px_28px_rgba(7,150,93,0.36)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#07131f]"
+              onClick={app.id === "gorut" ? () => window.sessionStorage.setItem(GORUT_ENTRY_SOURCE_KEY, GORUT_ENTRY_SOURCE_PIINDUNG) : undefined}
+              className="group/cta inline-flex min-h-10 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#07965d] to-[#0bbf78] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(7,150,93,0.24)] transition-shadow duration-200 hover:shadow-[0_12px_28px_rgba(7,150,93,0.36)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#07131f]"
             >
               <span className="relative flex items-center gap-2">
                 {app.cta}
@@ -691,11 +693,11 @@ function QuickAccess({
             >
               <Link
                 href={item.href}
-                className="group inline-flex items-center gap-2 rounded-xl border border-[#dce8e2]/90 bg-white/90 px-4 py-2.5 text-sm font-medium text-[#08213b] shadow-sm transition duration-200 hover:border-[#07965d]/35 hover:bg-[#e7f7ef]/60 hover:text-[#07965d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:border-white/10 dark:bg-[#0d1e2d]/85 dark:text-slate-200 dark:hover:border-emerald-500/30 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
+                className="group inline-flex items-center gap-2 rounded-xl border border-[#dce8e2]/90 bg-white/90 px-4 py-2.5 text-sm font-medium text-[#08213b] shadow-sm transition-[color,background-color,border-color,box-shadow] duration-200 hover:border-[#07965d]/35 hover:bg-[#e7f7ef]/60 hover:text-[#07965d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:border-white/10 dark:bg-[#0d1e2d]/85 dark:text-slate-200 dark:hover:border-emerald-500/30 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
               >
                 <Icon className="h-4 w-4 shrink-0 text-[#07965d] dark:text-emerald-400" aria-hidden="true" />
                 {item.title}
-                <ArrowRight className="h-3 w-3 shrink-0 opacity-0 transition-all duration-200 group-hover:translate-x-[3px] group-hover:opacity-100" aria-hidden="true" />
+                <ArrowRight className="h-3 w-3 shrink-0 opacity-0 transition-[transform,opacity] duration-200 group-hover:translate-x-[3px] group-hover:opacity-100" aria-hidden="true" />
               </Link>
             </motion.div>
           )

@@ -1,6 +1,8 @@
 'use client';
 
-import { AlertTriangle, Banknote, CalendarDays, CheckCircle2, Clock3, Download, FileQuestion, Info, ListFilter, MapPinned, Rows3, Search, SearchX } from 'lucide-react';
+import { Alert02Icon, BanknoteIcon, CheckmarkCircle02Icon, Clock01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
+import { CalendarDays, Download, FileQuestion, Info, ListFilter, MapPinned, Rows3, Search, SearchX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { formatRupiah } from '@/features/gorut-v2/formatters';
@@ -10,6 +12,8 @@ import { GorutHeader } from './gorut-header';
 import { GorutSidebar } from './gorut-sidebar';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { MobileSidebar } from './mobile-sidebar';
+import { PenghimpunanFilterHeading } from './penghimpunan-filter-heading';
+import { PenghimpunanPageHeader } from './penghimpunan-page-header';
 import { PenghimpunanTabs } from './penghimpunan-tabs';
 
 const target = { current: 'Rp1,42 M', max: 'Rp2 M', percentage: 71 };
@@ -34,10 +38,10 @@ export function PcVerificationShell() {
     return (
       <div className="gorut-viewport">
         <div className="gorut-app">
-          <GorutSidebar target={target} />
+          <GorutSidebar />
           <div className="gorut-workspace">
             <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
-            <main className="gorut-main"><div className="gorut-placeholder-skeleton" aria-label="Memuat scaffold Verifikasi PC" aria-busy="true" /></main>
+            <main className="gorut-main gorut-collection-workspace"><div className="gorut-placeholder-skeleton" aria-label="Memuat scaffold Verifikasi PC" aria-busy="true" /></main>
           </div>
         </div>
       </div>
@@ -47,24 +51,22 @@ export function PcVerificationShell() {
   return (
     <div className="gorut-viewport">
       <div className="gorut-app">
-        <GorutSidebar target={target} />
+        <GorutSidebar />
 
         <div className="gorut-workspace">
           <GorutHeader title="Penghimpunan" onMenuOpen={() => setMobileMenu(true)} />
 
-          <main className="gorut-main gorut-collect-main pc-verification-main">
+          <main className="gorut-main gorut-collect-main gorut-collection-workspace pc-verification-main">
+            <PenghimpunanPageHeader
+              title="Verifikasi PC"
+              description="Area pemeriksaan akhir penghimpunan tingkat kabupaten setelah rekap UPZIS tersedia."
+              meta={<span className="pc-verification-availability"><FileQuestion size={14} aria-hidden="true" />Sumber data belum aktif</span>}
+            />
+
             <PenghimpunanTabs />
 
-            <section className="gorut-collect-heading" aria-label="Judul halaman">
-              <div>
-                <p>PENGHIMPUNAN</p>
-                <h1>Verifikasi PC</h1>
-                <span>Area pemeriksaan akhir penghimpunan tingkat kabupaten setelah rekap UPZIS tersedia.</span>
-              </div>
-              <span className="pc-verification-availability"><FileQuestion size={14} aria-hidden="true" />Sumber data belum aktif</span>
-            </section>
-
             <section className="pjm-filters pc-verification-filters" aria-label="Filter Verifikasi PC belum tersedia">
+              <PenghimpunanFilterHeading description="Kontrol akan aktif setelah rekap tingkat UPZIS tersedia untuk diverifikasi." />
               <UnavailableFilter id="pc-period" icon={CalendarDays} label="Periode" options={['Semua Periode', 'Belum Tersedia']} />
               <UnavailableFilter id="pc-upzis" icon={MapPinned} label="Kecamatan / UPZIS" options={['Semua Kecamatan / UPZIS', 'Belum Tersedia']} />
               <UnavailableFilter id="pc-status" icon={ListFilter} label="Status Verifikasi" options={['Semua Status', 'Belum Tersedia']} />
@@ -73,10 +75,10 @@ export function PcVerificationShell() {
             </section>
 
             <section className="pjm-summary pc-verification-summary" aria-label="Ringkasan Verifikasi PC">
-              <EmptyStat icon={Clock3} label="Menunggu Verifikasi PC" />
-              <EmptyStat icon={CheckCircle2} label="Terverifikasi PC" />
-              <EmptyStat icon={AlertTriangle} label="Perlu Koreksi" />
-              <EmptyStat icon={Banknote} label="Total Penghimpunan" value={formatRupiah(0)} highlighted />
+              <EmptyStat icon={Clock01Icon} label="Menunggu Verifikasi PC" />
+              <EmptyStat icon={CheckmarkCircle02Icon} label="Terverifikasi PC" />
+              <EmptyStat icon={Alert02Icon} label="Perlu Koreksi" />
+              <EmptyStat icon={BanknoteIcon} label="Total Penghimpunan" value={formatRupiah(0)} highlighted />
             </section>
 
             <p className="gorut-collect-readonly-note pc-verification-note">
@@ -86,10 +88,13 @@ export function PcVerificationShell() {
 
             <section className="pjm-panel gorut-collect-panel pc-verification-panel" aria-label="Tabel Verifikasi PC belum tersedia">
               <header className="pjm-toolbar pc-verification-toolbar">
-                <label className="pjm-search pc-verification-disabled-control" title={unavailableMessage}>
-                  <Search size={16} aria-hidden="true" />
-                  <input type="search" placeholder="Cari UPZIS, wilayah, atau nomor dokumen" aria-label="Pencarian Verifikasi PC belum tersedia" disabled />
-                </label>
+                <div className="pjm-toolbar-primary">
+                  <div className="pjm-toolbar-heading"><h2>Daftar verifikasi PC</h2><p>Belum ada data yang tersedia</p></div>
+                  <label className="pjm-search pc-verification-disabled-control" title={unavailableMessage}>
+                    <Search size={16} aria-hidden="true" />
+                    <input type="search" placeholder="Cari UPZIS, wilayah, atau nomor dokumen" aria-label="Pencarian Verifikasi PC belum tersedia" disabled />
+                  </label>
+                </div>
 
                 <div className="pjm-toolbar-actions">
                   <label className="pjm-page-size pc-verification-disabled-control" title={unavailableMessage}>
@@ -117,7 +122,7 @@ export function PcVerificationShell() {
                       <th>Periode</th>
                       <th>Jumlah Desa</th>
                       <th className="is-amount">Jumlah Kotor</th>
-                      <th className="is-amount">Bisyaroh</th>
+                      <th className="is-amount">Bisyaroh PLPK</th>
                       <th className="is-amount">Jumlah Bersih</th>
                       <th>Kesiapan Dokumen</th>
                       <th className="is-status">Status</th>
@@ -179,10 +184,10 @@ function UnavailableFilter({ id, icon: Icon, label, options }: { id: string; ico
   );
 }
 
-function EmptyStat({ icon: Icon, label, value = '0', highlighted = false }: { icon: typeof Clock3; label: string; value?: string; highlighted?: boolean }) {
+function EmptyStat({ icon, label, value = '0', highlighted = false }: { icon: IconSvgElement; label: string; value?: string; highlighted?: boolean }) {
   return (
     <article className={highlighted ? 'is-highlighted' : undefined}>
-      <div className="pjm-summary-heading"><span><Icon size={15} aria-hidden="true" /></span><p>{label}</p></div>
+      <div className="pjm-summary-heading"><span><HugeiconsIcon icon={icon} size={17} strokeWidth={1.8} aria-hidden="true" /></span><p>{label}</p></div>
       <strong>{value}</strong>
       <small>Menunggu sumber data Verifikasi PC</small>
     </article>
