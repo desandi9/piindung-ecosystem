@@ -1,21 +1,21 @@
 import bcrypt from "bcryptjs"
 import { PrismaClient } from "@prisma/client"
+import { resolve } from "node:path"
+import { pathToFileURL } from "node:url"
 
-const deploymentEnvironment = process.env.GORUT_DEPLOYMENT_ENV?.trim().toUpperCase()
-const platformProduction = process.env.VERCEL_ENV?.trim().toLowerCase() === "production"
-const feeEnabled = process.env.GORUT_ENABLE_PROVISIONAL_FEE_POLICY === "true"
-const fixtureConfirmed = process.env.GORUT_UAT_FIXTURE_CONFIRM === "NON_PRODUCTION_ONLY"
-const fixturePassword = process.env.GORUT_UAT_FIXTURE_PASSWORD ?? ""
+export const gorutUatFixtureTransactionOptions = Object.freeze({
+  maxWait: 10_000,
+  timeout: 60_000,
+})
 
-if (platformProduction || (deploymentEnvironment !== "STAGING" && deploymentEnvironment !== "UAT")) {
-  throw new Error("GORUT UAT fixture is disabled outside explicit STAGING/UAT and on Vercel production.")
-}
-if (!feeEnabled) throw new Error("GORUT_ENABLE_PROVISIONAL_FEE_POLICY=true is required for this UAT fixture.")
-if (!fixtureConfirmed) throw new Error("Set GORUT_UAT_FIXTURE_CONFIRM=NON_PRODUCTION_ONLY after confirming the database is non-production.")
-if (fixturePassword.length < 12) throw new Error("GORUT_UAT_FIXTURE_PASSWORD must contain at least 12 characters.")
-
-const prisma = new PrismaClient()
-const passwordHash = await bcrypt.hash(fixturePassword, 10)
+export const gorutUatFixtureExpectedSummary = Object.freeze({
+  kecamatanCount: 1,
+  rantingCount: 3,
+  plpkCount: 4,
+  munfiqCount: 12,
+  kordesCount: 3,
+  upzisActorCount: 2,
+})
 
 const rantingFixtures = [
   { code: "UAT-R01", name: "[UAT] Ranting Boundary" },
@@ -57,6 +57,34 @@ const actorFixtures = [
   { memberId: "PID-CCCCCCCCE234", name: "[UAT] PLPK Scope", phone: "628990010009", appRole: "admin_upzis", role: "PLPK", scopeCode: "UAT-P04" },
 ]
 
+const fixtureMemberIds = actorFixtures.map((actor) => actor.memberId)
+const kordesMemberIds = actorFixtures.filter((actor) => actor.role === "RANTING").map((actor) => actor.memberId)
+const upzisMemberIds = actorFixtures.filter((actor) => actor.role === "UPZIS").map((actor) => actor.memberId)
+
+export function validateGorutUatFixtureEnvironment(env = {}) {
+  const deploymentEnvironment = env.GORUT_DEPLOYMENT_ENV?.trim().toUpperCase()
+  const platformProduction = env.VERCEL_ENV?.trim().toLowerCase() === "production"
+  const fixturePassword = env.GORUT_UAT_FIXTURE_PASSWORD ?? ""
+
+  if (platformProduction || (deploymentEnvironment !== "STAGING" && deploymentEnvironment !== "UAT")) {
+    return { ok: false, error: "GORUT UAT fixture is disabled outside explicit STAGING/UAT and on Vercel production." }
+  }
+  if (env.GORUT_ENABLE_PROVISIONAL_FEE_POLICY !== "true") {
+    return { ok: false, error: "GORUT_ENABLE_PROVISIONAL_FEE_POLICY=true is required for this UAT fixture." }
+  }
+  if (env.GORUT_UAT_FIXTURE_CONFIRM !== "NON_PRODUCTION_ONLY") {
+    return { ok: false, error: "Set GORUT_UAT_FIXTURE_CONFIRM=NON_PRODUCTION_ONLY after confirming the database is non-production." }
+  }
+  if (!env.DATABASE_URL?.trim()) {
+    return { ok: false, error: "DATABASE_URL is required for the guarded UAT fixture." }
+  }
+  if (fixturePassword.length < 12) {
+    return { ok: false, error: "GORUT_UAT_FIXTURE_PASSWORD must contain at least 12 characters." }
+  }
+
+  return { ok: true, deploymentEnvironment }
+}
+
 async function upsertAssignment(tx, userId, actor, kecamatan, rantings, plpks) {
   const scope = actor.role === "UPZIS"
     ? { kecamatanId: kecamatan.id, rantingId: null, plpkId: null }
@@ -74,8 +102,8 @@ async function upsertAssignment(tx, userId, actor, kecamatan, rantings, plpks) {
   await tx.gorutOperationalAssignment.create({ data: { userId, role: actor.role, ...scope } })
 }
 
-try {
-  const result = await prisma.$transaction(async (tx) => {
+export async function seedGorutV2UatFixture({ prisma, passwordHash }) {
+  return prisma.$transaction(async (tx) => {
     const kecamatan = await tx.gorutKecamatan.upsert({
       where: { code: "UAT-KEC-01" },
       create: { code: "UAT-KEC-01", name: "[UAT] Kecamatan Release Candidate" },
@@ -133,12 +161,66 @@ try {
       await upsertAssignment(tx, user.id, actor, kecamatan, rantings, plpks)
     }
 
-    return { kecamatan: kecamatan.code, rantings: rantings.size, plpks: plpks.size, munfiqs: munfiqFixtures.length, actors: actorFixtures.length }
-  })
-
-  console.log("GORUT V2 NON-PRODUCTION UAT fixture ready:", result)
-  console.log("Synthetic login phones:", actorFixtures.map((actor) => `${actor.name}: ${actor.phone}`).join(" | "))
-  console.log("Password was read from GORUT_UAT_FIXTURE_PASSWORD and was not printed.")
-} finally {
-  await prisma.$disconnect()
+    return { kecamatanId: kecamatan.id }
+  }, gorutUatFixtureTransactionOptions)
 }
+
+export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
+  const [kecamatanCount, rantingCount, plpkCount, munfiqCount, kordesCount, upzisActorCount] = await Promise.all([
+    prisma.gorutKecamatan.count({ where: { id: kecamatanId, code: "UAT-KEC-01" } }),
+    prisma.gorutRanting.count({ where: { kecamatanId, code: { in: rantingFixtures.map((fixture) => fixture.code) } } }),
+    prisma.gorutPlpk.count({ where: { code: { in: plpkFixtures.map((fixture) => fixture.code) } } }),
+    prisma.gorutMunfiq.count({ where: { code: { in: munfiqFixtures.map((fixture) => fixture.code) } } }),
+    prisma.gorutOperationalAssignment.count({
+      where: { role: "RANTING", isActive: true, user: { memberId: { in: kordesMemberIds } } },
+    }),
+    prisma.gorutOperationalAssignment.count({
+      where: { role: "UPZIS", isActive: true, user: { memberId: { in: upzisMemberIds } } },
+    }),
+  ])
+  const summary = { kecamatanCount, rantingCount, plpkCount, munfiqCount, kordesCount, upzisActorCount }
+  const mismatches = Object.entries(gorutUatFixtureExpectedSummary)
+    .filter(([key, expected]) => summary[key] !== expected)
+    .map(([key, expected]) => `${key}: expected ${expected}, got ${summary[key]}`)
+
+  if (mismatches.length > 0) {
+    throw new Error(`GORUT UAT fixture verification failed: ${mismatches.join("; ")}`)
+  }
+  return summary
+}
+
+export async function runGorutV2UatSeed({
+  env = process.env,
+  createPrisma = () => new PrismaClient(),
+  hashPassword = (password) => bcrypt.hash(password, 10),
+  logger = console,
+} = {}) {
+  const guard = validateGorutUatFixtureEnvironment(env)
+  if (!guard.ok) throw new Error(guard.error)
+
+  const passwordHash = await hashPassword(env.GORUT_UAT_FIXTURE_PASSWORD)
+  const prisma = createPrisma()
+  try {
+    const seeded = await seedGorutV2UatFixture({ prisma, passwordHash })
+    const summary = await verifyGorutV2UatFixture({ prisma, kecamatanId: seeded.kecamatanId })
+    logger.log("GORUT V2 NON-PRODUCTION UAT fixture verified:", summary)
+    logger.log("Synthetic login phones:", actorFixtures.map((actor) => `${actor.name}: ${actor.phone}`).join(" | "))
+    logger.log("Password was read from GORUT_UAT_FIXTURE_PASSWORD and was not printed.")
+    return summary
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+const isDirectExecution = process.argv[1]
+  ? import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+  : false
+
+if (isDirectExecution) {
+  await runGorutV2UatSeed().catch((error) => {
+    console.error(`GORUT V2 UAT fixture failed: ${error instanceof Error ? error.message : "Unknown error"}`)
+    process.exitCode = 1
+  })
+}
+
+export const gorutUatFixtureMemberIds = Object.freeze([...fixtureMemberIds])
