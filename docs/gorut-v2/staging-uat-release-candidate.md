@@ -4,6 +4,8 @@ Dokumen ini hanya untuk staging/UAT. Policy fee bukan SOP resmi, tidak membawa m
 
 ## Environment contract
 
+Deployment prerequisite dan controlled migration procedure mengikuti `docs/gorut-v2/staging-deployment-runbook.md`. `npm run build` tidak menjalankan migration; `prisma migrate deploy` harus dijalankan sebagai langkah eksplisit hanya setelah project dan database non-production dikonfirmasi.
+
 Policy `GORUT-PLPK-FEE-V1-PROVISIONAL` aktif hanya jika kedua kondisi berikut benar:
 
 ```text
@@ -11,9 +13,12 @@ GORUT_DEPLOYMENT_ENV=STAGING
 # atau GORUT_DEPLOYMENT_ENV=UAT
 
 GORUT_ENABLE_PROVISIONAL_FEE_POLICY=true
+DATABASE_URL=<staging secret>
 ```
 
 Nilai lain, flag yang tidak ada/false, `GORUT_DEPLOYMENT_ENV=PRODUCTION`, atau `VERCEL_ENV=production` harus fail-closed. Jangan simpan nilai `DATABASE_URL`, `AUTH_SECRET`, password, token, atau secret lain di repository.
+
+Sebelum migration atau fixture, owner harus mengonfirmasi satu `CANONICAL_GORUT_STAGING_PROJECT`, mapping branch Preview, dan dedicated PostgreSQL staging/UAT. Vercel Authentication tetap aktif; tester internal harus mempunyai authorized Preview access.
 
 API dan UI harus menampilkan authority policy persis sebagai `PROVISIONAL_PENDING_SOP_CONFIRMATION`. Istilah finansial canonical:
 

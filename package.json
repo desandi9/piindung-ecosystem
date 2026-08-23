@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
+    "gorut:staging:migrate": "node scripts/migrate-gorut-v2-staging.mjs deploy",
+    "gorut:staging:migrate:status": "node scripts/migrate-gorut-v2-staging.mjs status",
     "uat:seed:gorut-v2": "node scripts/seed-gorut-v2-uat.mjs",
     "uploads:cleanup": "node scripts/cleanup-orphan-uploads.mjs",
     "uploads:cleanup:delete": "node scripts/cleanup-orphan-uploads.mjs --delete"
