@@ -21,11 +21,13 @@ export function MobileBottomNav<T extends string>({
   activeKey,
   ariaLabel,
   onSelect,
+  disabled = false,
 }: {
   items: MobileBottomNavItem<T>[];
   activeKey: T;
   ariaLabel: string;
   onSelect: (key: T) => void;
+  disabled?: boolean;
 }) {
   return (
     <nav className="plpk-nav" aria-label={ariaLabel}>
@@ -40,6 +42,7 @@ export function MobileBottomNav<T extends string>({
             className={active ? 'is-active' : undefined}
             aria-current={active ? 'page' : undefined}
             aria-label={label}
+            disabled={disabled}
             onClick={() => onSelect(key)}
           >
             <span className="plpk-nav-icon">

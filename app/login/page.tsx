@@ -14,20 +14,17 @@ export default function LoginPage() {
 
   if (presentation.kind === "gorut-mobile") {
     return (
-      <>
-        {isTransitioning && <LoginTransitionScreen />}
-        <main
-          className="min-h-[100svh] bg-[#eef5f1] px-4 py-5 sm:px-6 sm:py-8"
-          data-login-presentation="gorut-mobile"
-          data-mobile-actor={presentation.actorType.toLowerCase()}
-        >
-          <div className="mx-auto flex min-h-[calc(100svh-2.5rem)] w-full max-w-[430px] items-center sm:min-h-[calc(100svh-4rem)]">
-            <section className="w-full rounded-2xl bg-white px-5 py-7 shadow-[0_18px_48px_rgba(15,52,43,0.12)] sm:px-8 sm:py-9" aria-label={`Login GORUT ${presentation.actorLabel}`}>
-              <LoginForm presentation={presentation} onTransitionStart={() => setIsTransitioning(true)} />
-            </section>
-          </div>
-        </main>
-      </>
+      <main
+        className="min-h-[100svh] overflow-x-hidden bg-[#f6f8f6] sm:px-6"
+        data-login-presentation="gorut-mobile"
+        data-mobile-actor={presentation.actorType.toLowerCase()}
+      >
+        <div className="mx-auto flex min-h-[100svh] w-full max-w-[430px] items-center bg-white px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))] sm:border-x sm:border-[#e4eae7] sm:px-8">
+          <section className="w-full" aria-label={`Login GORUT ${presentation.actorLabel}`}>
+            <LoginForm presentation={presentation} />
+          </section>
+        </div>
+      </main>
     )
   }
 

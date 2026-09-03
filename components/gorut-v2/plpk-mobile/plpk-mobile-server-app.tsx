@@ -13,6 +13,7 @@ import type { CollectionVisitOutcome, PlpkProfile } from '@/features/gorut-v2/ty
 import { useCollectionApi } from '@/features/gorut-v2/use-collection-api';
 
 import { MobileBottomNav } from './mobile-bottom-nav';
+import { MobileOperationalLoadingShell } from '../mobile-shared/mobile-operational-loading-shell';
 import { PlpkCollectionTab } from './plpk-collection-tab';
 import { PlpkDistributionScreen } from './plpk-distribution-screen';
 import { PlpkHome } from './plpk-home';
@@ -146,7 +147,16 @@ export function PlpkMobileServerApp({ profile }: { profile: PlpkProfile }) {
   }, [activeBatch, api, showToast]);
 
   if (api.loading && !batches.length) {
-    return <div className="plpk-app" aria-busy="true"><div className="plpk-scroll"><div className="plpk-card"><div className="plpk-empty"><strong>Memuat collection…</strong><p>Mengambil data canonical dari server.</p></div></div></div></div>;
+    return (
+      <div className="plpk-app" aria-busy="true">
+        <MobileOperationalLoadingShell
+          initials={profile.identity.initials}
+          name={profile.name}
+          assignmentLabel={profile.identity.assignmentLabel}
+        />
+        <MobileBottomNav items={tabs} activeKey="home" ariaLabel="Navigasi utama" onSelect={() => undefined} disabled />
+      </div>
+    );
   }
 
   return (

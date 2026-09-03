@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import type { LoginPresentation } from "@/lib/login-presentation"
+import { resolvePostLoginNavigation, shouldPrefetchPostLoginDestination, type LoginPresentation } from "@/lib/login-presentation"
 import { cn } from "@/lib/utils"
 
 export function LoginForm({ presentation, onTransitionStart }: { presentation: LoginPresentation; onTransitionStart?: () => void }) {
@@ -20,12 +20,16 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isDirectNavigating, setIsDirectNavigating] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const isGorutMobile = presentation.kind === "gorut-mobile"
+  const navigation = resolvePostLoginNavigation(presentation)
+  const shouldPrefetch = shouldPrefetchPostLoginDestination(presentation)
 
   useEffect(() => {
-    router.prefetch("/dashboard")
-  }, [router])
+    if (!shouldPrefetch) return
+    router.prefetch(navigation.destination)
+  }, [navigation.destination, router, shouldPrefetch])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -35,10 +39,18 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
     const result = await login(phoneNumber.trim(), password, { remember: rememberMe })
     if (result.success) {
       setErrorMessage(null)
-      setIsTransitioning(true)
-      onTransitionStart?.()
-      await new Promise((resolve) => window.setTimeout(resolve, 1250))
-      router.push(presentation.safeDestination)
+      if (navigation.method === "replace") {
+        setIsDirectNavigating(true)
+        router.replace(navigation.destination)
+        return
+      }
+
+      if (navigation.showDashboardTransition) {
+        setIsTransitioning(true)
+        onTransitionStart?.()
+        await new Promise((resolve) => window.setTimeout(resolve, 1250))
+      }
+      router.push(navigation.destination)
     } else {
       setErrorMessage(result.error ?? "Nomor HP atau password tidak valid.")
     }
@@ -48,14 +60,20 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
 
   return (
     <>
-      <div className={cn("w-full mx-auto transition-all duration-500 ease-out data-[transitioning=true]:scale-[0.985] data-[transitioning=true]:opacity-80", isGorutMobile ? "max-w-none" : "max-w-md")} data-transitioning={isTransitioning}>
+      <div
+        className={cn("w-full mx-auto transition-all duration-500 ease-out data-[transitioning=true]:scale-[0.985] data-[transitioning=true]:opacity-80", isGorutMobile ? "max-w-none" : "max-w-md")}
+        data-transitioning={isTransitioning}
+        data-post-login-method={navigation.method}
+      >
       {/* Logo */}
       {isGorutMobile ? (
-        <div className="mb-8 flex items-center justify-between gap-5">
-          <Image src="/piindung-logo-blue.png" alt="PIINDUNG" width={999} height={314} className="h-auto w-[132px]" priority />
-          <div className="flex items-center gap-2.5 text-[#0f3460]">
-            <Image src="/gorut-logo-icon.png" alt="" width={1905} height={2000} className="h-9 w-auto" priority />
-            <div className="leading-none"><strong className="block text-base tracking-[-0.02em]">GORUT</strong><span className="mt-1 block text-[10px] font-medium text-[#3d6457]">Gerakan Koin NU</span></div>
+        <div className="mb-9 text-center">
+          <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-[#eaf8f1]">
+            <Image src="/gorut-logo-icon.png" alt="" width={1905} height={2000} className="h-11 w-auto" priority />
+          </div>
+          <div className="mt-4 text-[#08213b]">
+            <strong className="block text-[1.65rem] font-bold leading-none tracking-[-0.03em]">GORUT</strong>
+            <span className="mt-2 block text-xs font-medium text-[#527064]">Gerakan Koin NU Kabupaten Garut</span>
           </div>
         </div>
       ) : (
@@ -73,16 +91,25 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
       )}
 
       {/* Login Title */}
-      <h1 className={cn("font-medium text-foreground", isGorutMobile ? "text-[1.75rem] leading-tight tracking-[-0.025em]" : "text-center text-lg mb-8")}>
+      <h1 className={cn("font-medium text-foreground", isGorutMobile ? "text-center text-[1.75rem] leading-tight tracking-[-0.025em] text-[#08213b]" : "text-center text-lg mb-8")}>
         {isGorutMobile ? "Masuk ke GORUT" : "Login Menggunakan No HP dan Password"}
       </h1>
-      {isGorutMobile ? <p className="mb-7 mt-2 text-[15px] leading-6 text-[#52645e]">Masuk sebagai <strong className="font-semibold text-[#1f6d4d]">{presentation.actorLabel}</strong> menggunakan akun PIINDUNG aktif Anda.</p> : null}
+      {isGorutMobile ? (
+        <div className="mb-8 mt-3 text-center">
+          <span className="inline-flex min-h-7 items-center rounded-full bg-[#eaf8f1] px-3 text-xs font-bold uppercase tracking-[0.08em] text-[#067a4c]">
+            {presentation.actorLabel}
+          </span>
+          <p className="mx-auto mt-4 max-w-[20rem] text-[15px] leading-6 text-[#61706b]">
+            Gunakan nomor HP dan password akun PIINDUNG Anda.
+          </p>
+        </div>
+      ) : null}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Phone Number Input */}
         <div>
-          {isGorutMobile ? <label htmlFor="login-phone" className="mb-2 block text-sm font-medium text-[#253a33]">Nomor HP</label> : null}
+          {isGorutMobile ? <label htmlFor="login-phone" className="mb-2 block text-sm font-semibold text-[#25364a]">No. HP</label> : null}
           <div className="relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
               <Phone className="h-5 w-5" aria-hidden="true" />
@@ -93,17 +120,17 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
               inputMode="tel"
               autoComplete="tel"
               aria-label={isGorutMobile ? undefined : "Nomor HP"}
-              placeholder="Nomor HP"
+              placeholder={isGorutMobile ? "Contoh: 0812 3456 7890" : "Nomor HP"}
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="h-14 pl-12 pr-4 text-base rounded-xl border-gray-200 bg-white focus:border-[#2e8b57] focus:ring-[#2e8b57]/20"
+              className={cn("h-14 pl-12 pr-4 text-base rounded-xl focus:border-[#07965d] focus:ring-[#07965d]/20", isGorutMobile ? "border-[#dfe7e3] bg-[#f8faf9] text-[#25364a] placeholder:text-[#68766f]" : "border-gray-200 bg-white")}
             />
           </div>
         </div>
 
         {/* Password Input */}
         <div>
-          {isGorutMobile ? <label htmlFor="login-password" className="mb-2 block text-sm font-medium text-[#253a33]">Password</label> : null}
+          {isGorutMobile ? <label htmlFor="login-password" className="mb-2 block text-sm font-semibold text-[#25364a]">Password</label> : null}
           <div className="relative">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
               <Lock className="h-5 w-5" aria-hidden="true" />
@@ -116,12 +143,12 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-14 pl-12 pr-14 text-base rounded-xl border-gray-200 bg-white focus:border-[#2e8b57] focus:ring-[#2e8b57]/20"
+              className={cn("h-14 pl-12 pr-14 text-base rounded-xl focus:border-[#07965d] focus:ring-[#07965d]/20", isGorutMobile ? "border-[#dfe7e3] bg-[#f8faf9] text-[#25364a] placeholder:text-[#68766f]" : "border-gray-200 bg-white")}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-1 top-1/2 flex size-12 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2e8b57]/40"
+              className="absolute right-1 top-1/2 flex size-12 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d]/40"
               aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
               aria-pressed={showPassword}
             >
@@ -131,7 +158,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
         </div>
 
         {errorMessage ? (
-          <p className="text-sm leading-5 text-destructive" role="alert">{errorMessage}</p>
+          <p className={cn("text-sm leading-5 text-destructive", isGorutMobile && "rounded-xl bg-[#fdecec] px-4 py-3 text-[#a43f3f]")} role="alert">{errorMessage}</p>
         ) : null}
 
         {/* Remember Me */}
@@ -140,11 +167,11 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
             id="remember"
             checked={rememberMe}
             onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-            className="border-gray-300 data-[state=checked]:bg-[#2e8b57] data-[state=checked]:border-[#2e8b57]"
+            className="border-gray-300 data-[state=checked]:bg-[#07965d] data-[state=checked]:border-[#07965d]"
           />
           <label
             htmlFor="remember"
-            className="text-sm text-muted-foreground cursor-pointer"
+            className={cn("text-sm text-muted-foreground cursor-pointer", isGorutMobile && "text-[#52645e]")}
           >
             Ingat Saya
           </label>
@@ -153,16 +180,21 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
         {/* Login Button */}
         <Button
           type="submit"
-          disabled={isLoading || isTransitioning}
-          className="w-full h-14 text-base font-semibold rounded-xl bg-[#2e8b57] hover:bg-[#257a4a] text-white transition-colors disabled:opacity-70"
+          disabled={isLoading || isTransitioning || isDirectNavigating}
+          className={cn("w-full h-14 text-base font-semibold rounded-xl text-white transition-colors disabled:opacity-70", isGorutMobile ? "bg-[#07965d] hover:bg-[#067a4c]" : "bg-[#2e8b57] hover:bg-[#257a4a]")}
         >
-          {isTransitioning ? "Memuat Dashboard..." : isLoading ? "Loading..." : "Login"}
+          {isGorutMobile
+            ? isDirectNavigating ? "Membuka GORUT..." : isLoading ? "Memeriksa akun..." : "Masuk"
+            : isTransitioning ? "Memuat Dashboard..." : isLoading ? "Loading..." : "Login"}
         </Button>
       </form>
 
       {/* Footer */}
       {isGorutMobile ? (
-        <div className="mt-8 text-center text-xs leading-5 text-[#61726c]"><p>Satu akun PIINDUNG untuk layanan GORUT</p><p className="font-medium text-[#315e4e]">NU Care–LAZISNU Kabupaten Garut</p></div>
+        <div className="mt-10 text-center text-xs leading-5 text-[#61706b]">
+          <p>Terhubung dengan <strong className="font-semibold text-[#0f3460]">PIINDUNG</strong></p>
+          <p>NU Care–LAZISNU Kabupaten Garut</p>
+        </div>
       ) : (
         <p className="text-center text-sm text-muted-foreground mt-12">
           ©2026 — <span className="text-[#2e8b57] font-medium">NU Care Lazisnu Garut</span>

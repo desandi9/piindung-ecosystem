@@ -14,6 +14,7 @@ import { plpkNotifications } from '@/features/gorut-v2/plpk-mobile-content';
 import { useCollectionApi } from '@/features/gorut-v2/use-collection-api';
 
 import { MobileBottomNav } from '../plpk-mobile/mobile-bottom-nav';
+import { MobileOperationalLoadingShell } from '../mobile-shared/mobile-operational-loading-shell';
 import { PlpkDistributionScreen } from '../plpk-mobile/plpk-distribution-screen';
 import { PlpkNewsScreen } from '../plpk-mobile/plpk-news-screen';
 import { PlpkNotificationsScreen } from '../plpk-mobile/plpk-notifications-screen';
@@ -126,7 +127,17 @@ export function KordesMobileServerApp({ profile }: { profile: KordesHomeProfile 
   }, [api, verificationBatch]);
 
   if (api.loading && !batches.length) {
-    return <div className="plpk-app kordes-mobile-app" aria-busy="true"><div className="plpk-scroll"><div className="plpk-card"><div className="plpk-empty"><strong>Memuat antrean…</strong><p>Mengambil collection canonical dari server.</p></div></div></div></div>;
+    return (
+      <div className="plpk-app kordes-mobile-app" aria-busy="true">
+        <MobileOperationalLoadingShell
+          initials={profile.identity.initials}
+          name={profile.name}
+          assignmentLabel={profile.identity.assignmentLabel}
+          contextLabel={profile.upzis}
+        />
+        <MobileBottomNav items={tabs} activeKey="home" ariaLabel="Navigasi utama Kordes" onSelect={() => undefined} disabled />
+      </div>
+    );
   }
 
   return <div className="plpk-app kordes-mobile-app">
