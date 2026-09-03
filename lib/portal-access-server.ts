@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client"
 import { cookies } from "next/headers"
 import { getPrismaClient } from "@/lib/prisma"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
-import { roleHasPortalPermission, registeredModules, isRegisteredModuleKey, resolveEffectivePortalModules, type PortalPermission, type RegisteredModuleKey } from "@/lib/portal-access"
+import { portalPermissionIds, roleHasPortalPermission, registeredModules, isRegisteredModuleKey, resolveEffectivePortalModules, type PortalPermission, type RegisteredModuleKey } from "@/lib/portal-access"
 import { createSystemNotification } from "@/lib/portal-notifications-server"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
@@ -35,9 +35,7 @@ export async function resolveCurrentPortalAccess() {
   if (user.status !== "Aktif") return { kind: "inactive" as const, user: user as CurrentUser }
 
   const grants = await getModuleGrantsForUserIds([user.id]).then((byUser) => byUser.get(user.id) ?? [])
-  const permissions = [
-    "dashboard.view", "member_area.view", "profile.view", "help.view", "notifications.view", "users.manage", "access.manage", "articles.manage", "homepage.manage", "products.manage", "impact.manage", "gallery.manage", "downloads.manage", "help_content.manage", "contact.manage", "branding.manage", "settings.manage", "audit.view", "notifications.manage",
-  ].filter((permission) => roleHasPortalPermission(user.role, permission as PortalPermission))
+  const permissions = portalPermissionIds.filter((permission) => roleHasPortalPermission(user.role, permission))
 
   return { kind: "authorized" as const, user: user as CurrentUser, permissions, modules: resolveEffectivePortalModules(user.role, true, grants), grants }
 }

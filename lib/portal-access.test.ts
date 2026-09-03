@@ -11,6 +11,7 @@ import {
 void test("portal-access: Basic permissions", () => {
   const roles = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"] as const
   const basicPermissions = [
+    "portal.access",
     "dashboard.view",
     "member_area.view",
     "profile.view",
@@ -97,6 +98,21 @@ void test("portal-access: Other roles permissions", () => {
   }
 })
 
+void test("portal-access: Munfiq has only the minimal self-service capability set", () => {
+  for (const permission of ["portal.access", "profile.view", "notifications.view", "munfiq.transparency.own.view"] as const) {
+    assert.equal(roleHasPortalPermission("munfiq", permission), true)
+  }
+  for (const permission of ["dashboard.view", "member_area.view", "help.view", "modules.gorut.enter", "users.manage", "notifications.manage", "munfiq.account_links.manage"] as const) {
+    assert.equal(roleHasPortalPermission("munfiq", permission), false)
+  }
+  assert.equal(roleHasPortalPermission("super_admin_pc", "munfiq.account_links.manage"), true)
+  assert.equal(roleHasPortalPermission("admin_pc", "munfiq.account_links.manage"), false)
+  assert.equal(roleHasPortalPermission("admin_upzis", "munfiq.account_links.manage"), false)
+  assert.equal(roleHasPortalPermission("admin_kordes", "munfiq.account_links.manage"), false)
+  assert.equal(hasEffectiveModuleEntry("munfiq", true, "gorut", true), false)
+  assert.deepEqual(resolveEffectivePortalModules("munfiq", true, [{ moduleKey: "gorut", enabled: true }]), [])
+})
+
 void test("portal-access: Deny by default", () => {
   // Unknown role
   assert.equal(roleHasPortalPermission("unknown_role", "dashboard.view"), false)
@@ -134,7 +150,7 @@ void test("portal-access: Module entry rules", () => {
 })
 
 void test("portal-access proxy: authenticated users may self-read exact GET /me", () => {
-  for (const role of ["admin_upzis", "admin_kordes", "admin_pc", "super_admin_pc"] as const) {
+  for (const role of ["admin_upzis", "admin_kordes", "admin_pc", "super_admin_pc", "munfiq"] as const) {
     assert.equal(canAccessPortalAccessApiRoute(role, "GET", "/api/portal-access/me"), true)
   }
 })

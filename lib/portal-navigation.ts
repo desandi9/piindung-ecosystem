@@ -8,7 +8,8 @@ export const superAdminRoutes = ["/dashboard/landing-page", "/dashboard/landing-
 export const legacyRedirectRoutes = ["/admin/notifikasi", "/admin/pengguna", "/admin/hak-akses"] as const
 export const operationalBoundaryRoutes = ["/gorut", "/api/user-operational-scopes"] as const
 
-const roles: readonly AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
+const authenticatedRoles: readonly AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes", "munfiq"]
+const operationalPortalRoles: readonly AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
 
 function matches(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(`${route}/`)
@@ -19,7 +20,7 @@ export function classifyCanonicalRoute(pathname: string, role?: AppRole | string
   if (operationalBoundaryRoutes.some((route) => matches(pathname, route))) return "operational-boundary"
   if (publicRoutes.some((route) => matches(pathname, route))) return "public"
   if (superAdminRoutes.some((route) => matches(pathname, route))) return role === "super_admin_pc" ? "super-admin" : "unknown"
-  if (authenticatedRoutes.some((route) => matches(pathname, route))) return roles.includes(role as AppRole) ? "authenticated" : "unknown"
+  if (authenticatedRoutes.some((route) => matches(pathname, route))) return authenticatedRoles.includes(role as AppRole) ? "authenticated" : "unknown"
   return "unknown"
 }
 
@@ -32,5 +33,5 @@ export const primaryNavigation = [
 ] as const satisfies ReadonlyArray<{ id: string; label: string; href: string; icon: PortalNavigationIcon }>
 
 export function canPresentPortalModule(role: AppRole, route: string) {
-  return route === "/gorut" && roles.includes(role)
+  return route === "/gorut" && operationalPortalRoles.includes(role)
 }

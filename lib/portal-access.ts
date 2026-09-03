@@ -1,6 +1,7 @@
 import type { AppRole } from "@/types/auth"
 
 export const portalPermissionIds = [
+  "portal.access",
   "dashboard.view",
   "member_area.view",
   "profile.view",
@@ -21,6 +22,8 @@ export const portalPermissionIds = [
   "audit.view",
   "notifications.manage",
   "modules.gorut.enter",
+  "munfiq.transparency.own.view",
+  "munfiq.account_links.manage",
 ] as const
 
 export type PortalPermission = (typeof portalPermissionIds)[number]
@@ -31,14 +34,22 @@ export const registeredModules = [
 ] as const
 
 const basicPermissions: readonly PortalPermission[] = ["dashboard.view", "member_area.view", "profile.view", "help.view", "notifications.view"]
-const managementPermissions = portalPermissionIds.filter((permission) => !basicPermissions.includes(permission) && permission !== "modules.gorut.enter")
+const managementPermissions = portalPermissionIds.filter((permission) =>
+  !basicPermissions.includes(permission) &&
+  permission !== "portal.access" &&
+  permission !== "modules.gorut.enter" &&
+  permission !== "munfiq.transparency.own.view" &&
+  permission !== "munfiq.account_links.manage"
+)
 
 const capabilities: Record<AppRole, readonly PortalPermission[]> = {
-  super_admin_pc: [...basicPermissions, ...managementPermissions, "modules.gorut.enter"],
-  admin_pc: [...basicPermissions, "articles.manage"],
-  admin_upzis: basicPermissions,
-  admin_kordes: basicPermissions,
+  super_admin_pc: ["portal.access", ...basicPermissions, ...managementPermissions, "modules.gorut.enter", "munfiq.account_links.manage"],
+  admin_pc: ["portal.access", ...basicPermissions, "articles.manage"],
+  admin_upzis: ["portal.access", ...basicPermissions],
+  admin_kordes: ["portal.access", ...basicPermissions],
+  munfiq: ["portal.access", "profile.view", "notifications.view", "munfiq.transparency.own.view"],
 }
+const operationalModuleEligibleRoles: readonly AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
 
 export function isPortalPermission(value: string): value is PortalPermission {
   return portalPermissionIds.includes(value as PortalPermission)
@@ -58,7 +69,7 @@ export function getRegisteredModuleByRoute(route: string) {
 }
 
 export function hasEffectiveModuleEntry(role: string, active: boolean, moduleKey: string, grantEnabled: boolean) {
-  if (!active || !isRegisteredModuleKey(moduleKey) || !(role in capabilities)) return false
+  if (!active || !isRegisteredModuleKey(moduleKey) || !(role in capabilities) || !operationalModuleEligibleRoles.includes(role as AppRole)) return false
   return role === "super_admin_pc" || grantEnabled
 }
 

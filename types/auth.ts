@@ -1,4 +1,4 @@
-export type AppRole = "super_admin_pc" | "admin_pc" | "admin_upzis" | "admin_kordes"
+export type AppRole = "super_admin_pc" | "admin_pc" | "admin_upzis" | "admin_kordes" | "munfiq"
 
 export interface AuthUser {
   id: string

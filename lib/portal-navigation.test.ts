@@ -25,6 +25,7 @@ void test("module presentation only accepts the existing GORUT route and roles",
   assert.equal(canPresentPortalModule("admin_upzis", "/gorut"), true)
   assert.equal(canPresentPortalModule("admin_kordes", "/gorut"), true)
   assert.equal(canPresentPortalModule("admin_pc", "/etasyaruf"), false)
+  assert.equal(canPresentPortalModule("munfiq", "/gorut"), false)
 })
 
 void test("classify public routes", () => {
@@ -34,7 +35,7 @@ void test("classify public routes", () => {
 })
 
 void test("classify authenticated routes across roles", () => {
-  const roles: AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
+  const roles: AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes", "munfiq"]
   for (const role of roles) {
     assert.equal(classifyCanonicalRoute("/dashboard", role), "authenticated")
     assert.equal(classifyCanonicalRoute("/profil", role), "authenticated")

@@ -33,6 +33,7 @@ void test("audience validation", () => {
   assert.equal(parseNotificationInput({ ...base, audience: "user", targetUserId: "u1" }).value?.targetUserId, "u1")
   assert.ok(parseNotificationInput({ ...base, audience: "user" }).error)
   assert.ok(parseNotificationInput({ ...base, targetRole: "admin_pc" }).error)
+  assert.equal(parseNotificationInput({ ...base, audience: "role", targetRole: "munfiq" }).value?.targetRole, "munfiq")
 })
 
 void test("action paths reject external and traversal forms", () => {
@@ -48,6 +49,7 @@ void test("eligibility supports all role and user", () => {
   assert.equal(isEligibleForNotification("role", null, "admin_pc", "u1", "admin_pc"), true)
   assert.equal(isEligibleForNotification("role", null, "admin_upzis", "u1", "admin_pc"), false)
   assert.equal(isEligibleForNotification("user", "u1", null, "u1", "admin_pc"), true)
+  assert.equal(isEligibleForNotification("role", null, "munfiq", "u2", "munfiq"), true)
 })
 
 void test("visibility excludes drafts withdrawals and expiry", () => {

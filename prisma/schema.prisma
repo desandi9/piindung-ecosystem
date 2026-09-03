@@ -14,6 +14,11 @@ enum GorutOperationalRole {
   PLPK
 }
 
+enum GorutMunfiqAccountLinkStatus {
+  ACTIVE
+  REVOKED
+}
+
 enum GorutTransactionState {
   DRAFT
   WAITING_RANTING_VERIFICATION
@@ -156,6 +161,9 @@ model User {
   targetedNotifications    PortalNotification[]         @relation("PortalNotificationTarget")
   notificationReceipts     PortalNotificationReceipt[]
   gorutAssignments         GorutOperationalAssignment[]
+  gorutMunfiqAccountLinks  GorutMunfiqAccountLink[]     @relation("GorutMunfiqLinkedAccount")
+  gorutMunfiqLinksCreated  GorutMunfiqAccountLink[]     @relation("GorutMunfiqLinkCreator")
+  gorutMunfiqLinksRevoked  GorutMunfiqAccountLink[]     @relation("GorutMunfiqLinkRevoker")
   gorutCreatedTransactions GorutTransaction[]           @relation("GorutTransactionCreator")
   gorutWorkflowEvents      GorutWorkflowEvent[]         @relation("GorutWorkflowActor")
   gorutCreatedCollections  GorutCollectionBatch[]       @relation("GorutCollectionCreator")
@@ -333,10 +341,36 @@ model GorutMunfiq {
   plpk        GorutPlpk              @relation(fields: [plpkId], references: [id], onDelete: Restrict)
   items       GorutTransactionItem[]
   collectionEntries GorutCollectionEntry[]
+  accountLinks GorutMunfiqAccountLink[]
 
   @@unique([legacyScope, legacyKey])
   @@index([rantingId])
   @@index([plpkId])
+}
+
+model GorutMunfiqAccountLink {
+  id              String                       @id @default(cuid())
+  linkCode        String                       @unique
+  userId          String
+  munfiqId        String
+  status          GorutMunfiqAccountLinkStatus @default(ACTIVE)
+  linkedAt        DateTime                     @default(now())
+  linkedByUserId  String
+  revokedAt       DateTime?
+  revokedByUserId String?
+  reason          String?
+  revokedReason   String?
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  user            User                         @relation("GorutMunfiqLinkedAccount", fields: [userId], references: [id], onDelete: Restrict)
+  munfiq          GorutMunfiq                   @relation(fields: [munfiqId], references: [id], onDelete: Restrict)
+  linkedBy        User                         @relation("GorutMunfiqLinkCreator", fields: [linkedByUserId], references: [id], onDelete: Restrict)
+  revokedBy       User?                        @relation("GorutMunfiqLinkRevoker", fields: [revokedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([munfiqId, status])
+  @@index([linkedByUserId])
+  @@index([revokedByUserId])
 }
 
 model GorutTransaction {
