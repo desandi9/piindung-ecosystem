@@ -1,10 +1,14 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import bcrypt from "bcryptjs"
 import { PrismaClient } from "@prisma/client"
 import {
   gorutUatFixtureExpectedSummary,
   gorutUatFixtureMemberIds,
+  gorutUatUpzisLoginPhones,
+  normalizeGorutUatFixturePhone,
   seedGorutV2UatFixture,
+  verifyGorutV2UatAuthFixture,
   verifyGorutV2UatFixture,
 } from "./seed-gorut-v2-uat.mjs"
 
@@ -12,6 +16,8 @@ const databaseUrl = process.env.GORUT_UAT_SEED_TEST_DATABASE_URL
 
 test("isolated PostgreSQL seed rolls back on failure and is idempotent", { skip: !databaseUrl }, async () => {
   const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
+  const fixturePassword = "isolated-auth-fixture-password"
+  const passwordHash = await bcrypt.hash(fixturePassword, 10)
   let failNextMunfiq = true
   prisma.$use(async (params, next) => {
     if (failNextMunfiq && params.model === "GorutMunfiq" && params.action === "upsert") {
@@ -24,7 +30,7 @@ test("isolated PostgreSQL seed rolls back on failure and is idempotent", { skip:
   try {
     await assert.rejects(seedGorutV2UatFixture({
       prisma,
-      passwordHash: "synthetic-isolated-test-hash",
+      passwordHash,
     }), /synthetic fixture transaction failure/)
 
     const rollbackCounts = await Promise.all([
@@ -37,12 +43,35 @@ test("isolated PostgreSQL seed rolls back on failure and is idempotent", { skip:
     ])
     assert.deepEqual(rollbackCounts, [0, 0, 0, 0, 0, 0])
 
-    const first = await seedGorutV2UatFixture({ prisma, passwordHash: "synthetic-isolated-test-hash" })
+    const first = await seedGorutV2UatFixture({ prisma, passwordHash })
     assert.deepEqual(await verifyGorutV2UatFixture({ prisma, kecamatanId: first.kecamatanId }), gorutUatFixtureExpectedSummary)
+    assert.deepEqual(await verifyGorutV2UatAuthFixture({ prisma, password: fixturePassword }), {
+      upzisLoginAccountCount: 2,
+      passwordMatch: true,
+      wrongPasswordRejected: true,
+      activeRoleScopeReady: true,
+    })
 
-    const second = await seedGorutV2UatFixture({ prisma, passwordHash: "synthetic-isolated-test-hash" })
+    const second = await seedGorutV2UatFixture({ prisma, passwordHash })
     assert.deepEqual(await verifyGorutV2UatFixture({ prisma, kecamatanId: second.kecamatanId }), gorutUatFixtureExpectedSummary)
+    assert.deepEqual(await verifyGorutV2UatAuthFixture({ prisma, password: fixturePassword }), {
+      upzisLoginAccountCount: 2,
+      passwordMatch: true,
+      wrongPasswordRejected: true,
+      activeRoleScopeReady: true,
+    })
     assert.equal(first.kecamatanId, second.kecamatanId)
+
+    for (const loginPhone of gorutUatUpzisLoginPhones) {
+      const authPhone = normalizeGorutUatFixturePhone(loginPhone)
+      const users = await prisma.$queryRaw`SELECT id, phone, "passwordHash", role, status FROM "User" WHERE phone = ${authPhone} LIMIT 1`
+      assert.equal(users.length, 1)
+      assert.equal(users[0].phone, authPhone)
+      assert.equal(users[0].status, "Aktif")
+      assert.equal(users[0].role, "admin_upzis")
+      assert.equal(await bcrypt.compare(fixturePassword, users[0].passwordHash), true)
+      assert.equal(await bcrypt.compare("definitely-wrong-password", users[0].passwordHash), false)
+    }
 
     const actorCount = await prisma.user.count({ where: { memberId: { in: gorutUatFixtureMemberIds } } })
     const assignmentCount = await prisma.gorutOperationalAssignment.count({

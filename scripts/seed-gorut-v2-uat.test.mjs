@@ -2,6 +2,8 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import {
   gorutUatFixtureTransactionOptions,
+  gorutUatUpzisLoginPhones,
+  normalizeGorutUatFixturePhone,
   runGorutV2UatSeed,
   validateGorutUatFixtureEnvironment,
 } from "./seed-gorut-v2-uat.mjs"
@@ -41,6 +43,14 @@ test("fixture guard remains fail closed for platform production and missing requ
 
 test("interactive transaction uses a bounded 60 second timeout", () => {
   assert.deepEqual(gorutUatFixtureTransactionOptions, { maxWait: 10_000, timeout: 60_000 })
+})
+
+test("fixture canonicalizes documented UPZIS login phones exactly like auth", () => {
+  assert.deepEqual(gorutUatUpzisLoginPhones, ["628990010001", "628990010002"])
+  assert.deepEqual(
+    gorutUatUpzisLoginPhones.map(normalizeGorutUatFixturePhone),
+    ["08990010001", "08990010002"],
+  )
 })
 
 test("password hashing stays outside the transaction and failed transaction is not success", async () => {

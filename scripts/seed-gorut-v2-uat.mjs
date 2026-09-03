@@ -61,6 +61,18 @@ const fixtureMemberIds = actorFixtures.map((actor) => actor.memberId)
 const kordesMemberIds = actorFixtures.filter((actor) => actor.role === "RANTING").map((actor) => actor.memberId)
 const upzisMemberIds = actorFixtures.filter((actor) => actor.role === "UPZIS").map((actor) => actor.memberId)
 
+export const gorutUatUpzisLoginPhones = Object.freeze(
+  actorFixtures.filter((actor) => actor.role === "UPZIS").map((actor) => actor.phone),
+)
+
+// Keep this canonicalization identical to lib/phone.ts, which /api/auth/login uses
+// before its exact-match lookup against User.phone.
+export function normalizeGorutUatFixturePhone(value) {
+  const digits = String(value ?? "").replace(/\D/g, "")
+  if (digits.startsWith("62")) return `0${digits.slice(2)}`
+  return digits
+}
+
 export function validateGorutUatFixtureEnvironment(env = {}) {
   const deploymentEnvironment = env.GORUT_DEPLOYMENT_ENV?.trim().toUpperCase()
   const platformProduction = env.VERCEL_ENV?.trim().toLowerCase() === "production"
@@ -148,10 +160,11 @@ export async function seedGorutV2UatFixture({ prisma, passwordHash }) {
     }
 
     for (const actor of actorFixtures) {
+      const normalizedPhone = normalizeGorutUatFixturePhone(actor.phone)
       const user = await tx.user.upsert({
         where: { memberId: actor.memberId },
-        create: { memberId: actor.memberId, name: actor.name, phone: actor.phone, email: `${actor.memberId.slice(4).toLowerCase()}@gorut-uat.invalid`, passwordHash, role: actor.appRole },
-        update: { name: actor.name, phone: actor.phone, passwordHash, role: actor.appRole, status: "Aktif" },
+        create: { memberId: actor.memberId, name: actor.name, phone: normalizedPhone, email: `${actor.memberId.slice(4).toLowerCase()}@gorut-uat.invalid`, passwordHash, role: actor.appRole, status: "Aktif" },
+        update: { name: actor.name, phone: normalizedPhone, passwordHash, role: actor.appRole, status: "Aktif" },
       })
       await tx.appRecord.upsert({
         where: { scope_key: { scope: "portal-module-grants", key: user.id } },
@@ -189,6 +202,54 @@ export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
   return summary
 }
 
+export async function verifyGorutV2UatAuthFixture({ prisma, password }) {
+  const upzisActors = actorFixtures.filter((actor) => actor.role === "UPZIS")
+  const accounts = await prisma.user.findMany({
+    where: { memberId: { in: upzisMemberIds } },
+    select: {
+      memberId: true,
+      phone: true,
+      passwordHash: true,
+      role: true,
+      status: true,
+      gorutAssignments: {
+        where: { role: "UPZIS", isActive: true },
+        select: { kecamatan: { select: { code: true, isActive: true } } },
+      },
+    },
+  })
+  const accountByMemberId = new Map(accounts.map((account) => [account.memberId, account]))
+
+  for (const actor of upzisActors) {
+    const account = accountByMemberId.get(actor.memberId)
+    const label = actor.name.includes("Maker") ? "maker" : "checker"
+    if (!account) throw new Error(`GORUT UAT auth verification failed: ${label} account missing`)
+    if (account.phone !== normalizeGorutUatFixturePhone(actor.phone)) {
+      throw new Error(`GORUT UAT auth verification failed: ${label} phone is not canonical`)
+    }
+    if (account.status !== "Aktif") throw new Error(`GORUT UAT auth verification failed: ${label} account inactive`)
+    if (account.role !== actor.appRole) throw new Error(`GORUT UAT auth verification failed: ${label} app role mismatch`)
+    if (!account.passwordHash) throw new Error(`GORUT UAT auth verification failed: ${label} password hash missing`)
+    if (!(await bcrypt.compare(password, account.passwordHash))) {
+      throw new Error(`GORUT UAT auth verification failed: ${label} fixture password mismatch`)
+    }
+    if (await bcrypt.compare(`${password}__WRONG_PASSWORD`, account.passwordHash)) {
+      throw new Error(`GORUT UAT auth verification failed: ${label} wrong password accepted`)
+    }
+    const scopedAssignment = account.gorutAssignments.some(
+      (assignment) => assignment.kecamatan?.code === actor.scopeCode && assignment.kecamatan.isActive,
+    )
+    if (!scopedAssignment) throw new Error(`GORUT UAT auth verification failed: ${label} UPZIS scope missing`)
+  }
+
+  return {
+    upzisLoginAccountCount: accounts.length,
+    passwordMatch: true,
+    wrongPasswordRejected: true,
+    activeRoleScopeReady: true,
+  }
+}
+
 export async function runGorutV2UatSeed({
   env = process.env,
   createPrisma = () => new PrismaClient(),
@@ -203,10 +264,12 @@ export async function runGorutV2UatSeed({
   try {
     const seeded = await seedGorutV2UatFixture({ prisma, passwordHash })
     const summary = await verifyGorutV2UatFixture({ prisma, kecamatanId: seeded.kecamatanId })
+    const authSummary = await verifyGorutV2UatAuthFixture({ prisma, password: env.GORUT_UAT_FIXTURE_PASSWORD })
     logger.log("GORUT V2 NON-PRODUCTION UAT fixture verified:", summary)
+    logger.log("GORUT V2 NON-PRODUCTION UAT auth fixture verified:", authSummary)
     logger.log("Synthetic login phones:", actorFixtures.map((actor) => `${actor.name}: ${actor.phone}`).join(" | "))
     logger.log("Password was read from GORUT_UAT_FIXTURE_PASSWORD and was not printed.")
-    return summary
+    return { ...summary, ...authSummary }
   } finally {
     await prisma.$disconnect()
   }
