@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
-import '../plpk/plpk-mobile.css';
+import './munfiq-mobile.css';
 
 export const metadata: Metadata = {
-  title: 'Aplikasi Munfiq — GORUT',
+  title: 'Aplikasi Munfiq | GORUT',
   description: 'Akses mobile Munfiq GORUT',
 };
 

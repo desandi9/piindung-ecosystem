@@ -30,12 +30,14 @@ const gorutV2Prefix = "/gorut-v2"
 
 /** Role yang boleh membuka seluruh /gorut-v2/**. Sengaja daftar tertutup, bukan turunan izin /gorut lama. */
 const gorutV2AllowedRoles = new Set(["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"])
+const gorutMunfiqMobilePrefix = "/gorut-v2/mobile/munfiq"
 
 function isGorutV2Path(pathname: string) {
   return pathname === gorutV2Prefix || pathname.startsWith(`${gorutV2Prefix}/`)
 }
 
-function canAccessGorutV2Path(role: string | null | undefined) {
+export function canAccessGorutV2Path(role: string | null | undefined, pathname: string) {
+  if (pathname === gorutMunfiqMobilePrefix || pathname.startsWith(`${gorutMunfiqMobilePrefix}/`)) return role === "munfiq"
   return typeof role === "string" && gorutV2AllowedRoles.has(role)
 }
 
@@ -219,7 +221,7 @@ export async function proxy(request: NextRequest) {
   // /gorut-v2 dijaga terpisah: daftar prefix canAccessGorutPath hanya mengenal /gorut/**,
   // sehingga tanpa cabang ini seluruh /gorut-v2 selalu jatuh ke penolakan.
   if (isGorutV2Path(pathname)) {
-    if (!canAccessGorutV2Path(session.role)) {
+    if (!canAccessGorutV2Path(session.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url))
     }
   } else if (pathname.startsWith("/gorut")) {
