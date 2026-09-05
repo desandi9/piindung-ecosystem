@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { getUnreadInboxCount, markAllInboxMessagesAsRead, updateInboxMessageStatus, useInboxMessages } from "@/lib/admin-inbox"
@@ -13,15 +12,12 @@ import {
   ArrowUpRight,
   Search,
   Bell,
-  FileText,
-  FolderOpen,
   Moon,
   Sun,
   HelpCircle,
   ChevronDown,
   Menu,
   Home,
-  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -343,7 +339,7 @@ onClick={onMenuClick}
                   <Home className="mr-2 h-4 w-4" />
                   Kembali ke Dashboard Utama
                 </button>
-                <button type="button" className="flex w-full cursor-pointer items-center rounded-xl px-2 py-2 text-left text-sm hover:bg-accent" onClick={() => handleNavAway("/bantuan")}>
+                <button type="button" className="flex w-full cursor-pointer items-center rounded-xl px-2 py-2 text-left text-sm hover:bg-accent" onClick={() => handleNavAway("/dashboard/bantuan")}>
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Bantuan
                 </button>

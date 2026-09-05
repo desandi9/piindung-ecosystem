@@ -22,7 +22,7 @@ test("help content validation rejects invalid product, status, position, control
   const question = content.categories[0].questions[0]
   assert.throws(() => validateHelpContent({ ...content, support: { ...content.support, href: "https://evil.example" } }))
   assert.throws(() => validateHelpContent({ ...content, categories: [{ ...content.categories[0], questions: [{ ...question, productId: "unknown" }] }] }))
-  assert.throws(() => validateHelpContent({ ...content, categories: [{ ...content.categories[0], questions: [{ ...question, status: "published<script>" as any }] }] }))
+  assert.throws(() => validateHelpContent({ ...content, categories: [{ ...content.categories[0], questions: [{ ...question, status: "published<script>" }] }] }))
   assert.throws(() => validateHelpContent({ ...content, categories: [{ ...content.categories[0], position: 0 }] }))
   assert.throws(() => validateHelpContent({ ...content, support: { ...content.support, title: "bad\u0000text" } }))
 })
@@ -47,7 +47,7 @@ test("buildInitialHelpContent normalizes legacy category/questions and skips inv
       key: "faq-manager-invalid",
       data: {
         id: "bad-cat",
-        title: 123 as any,
+        title: 123 as unknown as string,
         iconKey: "users",
         questions: [],
       },

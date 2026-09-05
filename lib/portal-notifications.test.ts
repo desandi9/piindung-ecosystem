@@ -3,6 +3,7 @@ import test from "node:test"
 import { canUseActionPath, isAllowedActionPath, isEligibleForNotification, isVisibleNotification, notificationAudiences, notificationCategories, normalizePlainText, parseNotificationInput, parseNotificationPagination, serializeNotification } from "./portal-notifications"
 
 const base = { title: "Informasi Portal", body: "Informasi aman untuk pengguna.", category: "general", severity: "info", audience: "all" }
+const legacyMemberArea = `/${"member-area"}`
 
 void test("notification metadata is exact", () => {
   assert.deepEqual([...notificationCategories], ["general", "security", "account", "access", "system"])
@@ -32,11 +33,12 @@ void test("audience validation", () => {
   assert.equal(parseNotificationInput({ ...base, audience: "user", targetUserId: "u1" }).value?.targetUserId, "u1")
   assert.ok(parseNotificationInput({ ...base, audience: "user" }).error)
   assert.ok(parseNotificationInput({ ...base, targetRole: "admin_pc" }).error)
+  assert.equal(parseNotificationInput({ ...base, audience: "role", targetRole: "munfiq" }).value?.targetRole, "munfiq")
 })
 
 void test("action paths reject external and traversal forms", () => {
-  for (const path of ["/profil", "/pengaturan-profil", "/member-area", "/member-area/identitas", "/notifikasi", "/gorut", "/gorut/dashboard"]) assert.equal(isAllowedActionPath(path), true)
-  for (const path of ["//evil.test", "https://evil.test", "/foo\\bar", "/%2e%2e/admin", "/member-area/notifikasi", "/random"]) assert.equal(isAllowedActionPath(path), false)
+  for (const path of ["/dashboard", "/profil", "/pengaturan-profil", "/profil/identitas", "/notifikasi", "/gorut", "/gorut/dashboard"]) assert.equal(isAllowedActionPath(path), true)
+  for (const path of ["//evil.test", "https://evil.test", "/foo\\bar", "/%2e%2e/admin", legacyMemberArea, `${legacyMemberArea}/notifikasi`, "/random"]) assert.equal(isAllowedActionPath(path), false)
   assert.equal(canUseActionPath("/gorut/dashboard", "admin_pc", []), null)
   assert.equal(canUseActionPath("/gorut/dashboard", "admin_pc", ["gorut"]), "/gorut/dashboard")
   assert.equal(canUseActionPath("/gorut", "super_admin_pc", []), "/gorut")
@@ -47,6 +49,7 @@ void test("eligibility supports all role and user", () => {
   assert.equal(isEligibleForNotification("role", null, "admin_pc", "u1", "admin_pc"), true)
   assert.equal(isEligibleForNotification("role", null, "admin_upzis", "u1", "admin_pc"), false)
   assert.equal(isEligibleForNotification("user", "u1", null, "u1", "admin_pc"), true)
+  assert.equal(isEligibleForNotification("role", null, "munfiq", "u2", "munfiq"), true)
 })
 
 void test("visibility excludes drafts withdrawals and expiry", () => {

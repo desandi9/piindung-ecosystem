@@ -14,6 +14,11 @@ enum GorutOperationalRole {
   PLPK
 }
 
+enum GorutMunfiqAccountLinkStatus {
+  ACTIVE
+  REVOKED
+}
+
 enum GorutTransactionState {
   DRAFT
   WAITING_RANTING_VERIFICATION
@@ -42,6 +47,101 @@ enum GorutWorkflowAction {
   CANCEL
 }
 
+enum GorutPackageRecordOrigin {
+  NATIVE
+  COLLECTION_BRIDGE
+  LEGACY_EXCEL
+}
+
+enum GorutPackageCoverageStatus {
+  INCLUDED
+  EXCLUDED
+  UNRESOLVED
+}
+
+enum GorutPackageFinancialStatus {
+  UNVERIFIED
+  BLOCKED
+  READY
+}
+
+enum GorutPackageSettlementMode {
+  PC_PICKUP
+  UPZIS_BANK_DEPOSIT
+}
+
+enum GorutPackageSettlementValidationResult {
+  MATCHED
+  MISMATCH
+}
+
+enum GorutCollectionStatus {
+  DRAFT
+  SCHEDULED
+  COLLECTING
+  COLLECTION_COMPLETED
+  WAITING_KORDES_VERIFICATION
+  VERIFIED_BY_KORDES
+  NEEDS_CORRECTION
+}
+
+enum GorutCollectionVisitStatus {
+  PENDING
+  COLLECTED
+  NOT_AROUND
+  NOT_READY
+  DECLINED
+  DAMAGED_LOST
+}
+
+enum GorutCollectionRecordOrigin {
+  NATIVE
+  LEGACY_IMPORT
+  PROTOTYPE
+}
+
+enum GorutCollectionAuthorityStatus {
+  UNVERIFIED
+  AUTHORITATIVE
+}
+
+enum GorutCollectionFinancialStatus {
+  BLOCKED
+  READY
+}
+
+enum GorutCollectionRevisionAction {
+  CREATE
+  RECORD_ENTRY
+  CORRECT_ENTRY
+  CONFIRM_AND_SUBMIT
+  VERIFY_BY_KORDES
+  REQUEST_CORRECTION
+  BRIDGE_TRANSACTION
+}
+
+enum GorutReturnReasonCode {
+  DATA_INCOMPLETE
+  AMOUNT_MISMATCH
+  UNRESOLVED_MAPPING
+  COLLECTION_CORRECTION_REQUIRED
+  FINANCIAL_RECONCILIATION_FAILED
+  EVIDENCE_INCOMPLETE
+  OTHER
+}
+
+enum GorutPackageCorrectionTargetType {
+  PACKAGE
+  RANTING
+  TRANSACTION
+  COLLECTION
+}
+
+enum GorutPackageCorrectionStatus {
+  OPEN
+  RESOLVED
+}
+
 model User {
   id                       String                       @id @default(cuid())
   memberId                 String                       @unique
@@ -61,8 +161,27 @@ model User {
   targetedNotifications    PortalNotification[]         @relation("PortalNotificationTarget")
   notificationReceipts     PortalNotificationReceipt[]
   gorutAssignments         GorutOperationalAssignment[]
+  gorutMunfiqAccountLinks  GorutMunfiqAccountLink[]     @relation("GorutMunfiqLinkedAccount")
+  gorutMunfiqLinksCreated  GorutMunfiqAccountLink[]     @relation("GorutMunfiqLinkCreator")
+  gorutMunfiqLinksRevoked  GorutMunfiqAccountLink[]     @relation("GorutMunfiqLinkRevoker")
   gorutCreatedTransactions GorutTransaction[]           @relation("GorutTransactionCreator")
   gorutWorkflowEvents      GorutWorkflowEvent[]         @relation("GorutWorkflowActor")
+  gorutCreatedCollections  GorutCollectionBatch[]       @relation("GorutCollectionCreator")
+  gorutConfirmedCollections GorutCollectionBatch[]      @relation("GorutCollectionPlpkConfirmer")
+  gorutSubmittedCollections GorutCollectionBatch[]      @relation("GorutCollectionKordesSubmitter")
+  gorutKordesDecisions      GorutCollectionBatch[]      @relation("GorutCollectionKordesDecisionActor")
+  gorutCollectionRevisions  GorutCollectionRevision[]
+  gorutRequestedCorrections GorutCollectionCorrection[] @relation("GorutCollectionCorrectionRequester")
+  gorutResolvedCorrections  GorutCollectionCorrection[] @relation("GorutCollectionCorrectionResolver")
+  gorutFrozenPackageRosters GorutUpzisPackage[]          @relation("GorutPackageRosterFreezer")
+  gorutRecordedPackageCoverages GorutUpzisPackageRantingCoverage[] @relation("GorutPackageCoverageRecorder")
+  gorutRequestedPackageCorrections GorutPackageCorrection[] @relation("GorutPackageCorrectionRequester")
+  gorutResolvedPackageCorrections  GorutPackageCorrection[] @relation("GorutPackageCorrectionResolver")
+  gorutRecordedSettlementEvidence  GorutPackageSettlementEvidence[] @relation("GorutSettlementRecorder")
+  gorutHandedOverSettlementEvidence GorutPackageSettlementEvidence[] @relation("GorutSettlementHandedOverBy")
+  gorutReceivedSettlementEvidence  GorutPackageSettlementEvidence[] @relation("GorutSettlementReceivedBy")
+  gorutDepositedSettlementEvidence GorutPackageSettlementEvidence[] @relation("GorutSettlementDepositedBy")
+  gorutSettlementValidations       GorutPackageSettlementValidation[] @relation("GorutSettlementValidator")
 }
 
 model PortalNotification {
@@ -119,30 +238,35 @@ model AppRecord {
 }
 
 model GorutKecamatan {
-  id           String                       @id @default(cuid())
-  code         String                       @unique
-  name         String                       @unique
-  isActive     Boolean                      @default(true)
-  createdAt    DateTime                     @default(now())
-  updatedAt    DateTime                     @updatedAt
-  rantings     GorutRanting[]
-  assignments  GorutOperationalAssignment[] @relation("GorutAssignmentKecamatan")
-  transactions GorutTransaction[]
+  id            String                       @id @default(cuid())
+  code          String                       @unique
+  name          String                       @unique
+  isActive      Boolean                      @default(true)
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+  rantings      GorutRanting[]
+  assignments   GorutOperationalAssignment[] @relation("GorutAssignmentKecamatan")
+  transactions  GorutTransaction[]
+  upzisPackages GorutUpzisPackage[]
+  collections   GorutCollectionBatch[]
 }
 
 model GorutRanting {
-  id           String                       @id @default(cuid())
-  kecamatanId  String
-  code         String
-  name         String
-  isActive     Boolean                      @default(true)
-  createdAt    DateTime                     @default(now())
-  updatedAt    DateTime                     @updatedAt
-  kecamatan    GorutKecamatan               @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
-  plpks        GorutPlpk[]
-  munfiqs      GorutMunfiq[]
-  assignments  GorutOperationalAssignment[] @relation("GorutAssignmentRanting")
-  transactions GorutTransaction[]
+  id               String                             @id @default(cuid())
+  kecamatanId      String
+  code             String
+  name             String
+  isActive         Boolean                            @default(true)
+  createdAt        DateTime                           @default(now())
+  updatedAt        DateTime                           @updatedAt
+  kecamatan        GorutKecamatan                     @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
+  plpks            GorutPlpk[]
+  munfiqs          GorutMunfiq[]
+  assignments      GorutOperationalAssignment[]       @relation("GorutAssignmentRanting")
+  transactions     GorutTransaction[]
+  packageCoverages GorutUpzisPackageRantingCoverage[]
+  packageCorrections GorutPackageCorrection[]
+  collections      GorutCollectionBatch[]
 
   @@unique([kecamatanId, code])
   @@unique([kecamatanId, name])
@@ -164,6 +288,7 @@ model GorutPlpk {
   assignments  GorutOperationalAssignment[] @relation("GorutAssignmentPlpk")
   munfiqs      GorutMunfiq[]
   transactions GorutTransaction[]
+  collections  GorutCollectionBatch[]
 
   @@unique([legacyScope, legacyKey])
   @@index([rantingId])
@@ -184,6 +309,9 @@ model GorutOperationalAssignment {
   ranting        GorutRanting?        @relation("GorutAssignmentRanting", fields: [rantingId], references: [id], onDelete: Restrict)
   plpk           GorutPlpk?           @relation("GorutAssignmentPlpk", fields: [plpkId], references: [id], onDelete: Restrict)
   workflowEvents GorutWorkflowEvent[]
+  recordedSettlementEvidence GorutPackageSettlementEvidence[] @relation("GorutSettlementRecorderAssignment")
+  handedOverSettlementEvidence GorutPackageSettlementEvidence[] @relation("GorutSettlementHandedOverAssignment")
+  settlementValidations        GorutPackageSettlementValidation[] @relation("GorutSettlementValidatorAssignment")
 
   @@index([userId, isActive])
   @@index([role, isActive])
@@ -212,35 +340,65 @@ model GorutMunfiq {
   ranting     GorutRanting           @relation(fields: [rantingId], references: [id], onDelete: Restrict)
   plpk        GorutPlpk              @relation(fields: [plpkId], references: [id], onDelete: Restrict)
   items       GorutTransactionItem[]
+  collectionEntries GorutCollectionEntry[]
+  accountLinks GorutMunfiqAccountLink[]
 
   @@unique([legacyScope, legacyKey])
   @@index([rantingId])
   @@index([plpkId])
 }
 
+model GorutMunfiqAccountLink {
+  id              String                       @id @default(cuid())
+  linkCode        String                       @unique
+  userId          String
+  munfiqId        String
+  status          GorutMunfiqAccountLinkStatus @default(ACTIVE)
+  linkedAt        DateTime                     @default(now())
+  linkedByUserId  String
+  revokedAt       DateTime?
+  revokedByUserId String?
+  reason          String?
+  revokedReason   String?
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  user            User                         @relation("GorutMunfiqLinkedAccount", fields: [userId], references: [id], onDelete: Restrict)
+  munfiq          GorutMunfiq                   @relation(fields: [munfiqId], references: [id], onDelete: Restrict)
+  linkedBy        User                         @relation("GorutMunfiqLinkCreator", fields: [linkedByUserId], references: [id], onDelete: Restrict)
+  revokedBy       User?                        @relation("GorutMunfiqLinkRevoker", fields: [revokedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status])
+  @@index([munfiqId, status])
+  @@index([linkedByUserId])
+  @@index([revokedByUserId])
+}
+
 model GorutTransaction {
-  id              String                 @id @default(cuid())
-  code            String                 @unique
-  transactionDate DateTime
-  totalAmount     Decimal                @db.Decimal(19, 2)
-  sourceChannel   String
-  notes           String?
-  currentState    GorutTransactionState
-  kecamatanId     String
-  rantingId       String
-  plpkId          String
-  createdByUserId String
-  finalApprovedAt DateTime?
-  legacyScope     String?
-  legacyKey       String?
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
-  kecamatan       GorutKecamatan         @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
-  ranting         GorutRanting           @relation(fields: [rantingId], references: [id], onDelete: Restrict)
-  plpk            GorutPlpk              @relation(fields: [plpkId], references: [id], onDelete: Restrict)
-  createdBy       User                   @relation("GorutTransactionCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  items           GorutTransactionItem[]
-  workflowEvents  GorutWorkflowEvent[]
+  id                String                        @id @default(cuid())
+  code              String                        @unique
+  transactionDate   DateTime
+  totalAmount       Decimal                       @db.Decimal(19, 2)
+  sourceChannel     String
+  notes             String?
+  currentState      GorutTransactionState
+  kecamatanId       String
+  rantingId         String
+  plpkId            String
+  createdByUserId   String
+  finalApprovedAt   DateTime?
+  legacyScope       String?
+  legacyKey         String?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+  kecamatan         GorutKecamatan                @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
+  ranting           GorutRanting                  @relation(fields: [rantingId], references: [id], onDelete: Restrict)
+  plpk              GorutPlpk                     @relation(fields: [plpkId], references: [id], onDelete: Restrict)
+  createdBy         User                          @relation("GorutTransactionCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  items             GorutTransactionItem[]
+  workflowEvents    GorutWorkflowEvent[]
+  packageMembership GorutUpzisPackageTransaction?
+  collectionSource  GorutCollectionBatch?           @relation("GorutCollectionTransaction")
+  packageCorrections GorutPackageCorrection[]
 
   @@unique([legacyScope, legacyKey])
   @@index([currentState])
@@ -248,6 +406,307 @@ model GorutTransaction {
   @@index([kecamatanId])
   @@index([rantingId])
   @@index([plpkId])
+}
+
+model GorutCollectionBatch {
+  id                         String                           @id @default(cuid())
+  collectionCode             String                           @unique
+  creationIdempotencyKey     String                           @unique
+  periodStart                DateTime                         @db.Date
+  kecamatanId                String
+  rantingId                  String
+  plpkId                     String
+  status                     GorutCollectionStatus            @default(DRAFT)
+  recordOrigin               GorutCollectionRecordOrigin
+  amountAuthorityStatus      GorutCollectionAuthorityStatus   @default(UNVERIFIED)
+  feeAuthorityStatus         GorutCollectionAuthorityStatus   @default(UNVERIFIED)
+  financialStatus            GorutCollectionFinancialStatus   @default(BLOCKED)
+  financialBlockingReasons   String[]                         @default([])
+  grossAmount                Decimal?                         @db.Decimal(19, 2)
+  totalPlpkFee               Decimal?                         @db.Decimal(19, 2)
+  netAmount                  Decimal?                         @db.Decimal(19, 2)
+  calculatedAt               DateTime?
+  calculationPolicyVersion   String?
+  financialSourceHash        String?
+  version                    Int                              @default(1)
+  revision                   Int                              @default(1)
+  sourceHash                 String
+  confirmedByPlpkAt          DateTime?
+  confirmedByPlpkUserId      String?
+  submittedToKordesAt        DateTime?
+  submittedToKordesByUserId  String?
+  verifiedByKordesAt         DateTime?
+  returnedForCorrectionAt    DateTime?
+  kordesDecisionByUserId     String?
+  kordesMoneyMatches         Boolean?
+  kordesHasDamagedMoney      Boolean?
+  kordesCashReceived         Boolean?
+  kordesNote                 String?
+  lockedAt                   DateTime?
+  transactionId              String?                          @unique
+  transactionSourceRevision  Int?
+  transactionSourceHash      String?
+  transactionBridgedAt       DateTime?
+  createdByUserId            String
+  createdAt                  DateTime                         @default(now())
+  updatedAt                  DateTime                         @updatedAt
+  kecamatan                  GorutKecamatan                   @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
+  ranting                    GorutRanting                     @relation(fields: [rantingId], references: [id], onDelete: Restrict)
+  plpk                       GorutPlpk                        @relation(fields: [plpkId], references: [id], onDelete: Restrict)
+  transaction                GorutTransaction?                @relation("GorutCollectionTransaction", fields: [transactionId], references: [id], onDelete: Restrict)
+  createdBy                  User                             @relation("GorutCollectionCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  confirmedByPlpk            User?                            @relation("GorutCollectionPlpkConfirmer", fields: [confirmedByPlpkUserId], references: [id], onDelete: Restrict)
+  submittedToKordesBy        User?                            @relation("GorutCollectionKordesSubmitter", fields: [submittedToKordesByUserId], references: [id], onDelete: Restrict)
+  kordesDecisionBy           User?                            @relation("GorutCollectionKordesDecisionActor", fields: [kordesDecisionByUserId], references: [id], onDelete: Restrict)
+  entries                    GorutCollectionEntry[]
+  revisions                  GorutCollectionRevision[]
+  corrections                GorutCollectionCorrection[]
+  packageCorrections         GorutPackageCorrection[]
+
+  @@unique([plpkId, periodStart])
+  @@index([kecamatanId, periodStart], map: "GorutCollectionBatch_kecamatan_period_idx")
+  @@index([rantingId, periodStart], map: "GorutCollectionBatch_ranting_period_idx")
+  @@index([status, periodStart], map: "GorutCollectionBatch_status_period_idx")
+  @@index([financialStatus, periodStart], map: "GorutCollectionBatch_financial_period_idx")
+  @@index([recordOrigin])
+}
+
+model GorutCollectionEntry {
+  id                      String                         @id @default(cuid())
+  batchId                 String
+  munfiqId                String
+  visitStatus             GorutCollectionVisitStatus
+  amount                  Decimal                        @db.Decimal(19, 2)
+  collectedAt             DateTime?
+  note                    String?
+  feeEligibleSnapshot     Boolean?
+  plpkFeeSnapshot         Decimal?                       @db.Decimal(19, 2)
+  feePolicyVersion        String?
+  sourceType              String
+  sourceKey               String
+  sourceHash              String
+  createdAt               DateTime                       @default(now())
+  updatedAt               DateTime                       @updatedAt
+  batch                   GorutCollectionBatch           @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  munfiq                  GorutMunfiq                    @relation(fields: [munfiqId], references: [id], onDelete: Restrict)
+  corrections             GorutCollectionCorrection[]
+
+  @@unique([batchId, munfiqId])
+  @@unique([sourceType, sourceKey])
+  @@index([batchId, visitStatus], map: "GorutCollectionEntry_batch_status_idx")
+  @@index([munfiqId])
+}
+
+model GorutCollectionRevision {
+  id              String                        @id @default(cuid())
+  batchId         String
+  revision        Int
+  action          GorutCollectionRevisionAction
+  idempotencyKey  String
+  commandHash     String
+  reason          String?
+  actorUserId     String
+  beforeSnapshot  Json?
+  afterSnapshot   Json
+  createdAt       DateTime                      @default(now())
+  batch           GorutCollectionBatch          @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  actor            User                          @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@unique([batchId, revision])
+  @@unique([batchId, idempotencyKey])
+  @@index([actorUserId, createdAt], map: "GorutCollectionRevision_actor_created_idx")
+  @@index([batchId, createdAt], map: "GorutCollectionRevision_batch_created_idx")
+}
+
+model GorutCollectionCorrection {
+  id                  String                @id @default(cuid())
+  batchId             String
+  entryId             String
+  reason              String
+  requestedByUserId   String
+  requestedAt         DateTime              @default(now())
+  requestRevision     Int
+  resolvedByUserId    String?
+  resolvedAt          DateTime?
+  resolutionRevision  Int?
+  batch               GorutCollectionBatch  @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  entry               GorutCollectionEntry  @relation(fields: [entryId], references: [id], onDelete: Restrict)
+  requestedBy         User                  @relation("GorutCollectionCorrectionRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  resolvedBy          User?                 @relation("GorutCollectionCorrectionResolver", fields: [resolvedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([batchId, requestedAt], map: "GorutCollectionCorrection_batch_requested_idx")
+  @@index([entryId, resolvedAt], map: "GorutCollectionCorrection_entry_resolved_idx")
+  @@index([requestedByUserId], map: "GorutCollectionCorrection_requestedBy_idx")
+  @@index([resolvedByUserId], map: "GorutCollectionCorrection_resolvedBy_idx")
+}
+
+model GorutUpzisPackage {
+  id                       String                             @id @default(cuid())
+  packageCode              String                             @unique
+  kecamatanId              String
+  periodStart              DateTime                           @db.Date
+  currentState             GorutTransactionState?             @default(DRAFT)
+  version                  Int                                @default(1)
+  revision                 Int                                @default(1)
+  recordOrigin             GorutPackageRecordOrigin
+  isHistorical             Boolean                            @default(false)
+  workflowHistoryComplete  Boolean                            @default(true)
+  legacyId                 String?
+  sourceRowKey             String?
+  migrationBatchKey        String?
+  financialStatus          GorutPackageFinancialStatus        @default(UNVERIFIED)
+  financialBlockingReasons String[]                           @default([])
+  grossAmount              Decimal?                           @db.Decimal(19, 2)
+  totalPlpkFee             Decimal?                           @db.Decimal(19, 2)
+  netAmount                Decimal?                           @db.Decimal(19, 2)
+  calculatedAt             DateTime?
+  calculationPolicyVersion String?
+  financialSourceRevision  Int?
+  financialSourceHash      String?
+  lockedAt                 DateTime?
+  rosterFrozenAt           DateTime?
+  rosterFrozenByUserId     String?
+  rosterSourceHash         String?
+  createdAt                DateTime                           @default(now())
+  updatedAt                DateTime                           @updatedAt
+  kecamatan                GorutKecamatan                     @relation(fields: [kecamatanId], references: [id], onDelete: Restrict)
+  transactionMemberships   GorutUpzisPackageTransaction[]
+  rantingCoverages         GorutUpzisPackageRantingCoverage[]
+  workflowEvents           GorutWorkflowEvent[]
+  rosterFrozenBy           User?                              @relation("GorutPackageRosterFreezer", fields: [rosterFrozenByUserId], references: [id], onDelete: Restrict)
+  corrections              GorutPackageCorrection[]
+  settlementEvidence       GorutPackageSettlementEvidence[]
+  settlementValidations    GorutPackageSettlementValidation[]
+
+  @@unique([kecamatanId, periodStart])
+  @@unique([recordOrigin, legacyId])
+  @@unique([migrationBatchKey, sourceRowKey])
+  @@index([periodStart])
+  @@index([currentState])
+  @@index([financialStatus])
+  @@index([recordOrigin])
+}
+
+model GorutPackageSettlementEvidence {
+  id                         String                          @id @default(cuid())
+  evidenceCode               String                          @unique
+  packageId                  String
+  mode                       GorutPackageSettlementMode
+  revision                   Int
+  supersedesEvidenceId       String?                         @unique
+  expectedAmountSnapshot     Decimal                         @db.Decimal(19, 2)
+  actualAmount               Decimal                         @db.Decimal(19, 2)
+  occurredAt                 DateTime
+  recordedAt                 DateTime                        @default(now())
+  recordedByUserId           String
+  recordedByAssignmentId     String
+  handedOverByUserId         String?
+  handedOverByAssignmentId   String?
+  receivedByUserId           String?
+  receivedAt                 DateTime?
+  depositedByUserId          String?
+  bankName                   String?
+  externalReference          String?
+  evidenceReference          String?
+  note                       String?
+  idempotencyKey             String
+  commandHash                String
+  packageVersionBefore       Int
+  packageVersionAfter        Int
+  createdAt                  DateTime                        @default(now())
+  package                    GorutUpzisPackage               @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  supersedes                 GorutPackageSettlementEvidence? @relation("GorutSettlementSupersession", fields: [supersedesEvidenceId], references: [id], onDelete: Restrict)
+  supersededBy               GorutPackageSettlementEvidence? @relation("GorutSettlementSupersession")
+  recordedBy                 User                            @relation("GorutSettlementRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+  recordedByAssignment       GorutOperationalAssignment      @relation("GorutSettlementRecorderAssignment", fields: [recordedByAssignmentId], references: [id], onDelete: Restrict)
+  handedOverBy               User?                           @relation("GorutSettlementHandedOverBy", fields: [handedOverByUserId], references: [id], onDelete: Restrict)
+  handedOverByAssignment     GorutOperationalAssignment?     @relation("GorutSettlementHandedOverAssignment", fields: [handedOverByAssignmentId], references: [id], onDelete: Restrict)
+  receivedBy                 User?                           @relation("GorutSettlementReceivedBy", fields: [receivedByUserId], references: [id], onDelete: Restrict)
+  depositedBy                User?                           @relation("GorutSettlementDepositedBy", fields: [depositedByUserId], references: [id], onDelete: Restrict)
+  validation                 GorutPackageSettlementValidation?
+
+  @@unique([packageId, revision], map: "GorutSettlement_package_revision_key")
+  @@unique([packageId, idempotencyKey], map: "GorutSettlement_package_idempotency_key")
+  @@index([packageId, recordedAt], map: "GorutSettlement_package_recorded_idx")
+  @@index([recordedByUserId])
+  @@index([recordedByAssignmentId])
+  @@index([handedOverByUserId])
+  @@index([handedOverByAssignmentId])
+  @@index([receivedByUserId])
+  @@index([depositedByUserId])
+}
+
+model GorutPackageSettlementValidation {
+  id                         String                                   @id @default(cuid())
+  validationCode             String                                   @unique
+  packageId                  String
+  settlementEvidenceId       String                                   @unique
+  settlementRevisionSnapshot Int
+  expectedAmountSnapshot     Decimal                                  @db.Decimal(19, 2)
+  actualAmountSnapshot       Decimal                                  @db.Decimal(19, 2)
+  differenceAmount           Decimal                                  @db.Decimal(19, 2)
+  result                     GorutPackageSettlementValidationResult
+  validatedAt                DateTime
+  validatorUserId            String
+  validatorAssignmentId      String
+  note                       String?
+  idempotencyKey             String
+  commandHash                String
+  packageVersionBefore       Int
+  packageVersionAfter        Int
+  createdAt                  DateTime                                 @default(now())
+  package                    GorutUpzisPackage                        @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  settlementEvidence         GorutPackageSettlementEvidence          @relation(fields: [settlementEvidenceId], references: [id], onDelete: Restrict)
+  validator                  User                                     @relation("GorutSettlementValidator", fields: [validatorUserId], references: [id], onDelete: Restrict)
+  validatorAssignment        GorutOperationalAssignment               @relation("GorutSettlementValidatorAssignment", fields: [validatorAssignmentId], references: [id], onDelete: Restrict)
+
+  @@unique([packageId, idempotencyKey], map: "GorutSettlementValidation_package_idempotency_key")
+  @@index([packageId, validatedAt], map: "GorutSettlementValidation_package_validated_idx")
+  @@index([validatorUserId])
+  @@index([validatorAssignmentId])
+}
+
+model GorutUpzisPackageTransaction {
+  id            String            @id @default(cuid())
+  packageId     String
+  transactionId String            @unique
+  sourceType    String
+  sourceKey     String
+  sourceVersion String?
+  sourceHash    String
+  includedAt    DateTime          @default(now())
+  package       GorutUpzisPackage @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  transaction   GorutTransaction  @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+
+  @@unique([sourceType, sourceKey])
+  @@index([packageId])
+}
+
+model GorutUpzisPackageRantingCoverage {
+  id                String                     @id @default(cuid())
+  packageId         String
+  rantingId         String?
+  status            GorutPackageCoverageStatus
+  sourceRantingKey  String?
+  sourceRantingName String?
+  exclusionReason   String?
+  exclusionReference String?
+  recordedByUserId  String?
+  recordedAt        DateTime?
+  idempotencyKey    String?
+  activeAtCutoff    Boolean?
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  package           GorutUpzisPackage          @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  ranting           GorutRanting?              @relation(fields: [rantingId], references: [id], onDelete: Restrict)
+  recordedBy        User?                       @relation("GorutPackageCoverageRecorder", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([packageId, rantingId], map: "GorutPackageCoverage_package_ranting_key")
+  @@unique([packageId, sourceRantingKey], map: "GorutPackageCoverage_package_source_key")
+  @@unique([packageId, idempotencyKey], map: "GorutPackageCoverage_package_idempotency_key")
+  @@index([packageId, status], map: "GorutPackageCoverage_package_status_idx")
+  @@index([packageId, activeAtCutoff], map: "GorutPackageCoverage_activeAtCutoff_idx")
+  @@index([rantingId], map: "GorutPackageCoverage_ranting_idx")
 }
 
 model GorutTransactionItem {
@@ -267,20 +726,65 @@ model GorutTransactionItem {
 
 model GorutWorkflowEvent {
   id                String                      @id @default(cuid())
-  transactionId     String
+  transactionId     String?
+  packageId         String?
   previousState     GorutTransactionState?
   resultingState    GorutTransactionState
   action            GorutWorkflowAction
   stage             GorutWorkflowStage?
   reason            String?
+  reasonCode        GorutReturnReasonCode?
+  metadata          Json?
+  idempotencyKey    String?
+  commandHash       String?
   actorUserId       String
   actorAssignmentId String?
   createdAt         DateTime                    @default(now())
-  transaction       GorutTransaction            @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  transaction       GorutTransaction?           @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  package           GorutUpzisPackage?          @relation(fields: [packageId], references: [id], onDelete: Restrict)
   actor             User                        @relation("GorutWorkflowActor", fields: [actorUserId], references: [id], onDelete: Restrict)
   actorAssignment   GorutOperationalAssignment? @relation(fields: [actorAssignmentId], references: [id], onDelete: Restrict)
+  packageCorrections GorutPackageCorrection[]    @relation("GorutPackageCorrectionReturnEvent")
 
   @@index([transactionId])
+  @@index([packageId])
   @@index([actorUserId])
   @@index([actorAssignmentId])
+  @@unique([packageId, idempotencyKey], map: "GorutWorkflowEvent_package_idempotency_key")
+}
+
+model GorutPackageCorrection {
+  id                    String                           @id @default(cuid())
+  correctionCode        String                           @unique
+  packageId             String
+  returnEventId         String
+  targetType            GorutPackageCorrectionTargetType
+  rantingId             String?
+  transactionId         String?
+  collectionId          String?
+  reasonCode            GorutReturnReasonCode
+  reasonText            String?
+  status                GorutPackageCorrectionStatus     @default(OPEN)
+  requestedByUserId     String
+  requestedAt           DateTime                         @default(now())
+  requestedPackageVersion Int
+  resolvedByUserId      String?
+  resolvedAt            DateTime?
+  resolutionNote        String?
+  resolvedPackageVersion Int?
+  package               GorutUpzisPackage                @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  returnEvent           GorutWorkflowEvent                @relation("GorutPackageCorrectionReturnEvent", fields: [returnEventId], references: [id], onDelete: Restrict)
+  ranting               GorutRanting?                     @relation(fields: [rantingId], references: [id], onDelete: Restrict)
+  transaction           GorutTransaction?                 @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  collection            GorutCollectionBatch?             @relation(fields: [collectionId], references: [id], onDelete: Restrict)
+  requestedBy           User                              @relation("GorutPackageCorrectionRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  resolvedBy            User?                             @relation("GorutPackageCorrectionResolver", fields: [resolvedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([packageId, status], map: "GorutPackageCorrection_package_status_idx")
+  @@index([returnEventId])
+  @@index([rantingId])
+  @@index([transactionId])
+  @@index([collectionId])
+  @@index([requestedByUserId])
+  @@index([resolvedByUserId])
 }

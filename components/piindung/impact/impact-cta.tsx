@@ -7,7 +7,7 @@ import { impactCta } from "@/lib/impact-page-data"
 
 export function ImpactCta() {
   return (
-    <section className="relative isolate overflow-hidden bg-[#062318] px-5 py-20 text-white sm:px-8 sm:py-24" aria-labelledby="impact-cta-heading">
+    <section className="relative isolate scroll-mt-[calc(72px+1rem)] overflow-hidden bg-[#062318] px-5 py-20 text-white sm:px-8 sm:py-24 lg:scroll-mt-[calc(78px+1rem)]" aria-labelledby="impact-cta-heading">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[#04140d] via-[#0a3626] to-[#062318]" aria-hidden="true" />
       <div className="pointer-events-none absolute -left-16 top-0 h-64 w-64 rounded-full bg-[#18b97a]/20 blur-[100px]" aria-hidden="true" />
       <div className="pointer-events-none absolute -right-10 bottom-0 h-72 w-72 rounded-full bg-[#5eead4]/12 blur-[110px]" aria-hidden="true" />

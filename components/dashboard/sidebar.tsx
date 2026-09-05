@@ -5,9 +5,10 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
-import { useAuth, roleDisplayNames } from "@/lib/auth-context"
+import { useAuth } from "@/lib/auth-context"
 import { primaryNavigation, type PortalNavigationIcon } from "@/lib/portal-navigation"
 import { getResolvedLogoUrl, useStoredSystemSettings } from "@/lib/system-settings"
+import type { AppRole } from "@/types/auth"
 import {
   CircleHelp,
   ChevronLeft,
@@ -16,6 +17,7 @@ import {
   LogOut,
   User,
   Users,
+  Globe,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,12 +32,13 @@ const navigationIcons: Record<PortalNavigationIcon, React.ElementType> = {
   members: Users,
   help: CircleHelp,
   profile: User,
+  landing: Globe,
 }
 
 export function flattenSidebarItems() {
   return primaryNavigation.map((item) => ({
     ...item,
-    roles: ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"] as const,
+    roles: ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"] as readonly AppRole[],
     icon: navigationIcons[item.icon],
   }))
 }

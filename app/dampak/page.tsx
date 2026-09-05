@@ -6,20 +6,25 @@ import { ImpactCaseStudies } from "@/components/piindung/impact/impact-case-stud
 import { ImpactHighlights } from "@/components/piindung/impact/impact-highlights"
 import { ImpactTestimonials } from "@/components/piindung/impact/impact-testimonials"
 import { ImpactCta } from "@/components/piindung/impact/impact-cta"
+import { readImpactContent } from "@/lib/impact-content-server"
+import { toPublicImpactContent } from "@/lib/impact-content"
 
 export const metadata: Metadata = {
   title: "Dampak | PIINDUNG",
   description: "Dampak nyata digitalisasi pelayanan ZIS melalui ekosistem PIINDUNG NU Care–LAZISNU Garut.",
 }
 
-export default function ImpactPage() {
+export default async function ImpactPage() {
+  const raw = await readImpactContent()
+  const content = toPublicImpactContent(raw)
+
   return (
     <PublicPageShell>
       <ImpactHero />
-      <ImpactStats />
-      <ImpactCaseStudies />
+      <ImpactStats content={content.impactStats} />
+      <ImpactCaseStudies content={content.caseStudies} />
       <ImpactHighlights />
-      <ImpactTestimonials />
+      <ImpactTestimonials content={content.testimonials} />
       <ImpactCta />
     </PublicPageShell>
   )

@@ -1,0 +1,677 @@
+/* Penghimpunan desktop presentation only.
+   Scoped to the existing collection workspace; workflow and motion stay intact. */
+
+@media (min-width: 901px) {
+  .gorut-collection-workspace {
+    width: min(100%, 1480px);
+    max-width: 1480px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-inline: auto;
+    padding-top: 20px !important;
+  }
+
+  .gorut-collection-workspace > * {
+    min-width: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  /* Workflow tabs remain visible and readable without resembling a second header. */
+  .gorut-collection-workspace .gorut-seg {
+    width: fit-content;
+    max-width: 100%;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    border: 1px solid var(--gorut-line);
+    border-radius: 12px;
+    background: var(--gorut-surface);
+    padding: 4px;
+    box-shadow: none;
+    scrollbar-width: none;
+  }
+
+  .gorut-collection-workspace .gorut-seg::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gorut-collection-workspace .gorut-seg a {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--gorut-muted);
+    padding-inline: 12px;
+    font-size: 9.5px;
+    font-weight: 680;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .gorut-collection-workspace .gorut-seg a.is-active,
+  .gorut-collection-workspace .gorut-seg a[aria-current='page'] {
+    border-color: color-mix(in srgb, var(--gorut-brand) 18%, var(--gorut-line));
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand-hover);
+  }
+
+  .gorut-collection-workspace .gorut-seg a:focus-visible {
+    outline: 2px solid var(--gorut-focus);
+    outline-offset: 2px;
+  }
+
+  /* One compact filter presentation across the four existing workflow tabs. */
+  .gorut-collection-workspace .pjm-filters {
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 11px 12px;
+    overflow: hidden;
+    border: 1px solid var(--gorut-line);
+    border-radius: 16px;
+    background: var(--gorut-surface);
+    padding: 15px 16px 16px;
+    box-shadow: var(--gorut-shadow-sm);
+    backdrop-filter: none;
+  }
+
+  .gorut-collection-workspace .pjm-filter-panel-heading {
+    grid-column: 1 / -1;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--gorut-line);
+    padding-bottom: 11px;
+  }
+
+  .gorut-collection-workspace .pjm-filter-panel-heading h2 {
+    margin: 0;
+    color: var(--gorut-ink-strong);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.3;
+    letter-spacing: -.015em;
+  }
+
+  .gorut-collection-workspace .pjm-filter-panel-heading p {
+    max-width: 68ch;
+    margin: 4px 0 0;
+    color: var(--gorut-muted);
+    font-size: 9.5px;
+    line-height: 1.5;
+  }
+
+  .gorut-collection-workspace .pjm-filter {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  .gorut-collection-workspace .pjm-filter-label {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gorut-ink);
+    font-size: 9px;
+    font-weight: 720;
+    line-height: 1.35;
+  }
+
+  .gorut-collection-workspace .pjm-filter-label > svg {
+    flex: 0 0 14px;
+    color: var(--gorut-brand);
+  }
+
+  .gorut-collection-workspace .pjm-filter select {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 10px;
+    background-color: var(--gorut-surface-raised);
+    color: var(--gorut-ink);
+    padding-inline: 11px 30px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .gorut-collection-workspace .pjm-filter select:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--gorut-brand) 30%, var(--gorut-line-strong));
+  }
+
+  .gorut-collection-workspace .pjm-filter select:focus-visible,
+  .gorut-collection-workspace :is(.pjm-search input, .pjm-page-size select):focus-visible {
+    border-color: var(--gorut-brand);
+    outline: 2px solid color-mix(in srgb, var(--gorut-focus) 18%, transparent);
+    outline-offset: 2px;
+  }
+
+  .gorut-collection-workspace :is(.upzis-verification-filter-footer, .pc-verification-filter-note) {
+    grid-column: 1 / -1;
+    margin: 0;
+    border-top: 1px solid var(--gorut-line);
+    padding-top: 10px;
+    color: var(--gorut-muted);
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .gorut-collection-workspace .gorut-collect-reset {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 9px;
+    background: var(--gorut-surface);
+    color: var(--gorut-brand-hover);
+    padding-inline: 10px;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  /* KPI cards use a consistent operational density. */
+  .gorut-collection-workspace .pjm-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .gorut-collection-workspace .pjm-summary article {
+    min-width: 0;
+    min-height: 104px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 16px;
+    background: var(--gorut-surface);
+    padding: 15px 16px;
+    box-shadow: var(--gorut-shadow-sm);
+  }
+
+  .gorut-collection-workspace .pjm-summary article.is-highlighted {
+    border-color: color-mix(in srgb, var(--gorut-brand) 22%, var(--gorut-line));
+    background: color-mix(in srgb, var(--gorut-brand-soft) 46%, var(--gorut-surface));
+  }
+
+  .gorut-collection-workspace .pjm-summary-heading {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .gorut-collection-workspace .pjm-summary-heading > span {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: grid;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 16%, var(--gorut-line));
+    border-radius: 11px;
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand);
+  }
+
+  .gorut-collection-workspace .pjm-summary-heading p {
+    min-width: 0;
+    margin: 0;
+    color: var(--gorut-muted);
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .gorut-collection-workspace .pjm-summary article > strong {
+    color: var(--gorut-ink-strong);
+    font-size: clamp(22px, 1.65vw, 26px);
+    font-weight: 790;
+    line-height: 1.08;
+    letter-spacing: -.03em;
+    overflow-wrap: anywhere;
+  }
+
+  /* Read-only guidance remains distinct from both errors and success messages. */
+  .gorut-collection-workspace .gorut-collect-readonly-note {
+    min-height: 42px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    border: 1px solid color-mix(in srgb, var(--gorut-info) 20%, var(--gorut-line));
+    border-radius: 11px;
+    background: var(--gorut-info-soft);
+    padding: 11px 13px;
+    color: var(--gorut-ink);
+    font-size: 9.5px;
+    line-height: 1.55;
+  }
+
+  .gorut-collection-workspace .gorut-collect-readonly-note > svg {
+    flex: 0 0 14px;
+    margin-top: 1px;
+    color: var(--gorut-info);
+  }
+
+  /* Data panel, controls, tables, and filtered-empty states. */
+  .gorut-collection-workspace .pjm-panel {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--gorut-line);
+    border-radius: 16px;
+    background: var(--gorut-surface);
+    box-shadow: var(--gorut-shadow-sm);
+  }
+
+  .gorut-collection-workspace .pjm-toolbar {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border: 0;
+    border-bottom: 1px solid var(--gorut-line);
+    background: var(--gorut-surface);
+    padding: 12px 15px;
+  }
+
+  .gorut-collection-workspace .pjm-toolbar-primary,
+  .gorut-collection-workspace .pjm-toolbar-actions {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .gorut-collection-workspace .pjm-toolbar-heading {
+    min-width: 150px;
+  }
+
+  .gorut-collection-workspace .pjm-toolbar-heading h2 {
+    margin: 0;
+    color: var(--gorut-ink-strong);
+    font-size: 13px;
+    font-weight: 760;
+    line-height: 1.3;
+  }
+
+  .gorut-collection-workspace .pjm-toolbar-heading p {
+    margin: 3px 0 0;
+    color: var(--gorut-muted);
+    font-size: 9px;
+  }
+
+  .gorut-collection-workspace .pjm-search {
+    width: clamp(220px, 26vw, 360px);
+    min-width: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 10px;
+    background: var(--gorut-surface-raised);
+    padding-inline: 11px;
+    color: var(--gorut-muted);
+  }
+
+  .gorut-collection-workspace .pjm-search input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--gorut-ink);
+    font-size: 10px;
+  }
+
+  .gorut-collection-workspace .pjm-search input::placeholder {
+    color: var(--gorut-subtle);
+    opacity: 1;
+  }
+
+  .gorut-collection-workspace :is(.pjm-page-size, .upzis-verification-kordes-filter) {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 10px;
+    background: var(--gorut-surface-raised);
+    padding-inline: 10px;
+    color: var(--gorut-muted);
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .gorut-collection-workspace :is(.pjm-page-size, .upzis-verification-kordes-filter) select {
+    height: 28px;
+    border: 0;
+    background: transparent;
+    color: var(--gorut-ink);
+    font-size: 9px;
+    font-weight: 680;
+  }
+
+  .gorut-collection-workspace .pjm-export {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 10px;
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    padding-inline: 12px;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .gorut-collection-workspace :is(button, input, select):disabled,
+  .gorut-collection-workspace .pc-verification-disabled-control {
+    border-color: var(--gorut-line) !important;
+    background-color: var(--gorut-surface-sunken) !important;
+    color: var(--gorut-subtle) !important;
+    box-shadow: none !important;
+    opacity: 1;
+    cursor: not-allowed;
+  }
+
+  .gorut-collection-workspace :is(.pjm-table-wrap, .kordes-village-table-wrap) {
+    width: 100%;
+    max-width: 100%;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--gorut-line-strong) transparent;
+  }
+
+  .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) {
+    width: 100%;
+    min-width: max(100%, 860px);
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) thead th {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    height: 44px;
+    border-bottom: 1px solid var(--gorut-line-strong);
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-muted);
+    padding: 12px 14px;
+    font-size: 8.5px;
+    font-weight: 760;
+    line-height: 1.3;
+    letter-spacing: .035em;
+    text-align: left;
+  }
+
+  .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) tbody td {
+    min-height: 68px;
+    border-bottom: 1px solid var(--gorut-line);
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    padding: 13px 14px;
+    font-size: 9.5px;
+    line-height: 1.45;
+    vertical-align: middle;
+  }
+
+  .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) :is(th, td):not(:last-child) {
+    border-right: 1px solid var(--gorut-line);
+  }
+
+  .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) td strong {
+    color: var(--gorut-ink-strong);
+    font-size: 10px;
+    font-weight: 690;
+  }
+
+  .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) td small,
+  .gorut-collection-workspace .pjm-name {
+    color: var(--gorut-muted);
+    font-size: 8.5px;
+    line-height: 1.4;
+  }
+
+  .gorut-collection-workspace :is(.is-amount, .is-numeric) {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .gorut-collection-workspace .pjm-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .gorut-collection-workspace :is(.pjm-badge, .kordes-status, .gorut-upzis-status) {
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 8px;
+    font-weight: 720;
+    line-height: 1.2;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .gorut-collection-workspace :is(.upzis-verification-action, .kordes-action, .kordes-village-action) {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 8px;
+    background: var(--gorut-surface);
+    color: var(--gorut-brand-hover);
+    padding-inline: 9px;
+    font-size: 8.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .gorut-collection-workspace :is(.upzis-verification-action, .kordes-action, .kordes-village-action).is-primary {
+    border-color: var(--gorut-brand);
+    background: var(--gorut-brand);
+    color: #fff;
+  }
+
+  .gorut-collection-workspace .gorut-collect-empty {
+    min-height: 228px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 30px 24px;
+    color: var(--gorut-muted);
+    text-align: center;
+  }
+
+  .gorut-collection-workspace .gorut-collect-empty > svg {
+    width: 42px;
+    height: 42px;
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 18%, var(--gorut-line));
+    border-radius: 12px;
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand);
+    padding: 10px;
+  }
+
+  .gorut-collection-workspace .gorut-collect-empty h2 {
+    margin: 12px 0 0;
+    color: var(--gorut-ink-strong);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.35;
+  }
+
+  .gorut-collection-workspace .gorut-collect-empty p {
+    max-width: 52ch;
+    margin: 6px 0 0;
+    color: var(--gorut-muted);
+    font-size: 9.5px;
+    line-height: 1.55;
+  }
+
+  .gorut-collection-workspace .pc-verification-table tbody td[colspan] {
+    height: auto;
+    padding: 0;
+  }
+
+  .gorut-collection-workspace .pc-verification-empty {
+    min-height: 210px;
+    background: var(--gorut-surface);
+  }
+
+  .gorut-collection-workspace .gorut-collect-pagination {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--gorut-line);
+    background: var(--gorut-surface-raised);
+    padding: 10px 15px;
+    color: var(--gorut-muted);
+    font-size: 9px;
+  }
+
+  .gorut-collection-workspace .gorut-pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .gorut-collection-workspace .gorut-pagination-buttons button {
+    min-height: 31px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 8px;
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    padding-inline: 9px;
+    font-size: 8.5px;
+  }
+
+  /* Existing Kordes drawers and UPZIS dialog stay bounded above the shell. */
+  .gorut-viewport .kordes-drawer,
+  .gorut-viewport .upzis-verification-modal {
+    z-index: 120;
+    max-height: calc(100dvh - 32px);
+    overflow: hidden;
+    border-color: var(--gorut-line-strong);
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    box-shadow: 0 24px 64px rgb(16 42 31 / 20%);
+  }
+
+  .gorut-viewport .kordes-drawer {
+    width: min(520px, calc(100vw - 48px));
+    top: 16px;
+    right: 16px;
+    bottom: 16px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 16px;
+  }
+
+  .gorut-viewport .kordes-drawer-head,
+  .gorut-viewport .kordes-drawer-footer,
+  .gorut-viewport .upzis-verification-modal-header,
+  .gorut-viewport .upzis-verification-modal-footer {
+    background: var(--gorut-surface);
+  }
+
+  .gorut-viewport .kordes-drawer-body,
+  .gorut-viewport .upzis-verification-modal-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .gorut-viewport .kordes-drawer-footer,
+  .gorut-viewport .upzis-verification-modal-footer {
+    border-top: 1px solid var(--gorut-line);
+  }
+
+  .gorut-viewport :is(.kordes-close, .upzis-verification-modal-close):focus-visible,
+  .gorut-collection-workspace :is(button, input, select, a):focus-visible {
+    outline: 2px solid var(--gorut-focus);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .gorut-collection-workspace :is(.pjm-table, .kordes-inner-table) tbody tr:hover td {
+      background: color-mix(in srgb, var(--gorut-brand-soft) 32%, var(--gorut-surface));
+    }
+
+    .gorut-collection-workspace :is(.upzis-verification-action, .kordes-action, .kordes-village-action):hover:not(:disabled),
+    .gorut-collection-workspace .pjm-export:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--gorut-brand) 34%, var(--gorut-line));
+      background: var(--gorut-brand-soft);
+      color: var(--gorut-brand-hover);
+    }
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .gorut-collection-workspace .pjm-filters,
+  .gorut-collection-workspace .pjm-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gorut-collection-workspace .pjm-toolbar,
+  .gorut-collection-workspace .pjm-toolbar-primary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gorut-collection-workspace .pjm-toolbar-actions {
+    justify-content: flex-end;
+  }
+
+  .gorut-collection-workspace .pjm-search {
+    width: 100%;
+  }
+}

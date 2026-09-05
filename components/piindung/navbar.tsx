@@ -12,6 +12,8 @@ import {
   Sun,
   Menu,
   User,
+  Home,
+  LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -22,18 +24,20 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { updateStoredSystemColorMode, type ColorMode } from "@/lib/system-settings"
+import { useRouter } from "next/navigation"
 import { useAuth, roleDisplayNames } from "@/lib/auth-context"
 import { primaryNavigation } from "@/lib/portal-navigation"
 import { NotificationBell } from "@/components/notification-bell"
 
-const navItems = primaryNavigation.filter((item) => item.id !== "member-area")
+const navItems = primaryNavigation.filter((item) => item.id !== "landing-page")
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { resolvedTheme, setTheme } = useTheme()
   const { settings } = useStoredSystemSettings()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const router = useRouter()
   const pathname = usePathname()
   useEffect(() => setMounted(true), [])
   const toggleDarkMode = () => {
@@ -126,7 +130,7 @@ export function Navbar() {
                   </nav>
                 </div>
 
-                <div className="border-t border-[#dfe9e4] pt-4 dark:border-white/10">
+                <div className="flex flex-col gap-2 border-t border-[#dfe9e4] pt-4 dark:border-white/10">
                   <div className="flex items-center gap-3 px-2 py-1">
                     <Avatar className="h-10 w-10 bg-gradient-to-br from-[#08213b] to-[#1a4a7a] shadow-sm">
                       <AvatarImage src={user?.avatar || undefined} alt={user?.name || "User"} className="object-cover" />
@@ -141,9 +145,28 @@ export function Navbar() {
                       </p>
                     </div>
                   </div>
+                  <button
+                    onClick={async () => {
+                      setIsMobileMenuOpen(false)
+                      await logout()
+                      router.push("/")
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-destructive transition-all duration-200 hover:bg-red-500/10"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    Keluar / Logout
+                  </button>
                 </div>
               </SheetContent>
             </Sheet>
+
+            <Link
+              href="/"
+              className="rounded-full p-2 text-[#6c7a89] transition-all duration-200 hover:bg-[#e6f7ef] hover:text-[#07965d] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-emerald-300"
+              title="Kembali ke Landing Page"
+            >
+              <Home className="h-5 w-5" />
+            </Link>
 
             <NotificationBell />
 
