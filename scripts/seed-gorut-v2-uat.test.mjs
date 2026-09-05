@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import {
   gorutUatFixtureTransactionOptions,
+  gorutUatLoginPhones,
   gorutUatUpzisLoginPhones,
   normalizeGorutUatFixturePhone,
   runGorutV2UatSeed,
@@ -51,6 +52,22 @@ test("fixture canonicalizes documented UPZIS login phones exactly like auth", ()
     gorutUatUpzisLoginPhones.map(normalizeGorutUatFixturePhone),
     ["08990010001", "08990010002"],
   )
+})
+
+test("fixture exposes explicit login accounts for the full staging actor chain", () => {
+  assert.deepEqual(gorutUatLoginPhones, [
+    "628990010001",
+    "628990010002",
+    "628990010003",
+    "628990010004",
+    "628990010005",
+    "628990010006",
+    "628990010007",
+    "628990010008",
+    "628990010009",
+    "628990010010",
+    "628990010011",
+  ])
 })
 
 test("password hashing stays outside the transaction and failed transaction is not success", async () => {

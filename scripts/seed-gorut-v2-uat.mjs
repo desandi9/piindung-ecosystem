@@ -13,8 +13,12 @@ export const gorutUatFixtureExpectedSummary = Object.freeze({
   rantingCount: 3,
   plpkCount: 4,
   munfiqCount: 12,
+  plpkActorCount: 4,
   kordesCount: 3,
   upzisActorCount: 2,
+  pcActorCount: 1,
+  munfiqActorCount: 1,
+  munfiqAccountLinkCount: 1,
 })
 
 const rantingFixtures = [
@@ -57,13 +61,38 @@ const actorFixtures = [
   { memberId: "PID-CCCCCCCCE234", name: "[UAT] PLPK Scope", phone: "628990010009", appRole: "admin_upzis", role: "PLPK", scopeCode: "UAT-P04" },
 ]
 
-const fixtureMemberIds = actorFixtures.map((actor) => actor.memberId)
+const pcActorFixture = {
+  memberId: "PID-DDDDDDDDA234",
+  name: "[UAT] PC Final Approval",
+  phone: "628990010010",
+  appRole: "super_admin_pc",
+  role: null,
+  scopeCode: null,
+}
+
+const munfiqActorFixture = {
+  memberId: "PID-EEEEEEEEA234",
+  name: "[UAT] Munfiq Transparency",
+  phone: "628990010011",
+  appRole: "munfiq",
+  role: null,
+  scopeCode: null,
+  munfiqCode: "UAT-M001",
+  grantGorutModule: false,
+}
+
+const loginFixtures = [...actorFixtures, pcActorFixture, munfiqActorFixture]
+const fixtureMemberIds = loginFixtures.map((actor) => actor.memberId)
+const plpkMemberIds = actorFixtures.filter((actor) => actor.role === "PLPK").map((actor) => actor.memberId)
 const kordesMemberIds = actorFixtures.filter((actor) => actor.role === "RANTING").map((actor) => actor.memberId)
 const upzisMemberIds = actorFixtures.filter((actor) => actor.role === "UPZIS").map((actor) => actor.memberId)
+const pcMemberIds = [pcActorFixture.memberId]
+const munfiqMemberIds = [munfiqActorFixture.memberId]
 
 export const gorutUatUpzisLoginPhones = Object.freeze(
   actorFixtures.filter((actor) => actor.role === "UPZIS").map((actor) => actor.phone),
 )
+export const gorutUatLoginPhones = Object.freeze(loginFixtures.map((actor) => actor.phone))
 
 // Keep this canonicalization identical to lib/phone.ts, which /api/auth/login uses
 // before its exact-match lookup against User.phone.
@@ -98,6 +127,7 @@ export function validateGorutUatFixtureEnvironment(env = {}) {
 }
 
 async function upsertAssignment(tx, userId, actor, kecamatan, rantings, plpks) {
+  if (!actor.role) return
   const scope = actor.role === "UPZIS"
     ? { kecamatanId: kecamatan.id, rantingId: null, plpkId: null }
     : actor.role === "RANTING"
@@ -159,19 +189,62 @@ export async function seedGorutV2UatFixture({ prisma, passwordHash }) {
       })
     }
 
-    for (const actor of actorFixtures) {
+    for (const actor of loginFixtures) {
       const normalizedPhone = normalizeGorutUatFixturePhone(actor.phone)
       const user = await tx.user.upsert({
         where: { memberId: actor.memberId },
         create: { memberId: actor.memberId, name: actor.name, phone: normalizedPhone, email: `${actor.memberId.slice(4).toLowerCase()}@gorut-uat.invalid`, passwordHash, role: actor.appRole, status: "Aktif" },
         update: { name: actor.name, phone: normalizedPhone, passwordHash, role: actor.appRole, status: "Aktif" },
       })
-      await tx.appRecord.upsert({
-        where: { scope_key: { scope: "portal-module-grants", key: user.id } },
-        create: { scope: "portal-module-grants", key: user.id, data: { grants: [{ userId: user.id, moduleKey: "gorut", enabled: true, actorId: "GORUT_UAT_FIXTURE" }] } },
-        update: { data: { grants: [{ userId: user.id, moduleKey: "gorut", enabled: true, actorId: "GORUT_UAT_FIXTURE" }] } },
-      })
+      if (actor.grantGorutModule !== false) {
+        await tx.appRecord.upsert({
+          where: { scope_key: { scope: "portal-module-grants", key: user.id } },
+          create: { scope: "portal-module-grants", key: user.id, data: { grants: [{ userId: user.id, moduleKey: "gorut", enabled: true, actorId: "GORUT_UAT_FIXTURE" }] } },
+          update: { data: { grants: [{ userId: user.id, moduleKey: "gorut", enabled: true, actorId: "GORUT_UAT_FIXTURE" }] } },
+        })
+      }
       await upsertAssignment(tx, user.id, actor, kecamatan, rantings, plpks)
+    }
+
+    const [pcUser, munfiqUser, linkedMunfiq] = await Promise.all([
+      tx.user.findUnique({ where: { memberId: pcActorFixture.memberId }, select: { id: true } }),
+      tx.user.findUnique({ where: { memberId: munfiqActorFixture.memberId }, select: { id: true } }),
+      tx.gorutMunfiq.findUnique({ where: { code: munfiqActorFixture.munfiqCode }, select: { id: true } }),
+    ])
+    if (!pcUser || !munfiqUser || !linkedMunfiq) throw new Error("GORUT UAT explicit Munfiq link target missing")
+
+    const activeLinks = await tx.gorutMunfiqAccountLink.findMany({
+      where: { status: "ACTIVE", OR: [{ userId: munfiqUser.id }, { munfiqId: linkedMunfiq.id }] },
+      select: { userId: true, munfiqId: true },
+      take: 2,
+    })
+    const exactActiveLink = activeLinks.length === 1
+      && activeLinks[0].userId === munfiqUser.id
+      && activeLinks[0].munfiqId === linkedMunfiq.id
+    if (activeLinks.length > 0 && !exactActiveLink) {
+      throw new Error("GORUT UAT explicit Munfiq link conflicts with an existing active link")
+    }
+    if (!exactActiveLink) {
+      await tx.gorutMunfiqAccountLink.upsert({
+        where: { linkCode: "GML-UAT-M001-ACCOUNT" },
+        create: {
+          linkCode: "GML-UAT-M001-ACCOUNT",
+          userId: munfiqUser.id,
+          munfiqId: linkedMunfiq.id,
+          linkedByUserId: pcUser.id,
+          reason: "Explicit non-production UAT fixture link",
+        },
+        update: {
+          userId: munfiqUser.id,
+          munfiqId: linkedMunfiq.id,
+          status: "ACTIVE",
+          linkedByUserId: pcUser.id,
+          revokedAt: null,
+          revokedByUserId: null,
+          revokedReason: null,
+          reason: "Explicit non-production UAT fixture link",
+        },
+      })
     }
 
     return { kecamatanId: kecamatan.id }
@@ -179,19 +252,31 @@ export async function seedGorutV2UatFixture({ prisma, passwordHash }) {
 }
 
 export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
-  const [kecamatanCount, rantingCount, plpkCount, munfiqCount, kordesCount, upzisActorCount] = await Promise.all([
+  const [kecamatanCount, rantingCount, plpkCount, munfiqCount, plpkActorCount, kordesCount, upzisActorCount, pcActorCount, munfiqActorCount, munfiqAccountLinkCount] = await Promise.all([
     prisma.gorutKecamatan.count({ where: { id: kecamatanId, code: "UAT-KEC-01" } }),
     prisma.gorutRanting.count({ where: { kecamatanId, code: { in: rantingFixtures.map((fixture) => fixture.code) } } }),
     prisma.gorutPlpk.count({ where: { code: { in: plpkFixtures.map((fixture) => fixture.code) } } }),
     prisma.gorutMunfiq.count({ where: { code: { in: munfiqFixtures.map((fixture) => fixture.code) } } }),
+    prisma.gorutOperationalAssignment.count({
+      where: { role: "PLPK", isActive: true, user: { memberId: { in: plpkMemberIds } } },
+    }),
     prisma.gorutOperationalAssignment.count({
       where: { role: "RANTING", isActive: true, user: { memberId: { in: kordesMemberIds } } },
     }),
     prisma.gorutOperationalAssignment.count({
       where: { role: "UPZIS", isActive: true, user: { memberId: { in: upzisMemberIds } } },
     }),
+    prisma.user.count({ where: { memberId: { in: pcMemberIds }, role: "super_admin_pc", status: "Aktif" } }),
+    prisma.user.count({ where: { memberId: { in: munfiqMemberIds }, role: "munfiq", status: "Aktif" } }),
+    prisma.gorutMunfiqAccountLink.count({
+      where: {
+        status: "ACTIVE",
+        user: { memberId: munfiqActorFixture.memberId },
+        munfiq: { code: munfiqActorFixture.munfiqCode },
+      },
+    }),
   ])
-  const summary = { kecamatanCount, rantingCount, plpkCount, munfiqCount, kordesCount, upzisActorCount }
+  const summary = { kecamatanCount, rantingCount, plpkCount, munfiqCount, plpkActorCount, kordesCount, upzisActorCount, pcActorCount, munfiqActorCount, munfiqAccountLinkCount }
   const mismatches = Object.entries(gorutUatFixtureExpectedSummary)
     .filter(([key, expected]) => summary[key] !== expected)
     .map(([key, expected]) => `${key}: expected ${expected}, got ${summary[key]}`)
@@ -203,9 +288,8 @@ export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
 }
 
 export async function verifyGorutV2UatAuthFixture({ prisma, password }) {
-  const upzisActors = actorFixtures.filter((actor) => actor.role === "UPZIS")
   const accounts = await prisma.user.findMany({
-    where: { memberId: { in: upzisMemberIds } },
+    where: { memberId: { in: fixtureMemberIds } },
     select: {
       memberId: true,
       phone: true,
@@ -213,16 +297,25 @@ export async function verifyGorutV2UatAuthFixture({ prisma, password }) {
       role: true,
       status: true,
       gorutAssignments: {
-        where: { role: "UPZIS", isActive: true },
-        select: { kecamatan: { select: { code: true, isActive: true } } },
+        where: { isActive: true },
+        select: {
+          role: true,
+          kecamatan: { select: { code: true, isActive: true } },
+          ranting: { select: { code: true, isActive: true } },
+          plpk: { select: { code: true, isActive: true } },
+        },
+      },
+      gorutMunfiqAccountLinks: {
+        where: { status: "ACTIVE" },
+        select: { munfiq: { select: { code: true } } },
       },
     },
   })
   const accountByMemberId = new Map(accounts.map((account) => [account.memberId, account]))
 
-  for (const actor of upzisActors) {
+  for (const actor of loginFixtures) {
     const account = accountByMemberId.get(actor.memberId)
-    const label = actor.name.includes("Maker") ? "maker" : "checker"
+    const label = actor.name
     if (!account) throw new Error(`GORUT UAT auth verification failed: ${label} account missing`)
     if (account.phone !== normalizeGorutUatFixturePhone(actor.phone)) {
       throw new Error(`GORUT UAT auth verification failed: ${label} phone is not canonical`)
@@ -236,17 +329,33 @@ export async function verifyGorutV2UatAuthFixture({ prisma, password }) {
     if (await bcrypt.compare(`${password}__WRONG_PASSWORD`, account.passwordHash)) {
       throw new Error(`GORUT UAT auth verification failed: ${label} wrong password accepted`)
     }
-    const scopedAssignment = account.gorutAssignments.some(
-      (assignment) => assignment.kecamatan?.code === actor.scopeCode && assignment.kecamatan.isActive,
-    )
-    if (!scopedAssignment) throw new Error(`GORUT UAT auth verification failed: ${label} UPZIS scope missing`)
+    if (actor.role) {
+      const scopedAssignment = account.gorutAssignments.some((assignment) =>
+        assignment.role === actor.role
+        && (assignment.kecamatan?.code === actor.scopeCode
+          || assignment.ranting?.code === actor.scopeCode
+          || assignment.plpk?.code === actor.scopeCode)
+        && (assignment.kecamatan?.isActive ?? assignment.ranting?.isActive ?? assignment.plpk?.isActive ?? false))
+      if (!scopedAssignment) throw new Error(`GORUT UAT auth verification failed: ${label} operational scope missing`)
+    }
   }
 
+  const munfiqAccount = accountByMemberId.get(munfiqActorFixture.memberId)
+  const explicitMunfiqAccountLinkReady = munfiqAccount?.gorutMunfiqAccountLinks.length === 1
+    && munfiqAccount.gorutMunfiqAccountLinks[0].munfiq.code === munfiqActorFixture.munfiqCode
+  if (!explicitMunfiqAccountLinkReady) throw new Error("GORUT UAT auth verification failed: explicit Munfiq account link missing")
+
   return {
-    upzisLoginAccountCount: accounts.length,
+    loginAccountCount: accounts.length,
+    plpkLoginAccountCount: plpkMemberIds.length,
+    kordesLoginAccountCount: kordesMemberIds.length,
+    upzisLoginAccountCount: upzisMemberIds.length,
+    pcLoginAccountCount: pcMemberIds.length,
+    munfiqLoginAccountCount: munfiqMemberIds.length,
     passwordMatch: true,
     wrongPasswordRejected: true,
     activeRoleScopeReady: true,
+    explicitMunfiqAccountLinkReady: true,
   }
 }
 
@@ -267,7 +376,7 @@ export async function runGorutV2UatSeed({
     const authSummary = await verifyGorutV2UatAuthFixture({ prisma, password: env.GORUT_UAT_FIXTURE_PASSWORD })
     logger.log("GORUT V2 NON-PRODUCTION UAT fixture verified:", summary)
     logger.log("GORUT V2 NON-PRODUCTION UAT auth fixture verified:", authSummary)
-    logger.log("Synthetic login phones:", actorFixtures.map((actor) => `${actor.name}: ${actor.phone}`).join(" | "))
+    logger.log("Synthetic login phones:", loginFixtures.map((actor) => `${actor.name}: ${actor.phone}`).join(" | "))
     logger.log("Password was read from GORUT_UAT_FIXTURE_PASSWORD and was not printed.")
     return { ...summary, ...authSummary }
   } finally {

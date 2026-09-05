@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client"
 import {
   gorutUatFixtureExpectedSummary,
   gorutUatFixtureMemberIds,
+  gorutUatLoginPhones,
   gorutUatUpzisLoginPhones,
   normalizeGorutUatFixturePhone,
   seedGorutV2UatFixture,
@@ -45,21 +46,23 @@ test("isolated PostgreSQL seed rolls back on failure and is idempotent", { skip:
 
     const first = await seedGorutV2UatFixture({ prisma, passwordHash })
     assert.deepEqual(await verifyGorutV2UatFixture({ prisma, kecamatanId: first.kecamatanId }), gorutUatFixtureExpectedSummary)
-    assert.deepEqual(await verifyGorutV2UatAuthFixture({ prisma, password: fixturePassword }), {
+    const expectedAuthSummary = {
+      loginAccountCount: 11,
+      plpkLoginAccountCount: 4,
+      kordesLoginAccountCount: 3,
       upzisLoginAccountCount: 2,
+      pcLoginAccountCount: 1,
+      munfiqLoginAccountCount: 1,
       passwordMatch: true,
       wrongPasswordRejected: true,
       activeRoleScopeReady: true,
-    })
+      explicitMunfiqAccountLinkReady: true,
+    }
+    assert.deepEqual(await verifyGorutV2UatAuthFixture({ prisma, password: fixturePassword }), expectedAuthSummary)
 
     const second = await seedGorutV2UatFixture({ prisma, passwordHash })
     assert.deepEqual(await verifyGorutV2UatFixture({ prisma, kecamatanId: second.kecamatanId }), gorutUatFixtureExpectedSummary)
-    assert.deepEqual(await verifyGorutV2UatAuthFixture({ prisma, password: fixturePassword }), {
-      upzisLoginAccountCount: 2,
-      passwordMatch: true,
-      wrongPasswordRejected: true,
-      activeRoleScopeReady: true,
-    })
+    assert.deepEqual(await verifyGorutV2UatAuthFixture({ prisma, password: fixturePassword }), expectedAuthSummary)
     assert.equal(first.kecamatanId, second.kecamatanId)
 
     for (const loginPhone of gorutUatUpzisLoginPhones) {
@@ -73,11 +76,25 @@ test("isolated PostgreSQL seed rolls back on failure and is idempotent", { skip:
       assert.equal(await bcrypt.compare("definitely-wrong-password", users[0].passwordHash), false)
     }
 
+    for (const loginPhone of gorutUatLoginPhones) {
+      const authPhone = normalizeGorutUatFixturePhone(loginPhone)
+      assert.equal(await prisma.user.count({ where: { phone: authPhone, status: "Aktif" } }), 1)
+    }
+
+    assert.equal(await prisma.gorutMunfiqAccountLink.count({
+      where: {
+        status: "ACTIVE",
+        user: { memberId: "PID-EEEEEEEEA234", role: "munfiq" },
+        munfiq: { code: "UAT-M001" },
+        linkedBy: { memberId: "PID-DDDDDDDDA234", role: "super_admin_pc" },
+      },
+    }), 1)
+
     const actorCount = await prisma.user.count({ where: { memberId: { in: gorutUatFixtureMemberIds } } })
     const assignmentCount = await prisma.gorutOperationalAssignment.count({
       where: { user: { memberId: { in: gorutUatFixtureMemberIds } } },
     })
-    assert.equal(actorCount, 9)
+    assert.equal(actorCount, 11)
     assert.equal(assignmentCount, 9)
   } finally {
     await prisma.$disconnect()
