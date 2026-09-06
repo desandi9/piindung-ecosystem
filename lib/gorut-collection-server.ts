@@ -30,6 +30,11 @@ import {
 } from "./gorut-provisional-plpk-fee-policy"
 
 const SERVER_COLLECTION_SOURCE_TYPE = "SERVER_COLLECTION_COMMAND"
+const COLLECTION_TRANSACTION_OPTIONS = {
+  isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+  maxWait: 10_000,
+  timeout: 60_000,
+} as const
 
 const collectionSelect = {
   id: true,
@@ -273,7 +278,7 @@ function retryable(error: unknown) {
 async function serializable<T>(prisma: PrismaClient, run: (tx: TxClient) => Promise<T>, maxAttempts = 6): Promise<T> {
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      return await prisma.$transaction(run, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+      return await prisma.$transaction(run, COLLECTION_TRANSACTION_OPTIONS)
     } catch (error) {
       if (!retryable(error)) throw error
       if (attempt === maxAttempts) {
