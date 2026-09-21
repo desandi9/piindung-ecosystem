@@ -17,6 +17,7 @@ export const gorutUatFixtureExpectedSummary = Object.freeze({
   kordesCount: 3,
   upzisActorCount: 2,
   pcActorCount: 1,
+  pcAssignmentCount: 1,
   munfiqActorCount: 1,
   munfiqAccountLinkCount: 1,
 })
@@ -66,7 +67,7 @@ const pcActorFixture = {
   name: "[UAT] PC Final Approval",
   phone: "628990010010",
   appRole: "super_admin_pc",
-  role: null,
+  role: "PC",
   scopeCode: null,
 }
 
@@ -128,7 +129,9 @@ export function validateGorutUatFixtureEnvironment(env = {}) {
 
 async function upsertAssignment(tx, userId, actor, kecamatan, rantings, plpks) {
   if (!actor.role) return
-  const scope = actor.role === "UPZIS"
+  const scope = actor.role === "PC"
+    ? { kecamatanId: null, rantingId: null, plpkId: null }
+    : actor.role === "UPZIS"
     ? { kecamatanId: kecamatan.id, rantingId: null, plpkId: null }
     : actor.role === "RANTING"
       ? { kecamatanId: null, rantingId: rantings.get(actor.scopeCode).id, plpkId: null }
@@ -252,7 +255,7 @@ export async function seedGorutV2UatFixture({ prisma, passwordHash }) {
 }
 
 export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
-  const [kecamatanCount, rantingCount, plpkCount, munfiqCount, plpkActorCount, kordesCount, upzisActorCount, pcActorCount, munfiqActorCount, munfiqAccountLinkCount] = await Promise.all([
+  const [kecamatanCount, rantingCount, plpkCount, munfiqCount, plpkActorCount, kordesCount, upzisActorCount, pcActorCount, pcAssignmentCount, munfiqActorCount, munfiqAccountLinkCount] = await Promise.all([
     prisma.gorutKecamatan.count({ where: { id: kecamatanId, code: "UAT-KEC-01" } }),
     prisma.gorutRanting.count({ where: { kecamatanId, code: { in: rantingFixtures.map((fixture) => fixture.code) } } }),
     prisma.gorutPlpk.count({ where: { code: { in: plpkFixtures.map((fixture) => fixture.code) } } }),
@@ -267,6 +270,9 @@ export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
       where: { role: "UPZIS", isActive: true, user: { memberId: { in: upzisMemberIds } } },
     }),
     prisma.user.count({ where: { memberId: { in: pcMemberIds }, role: "super_admin_pc", status: "Aktif" } }),
+    prisma.gorutOperationalAssignment.count({
+      where: { role: "PC", isActive: true, kecamatanId: null, rantingId: null, plpkId: null, user: { memberId: { in: pcMemberIds } } },
+    }),
     prisma.user.count({ where: { memberId: { in: munfiqMemberIds }, role: "munfiq", status: "Aktif" } }),
     prisma.gorutMunfiqAccountLink.count({
       where: {
@@ -276,7 +282,7 @@ export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
       },
     }),
   ])
-  const summary = { kecamatanCount, rantingCount, plpkCount, munfiqCount, plpkActorCount, kordesCount, upzisActorCount, pcActorCount, munfiqActorCount, munfiqAccountLinkCount }
+  const summary = { kecamatanCount, rantingCount, plpkCount, munfiqCount, plpkActorCount, kordesCount, upzisActorCount, pcActorCount, pcAssignmentCount, munfiqActorCount, munfiqAccountLinkCount }
   const mismatches = Object.entries(gorutUatFixtureExpectedSummary)
     .filter(([key, expected]) => summary[key] !== expected)
     .map(([key, expected]) => `${key}: expected ${expected}, got ${summary[key]}`)
@@ -329,7 +335,13 @@ export async function verifyGorutV2UatAuthFixture({ prisma, password }) {
     if (await bcrypt.compare(`${password}__WRONG_PASSWORD`, account.passwordHash)) {
       throw new Error(`GORUT UAT auth verification failed: ${label} wrong password accepted`)
     }
-    if (actor.role) {
+    if (actor.role === "PC") {
+      const [assignment] = account.gorutAssignments
+      if (account.gorutAssignments.length !== 1 || assignment?.role !== "PC"
+        || assignment.kecamatan || assignment.ranting || assignment.plpk) {
+        throw new Error(`GORUT UAT auth verification failed: ${label} requires exactly one active unscoped PC assignment`)
+      }
+    } else if (actor.role) {
       const scopedAssignment = account.gorutAssignments.some((assignment) =>
         assignment.role === actor.role
         && (assignment.kecamatan?.code === actor.scopeCode

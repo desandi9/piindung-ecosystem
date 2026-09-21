@@ -45,6 +45,13 @@ test("isolated PostgreSQL seed rolls back on failure and is idempotent", { skip:
     assert.deepEqual(rollbackCounts, [0, 0, 0, 0, 0, 0])
 
     const first = await seedGorutV2UatFixture({ prisma, passwordHash })
+    const pcUser = await prisma.user.findUniqueOrThrow({ where: { memberId: "PID-DDDDDDDDA234" } })
+    const pcAssignments = await prisma.gorutOperationalAssignment.findMany({
+      where: { userId: pcUser.id, isActive: true },
+      select: { role: true, kecamatanId: true, rantingId: true, plpkId: true },
+    })
+    assert.deepEqual(pcAssignments, [{ role: "PC", kecamatanId: null, rantingId: null, plpkId: null }],
+      "PC login requires exactly one canonical operational assignment, independent of its AppRole")
     assert.deepEqual(await verifyGorutV2UatFixture({ prisma, kecamatanId: first.kecamatanId }), gorutUatFixtureExpectedSummary)
     const expectedAuthSummary = {
       loginAccountCount: 11,
@@ -95,7 +102,35 @@ test("isolated PostgreSQL seed rolls back on failure and is idempotent", { skip:
       where: { user: { memberId: { in: gorutUatFixtureMemberIds } } },
     })
     assert.equal(actorCount, 11)
-    assert.equal(assignmentCount, 9)
+    assert.equal(assignmentCount, 10)
+
+    // Login/AppRole alone must never make an incomplete PC fixture pass verification.
+    const pcAssignment = await prisma.gorutOperationalAssignment.findFirstOrThrow({ where: { userId: pcUser.id, role: "PC" } })
+    for (const boundary of ["missing", "inactive", "role mismatch", "duplicate active scope"]) {
+      const rollback = new Error("rollback PC boundary probe")
+      await assert.rejects(prisma.$transaction(async (tx) => {
+        if (boundary === "missing") {
+          await tx.gorutOperationalAssignment.delete({ where: { id: pcAssignment.id } })
+        } else if (boundary === "inactive") {
+          await tx.gorutOperationalAssignment.update({ where: { id: pcAssignment.id }, data: { isActive: false } })
+        } else if (boundary === "role mismatch") {
+          await tx.gorutOperationalAssignment.update({ where: { id: pcAssignment.id }, data: { role: "UPZIS", kecamatanId: first.kecamatanId } })
+        } else {
+          await tx.gorutOperationalAssignment.create({ data: { userId: pcUser.id, role: "UPZIS", kecamatanId: first.kecamatanId } })
+        }
+        await assert.rejects(verifyGorutV2UatAuthFixture({ prisma: tx, password: fixturePassword }),
+          /requires exactly one active unscoped PC assignment/, boundary)
+        throw rollback
+      }, { timeout: 60_000 }), (error) => error === rollback)
+    }
+
+    await prisma.gorutOperationalAssignment.update({ where: { id: pcAssignment.id }, data: { isActive: false } })
+    await seedGorutV2UatFixture({ prisma, passwordHash })
+    const reactivated = await prisma.gorutOperationalAssignment.findMany({ where: { userId: pcUser.id } })
+    assert.equal(reactivated.length, 1)
+    assert.equal(reactivated[0].id, pcAssignment.id)
+    assert.equal(reactivated[0].isActive, true)
+    assert.deepEqual(await verifyGorutV2UatAuthFixture({ prisma, password: fixturePassword }), expectedAuthSummary)
   } finally {
     await prisma.$disconnect()
   }
