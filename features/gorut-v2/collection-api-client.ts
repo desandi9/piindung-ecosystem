@@ -1,3 +1,5 @@
+import { isAbortedRequest, runActorRequest } from '@/services/api/actor-session';
+
 export type GorutCollectionStatus =
   | 'DRAFT'
   | 'SCHEDULED'
@@ -366,19 +368,22 @@ export class GorutCollectionApiClient {
   }
 
   private async request<T>(url: string, init?: RequestInit): Promise<T> {
-    let response: Response;
-    try {
-      response = await this.fetcher(url, { cache: 'no-store', credentials: 'same-origin', ...init });
-    } catch (error) {
-      throw new CollectionApiError(
-        error instanceof Error ? error.message : 'Network request failed.',
-        0,
-        'NETWORK_ERROR',
-      );
-    }
-    const body = await responseBody(response);
-    if (!response.ok) throw errorFromResponse(response, body);
-    return body as T;
+    return runActorRequest(async (signal) => {
+      let response: Response;
+      try {
+        response = await this.fetcher(url, { cache: 'no-store', credentials: 'same-origin', ...init, signal });
+      } catch (error) {
+        if (isAbortedRequest(error)) throw error;
+        throw new CollectionApiError(
+          error instanceof Error ? error.message : 'Network request failed.',
+          0,
+          'NETWORK_ERROR',
+        );
+      }
+      const body = await responseBody(response);
+      if (!response.ok) throw errorFromResponse(response, body);
+      return body as T;
+    }, init?.signal);
   }
 }
 

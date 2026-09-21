@@ -32,6 +32,7 @@ export const DEFAULT_MAINTENANCE_SETTINGS: MaintenanceSettings = {
 
 const maintenanceClient = createSingletonClient<MaintenanceSettings>({
   scope: "maintenance-mode",
+  publicRead: true,
   defaultValue: DEFAULT_MAINTENANCE_SETTINGS,
   eventName: MAINTENANCE_MODE_EVENT,
 })

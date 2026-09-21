@@ -2,7 +2,10 @@
 
 import { HandCoinsIcon, Home01Icon, Notification02Icon } from '@hugeicons/core-free-icons';
 import type { IconSvgElement } from '@hugeicons/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { isAbortedRequest, runActorRequest, subscribeActorSession } from '@/services/api/actor-session';
+import { useMobileLogout } from '@/features/gorut-v2/mobile-auth';
+import { useAuth } from '@/lib/auth-context';
 
 import { MobileServiceIcon } from '@/components/gorut-v2/plpk-mobile/mobile-service-icon';
 
@@ -65,6 +68,7 @@ function CollectionCard({ item, onOpen }: { item: Collection; onOpen: () => void
 }
 
 export function MunfiqMobileApp({ identity }: { identity: { munfiqCode: string; name: string } }) {
+  const { user, isLoading: authLoading } = useAuth();
   const [tab, setTab] = useState<TabKey>('home');
   const [data, setData] = useState<CollectionsResponse | null>(null);
   const [notifications, setNotifications] = useState<NotificationsResponse | null>(null);
@@ -72,38 +76,61 @@ export function MunfiqMobileApp({ identity }: { identity: { munfiqCode: string; 
   const [detailLoading, setDetailLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const requests = useRef(new AbortController());
+  const { logout, logoutPending } = useMobileLogout('MUNFIQ', setError);
 
   const load = useCallback(async () => {
+    // A failed logout keeps the server session. An explicit retry gets a fresh signal.
+    if (requests.current.signal.aborted) requests.current = new AbortController();
     setLoading(true);
     setError('');
     try {
-      const collectionsResponse = await fetch('/api/gorut/munfiq/me/collections', { cache: 'no-store' });
-      if (!collectionsResponse.ok) throw new Error('Data belum dapat dimuat.');
-      const collectionsData = await collectionsResponse.json() as CollectionsResponse;
-      const notificationsResponse = await fetch('/api/notifications/me?page=1&limit=20', { cache: 'no-store' });
-      if (!notificationsResponse.ok) throw new Error('Notifikasi belum dapat dimuat.');
-      const notificationsData = await notificationsResponse.json() as NotificationsResponse;
+      const [collectionsData, notificationsData] = await runActorRequest(async (signal) => {
+        const collectionsResponse = await fetch('/api/gorut/munfiq/me/collections', { cache: 'no-store', signal });
+        if (!collectionsResponse.ok) throw new Error('Data belum dapat dimuat.');
+        const collectionsData = await collectionsResponse.json() as CollectionsResponse;
+        const notificationsResponse = await fetch('/api/notifications/me?page=1&limit=20', { cache: 'no-store', signal });
+        if (!notificationsResponse.ok) throw new Error('Notifikasi belum dapat dimuat.');
+        const notificationsData = await notificationsResponse.json() as NotificationsResponse;
+        return [collectionsData, notificationsData] as const;
+      }, requests.current.signal);
       setData(collectionsData);
       setNotifications(notificationsData);
     } catch (cause) {
+      if (isAbortedRequest(cause)) return;
       setError(cause instanceof Error ? cause.message : 'Terjadi kendala saat memuat data.');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (authLoading || !user || user.role !== 'munfiq') return;
+    requests.current = new AbortController();
+    const unsubscribe = subscribeActorSession(() => {
+      requests.current.abort();
+      setData(null);
+      setNotifications(null);
+      setDetail(null);
+      setError('');
+    });
+    void load();
+    return () => { requests.current.abort(); unsubscribe(); };
+  }, [load, authLoading, user]);
 
   const openDetail = useCallback(async (collectionCode: string) => {
     setTab('collections');
     setDetailLoading(true);
     setDetail(null);
     try {
-      const response = await fetch(`/api/gorut/munfiq/me/collections/${encodeURIComponent(collectionCode)}`, { cache: 'no-store' });
-      if (!response.ok) throw new Error('Riwayat tidak dapat dibuka.');
-      const result = await response.json() as { collection: Collection };
+      const result = await runActorRequest(async (signal) => {
+        const response = await fetch(`/api/gorut/munfiq/me/collections/${encodeURIComponent(collectionCode)}`, { cache: 'no-store', signal });
+        if (!response.ok) throw new Error('Riwayat tidak dapat dibuka.');
+        return await response.json() as { collection: Collection };
+      }, requests.current.signal);
       setDetail(result.collection);
     } catch (cause) {
+      if (isAbortedRequest(cause)) return;
       setError(cause instanceof Error ? cause.message : 'Riwayat tidak dapat dibuka.');
     } finally {
       setDetailLoading(false);
@@ -118,11 +145,15 @@ export function MunfiqMobileApp({ identity }: { identity: { munfiqCode: string; 
   const visibleNotifications = notifications?.notifications ?? [];
   const displayName = data?.owner.name ?? identity.name;
 
+  if (logoutPending) return <main className="munfiq-app" role="status">Sedang keluar…</main>;
+  if (authLoading || !user || user.role !== 'munfiq') return <main className="munfiq-app"><LoadingCards /></main>;
+
   return (
     <main className="munfiq-app">
       <header className="munfiq-header">
         <div className="munfiq-brand-mark" aria-hidden="true">NU</div>
         <div><strong>GORUT Munfiq</strong><span>Transparansi infak Anda</span></div>
+        <button type="button" onClick={logout} className="ml-auto min-h-11 px-3 text-sm font-semibold" aria-label="Keluar">Keluar</button>
         {notifications?.unreadCount ? <span className="munfiq-unread" aria-label={`${notifications.unreadCount} notifikasi belum dibaca`}>{notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}</span> : null}
       </header>
 

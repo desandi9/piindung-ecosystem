@@ -146,6 +146,8 @@ export function PlpkMobileServerApp({ profile }: { profile: PlpkProfile }) {
     }
   }, [activeBatch, api, showToast]);
 
+  if (logoutPending) return <main className="plpk-app" role="status">Sedang keluar…</main>;
+
   if (api.loading && !batches.length) {
     return (
       <div className="plpk-app" aria-busy="true">
@@ -161,7 +163,7 @@ export function PlpkMobileServerApp({ profile }: { profile: PlpkProfile }) {
 
   return (
     <div className="plpk-app">
-      {api.error ? <div className="plpk-warning" role="alert"><span>{api.error} <button type="button" onClick={() => void api.reload()}>Coba lagi</button></span></div> : null}
+      {api.error ? <div className="plpk-warning" role="alert"><span>{api.error} <button type="button" onClick={() => void api.reload().catch(() => undefined)}>Coba lagi</button></span></div> : null}
       {api.notice ? <div className="plpk-callout" role="status"><span>{api.notice}</span></div> : null}
 
       {subScreen === 'munfiq' ? <PlpkMunfiqScreen profile={profile} batches={batches} activeBatch={currentBatch} onBack={() => setSubScreen(null)} onOpenCollection={(entryId) => { setSubScreen(null); setWorkingBatchId(currentBatch?.id ?? null); setTab('collection'); setOpenEntryId(entryId); }} /> : null}

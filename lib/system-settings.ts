@@ -59,6 +59,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
 
 const systemSettingsClient = createSingletonClient<SystemSettings>({
   scope: "system-settings",
+  publicRead: true,
   defaultValue: DEFAULT_SYSTEM_SETTINGS,
   eventName: "piindung-system-settings-updated",
 })

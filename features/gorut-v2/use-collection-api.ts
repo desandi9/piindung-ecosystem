@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { actorGeneration, isAbortedRequest, subscribeActorSession } from '@/services/api/actor-session';
+import { useAuth } from '@/lib/auth-context';
 
 import {
   CollectionApiError,
@@ -13,9 +15,9 @@ import {
   type RecordCollectionEntryCommand,
 } from './collection-api-client';
 
-const sharedClient = new GorutCollectionApiClient();
-
 export function useCollectionApi(filters: CollectionListFilters = {}) {
+  const { user, isLoading: authLoading } = useAuth();
+  const client = useRef(new GorutCollectionApiClient());
   const [collections, setCollections] = useState<GorutCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -26,26 +28,37 @@ export function useCollectionApi(filters: CollectionListFilters = {}) {
   const stableFilters = useMemo(() => JSON.parse(filterKey) as CollectionListFilters, [filterKey]);
 
   const reload = useCallback(async () => {
+    const owner = actorGeneration();
     setLoading(true);
     setError('');
     try {
-      const response = await sharedClient.list(stableFilters);
+      const response = await client.current.list(stableFilters);
       setCollections(response.data);
       return response.data;
     } catch (caught) {
-      setError(collectionErrorMessage(caught));
+      if (owner === actorGeneration() && !isAbortedRequest(caught)) setError(collectionErrorMessage(caught));
       throw caught;
     } finally {
-      setLoading(false);
+      if (owner === actorGeneration()) setLoading(false);
     }
   }, [stableFilters]);
 
   useEffect(() => {
-    void reload().catch(() => undefined);
-  }, [reload]);
+    const unsubscribe = subscribeActorSession(() => {
+      client.current = new GorutCollectionApiClient();
+      inFlight.current.clear();
+      setCollections([]);
+      setPendingIntents(new Set());
+      setError('');
+      setNotice('');
+      setLoading(false);
+    });
+    if (!authLoading && user) void reload().catch(() => undefined);
+    return unsubscribe;
+  }, [reload, authLoading, user]);
 
   const refreshCollection = useCallback(async (collectionCode: string) => {
-    const canonical = await sharedClient.detail(collectionCode);
+    const canonical = await client.current.detail(collectionCode);
     setCollections((current) => {
       const index = current.findIndex((item) => item.identity.collectionCode === collectionCode);
       if (index < 0) return [canonical, ...current];
@@ -61,21 +74,25 @@ export function useCollectionApi(filters: CollectionListFilters = {}) {
       setPendingIntents((current) => new Set(current).add(intentId));
       setError('');
       setNotice('');
+      const owner = actorGeneration();
       try {
         return await command();
       } catch (caught) {
+        if (owner !== actorGeneration() || isAbortedRequest(caught)) throw caught;
         if (caught instanceof CollectionApiError && caught.status === 409) {
           setNotice('Data berubah di server. Data terbaru sudah dimuat; periksa kembali sebelum melanjutkan.');
         }
         setError(collectionErrorMessage(caught));
         throw caught;
       } finally {
-        inFlight.current.delete(intentId);
-        setPendingIntents((current) => {
-          const next = new Set(current);
-          next.delete(intentId);
-          return next;
-        });
+        if (owner === actorGeneration()) {
+          inFlight.current.delete(intentId);
+          setPendingIntents((current) => {
+            const next = new Set(current);
+            next.delete(intentId);
+            return next;
+          });
+        }
       }
     })();
     inFlight.current.set(intentId, task);
@@ -84,7 +101,7 @@ export function useCollectionApi(filters: CollectionListFilters = {}) {
 
   const createCollection = useCallback(async (period: string) => {
     const intentId = `create:${period}`;
-    const result = await runMutation(intentId, () => sharedClient.create(period, intentId));
+    const result = await runMutation(intentId, () => client.current.create(period, intentId));
     const collectionCode = result.collection.collectionCode;
     await reload();
     return refreshCollection(collectionCode);
@@ -99,7 +116,7 @@ export function useCollectionApi(filters: CollectionListFilters = {}) {
     return runMutation(
       intentId,
       () => executeWithCanonicalRefetch(
-        () => sharedClient.recordEntry(collectionCode, munfiqCode, command, intentId),
+        () => client.current.recordEntry(collectionCode, munfiqCode, command, intentId),
         () => refreshCollection(collectionCode),
       ),
     );
@@ -108,7 +125,7 @@ export function useCollectionApi(filters: CollectionListFilters = {}) {
   const executeAction = useCallback(async (collectionCode: string, command: CollectionActionCommand) => {
     const intentId = `action:${collectionCode}:${command.action}`;
     return runMutation(intentId, () => executeWithCanonicalRefetch(
-      () => sharedClient.action(collectionCode, command, intentId),
+      () => client.current.action(collectionCode, command, intentId),
       () => refreshCollection(collectionCode),
     ));
   }, [refreshCollection, runMutation]);

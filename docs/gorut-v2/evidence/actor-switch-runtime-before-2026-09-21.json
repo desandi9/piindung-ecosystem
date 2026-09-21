@@ -1,0 +1,261 @@
+{
+  "target": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app",
+  "exceptionCount": 6,
+  "exceptions": [
+    {
+      "phase": "1:Munfiq",
+      "text": "Error: {\"error\":\"Unauthorized\"}\n    at n (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11392)\n    at async o (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:13433)",
+      "stack": {
+        "callFrames": [
+          {
+            "functionName": "n",
+            "scriptId": "19",
+            "url": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js",
+            "lineNumber": 0,
+            "columnNumber": 11391
+          }
+        ]
+      }
+    },
+    {
+      "phase": "1:Munfiq",
+      "text": "Error: {\"error\":\"Forbidden\"}\n    at n (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11392)\n    at async Promise.all (index 2)\n    at async i (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11676)",
+      "stack": {
+        "callFrames": [
+          {
+            "functionName": "n",
+            "scriptId": "19",
+            "url": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js",
+            "lineNumber": 0,
+            "columnNumber": 11391
+          }
+        ]
+      }
+    },
+    {
+      "phase": "1:PLPK",
+      "text": "Error: {\"error\":\"Unauthorized\"}\n    at n (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11392)\n    at async o (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:13433)",
+      "stack": {
+        "callFrames": [
+          {
+            "functionName": "n",
+            "scriptId": "19",
+            "url": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js",
+            "lineNumber": 0,
+            "columnNumber": 11391
+          }
+        ]
+      }
+    },
+    {
+      "phase": "1:PLPK",
+      "text": "Error: {\"error\":\"Akses tidak diizinkan.\"}\n    at n (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11392)\n    at async Promise.all (index 0)\n    at async i (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11676)",
+      "stack": {
+        "callFrames": [
+          {
+            "functionName": "n",
+            "scriptId": "19",
+            "url": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js",
+            "lineNumber": 0,
+            "columnNumber": 11391
+          }
+        ]
+      }
+    },
+    {
+      "phase": "1:Munfiq",
+      "text": "Error: {\"error\":\"Unauthorized\"}\n    at n (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11392)\n    at async o (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:13433)",
+      "stack": {
+        "callFrames": [
+          {
+            "functionName": "n",
+            "scriptId": "19",
+            "url": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js",
+            "lineNumber": 0,
+            "columnNumber": 11391
+          }
+        ]
+      }
+    },
+    {
+      "phase": "1:Munfiq",
+      "text": "Error: {\"error\":\"Forbidden\"}\n    at n (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11392)\n    at async Promise.all (index 1)\n    at async i (https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js:1:11676)",
+      "stack": {
+        "callFrames": [
+          {
+            "functionName": "n",
+            "scriptId": "19",
+            "url": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app/_next/static/chunks/0d5eh_7_obff1.js",
+            "lineNumber": 0,
+            "columnNumber": 11391
+          }
+        ]
+      }
+    }
+  ],
+  "failedRequests": [
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/maintenance-mode/singleton",
+      "method": "PATCH",
+      "status": 401,
+      "start": 4080.765616,
+      "end": 4081.049771,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-1789994902855",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4088.710191,
+      "end": 4089.015883,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-1",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4088.710492,
+      "end": 4089.016189,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-2",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4088.710684,
+      "end": 4089.015563,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-3",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4088.710858,
+      "end": 4089.212272,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-4",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4088.711027,
+      "end": 4089.017271,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:PLPK",
+      "path": "/api/records/maintenance-mode/singleton",
+      "method": "PATCH",
+      "status": 401,
+      "start": 4125.85258,
+      "end": 4126.126318,
+      "responsePhase": "1:PLPK"
+    },
+    {
+      "phase": "1:PLPK",
+      "path": "/api/records/activity-log/log-1789994948039",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4133.893642,
+      "end": 4134.426989,
+      "responsePhase": "1:PLPK"
+    },
+    {
+      "phase": "1:PLPK",
+      "path": "/api/records/activity-log/log-1",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4133.893961,
+      "end": 4134.578244,
+      "responsePhase": "1:PLPK"
+    },
+    {
+      "phase": "1:PLPK",
+      "path": "/api/records/activity-log/log-2",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4133.894189,
+      "end": 4134.610313,
+      "responsePhase": "1:PLPK"
+    },
+    {
+      "phase": "1:PLPK",
+      "path": "/api/records/activity-log/log-3",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4133.894417,
+      "end": 4134.618359,
+      "responsePhase": "1:PLPK"
+    },
+    {
+      "phase": "1:PLPK",
+      "path": "/api/records/activity-log/log-4",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4133.894626,
+      "end": 4134.578718,
+      "responsePhase": "1:PLPK"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/maintenance-mode/singleton",
+      "method": "PATCH",
+      "status": 401,
+      "start": 4170.920747,
+      "end": 4171.203676,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-1789994992677",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4178.531118,
+      "end": 4178.825924,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-1",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4178.531315,
+      "end": 4178.801346,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-2",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4178.531448,
+      "end": 4178.808011,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-3",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4178.531567,
+      "end": 4178.817323,
+      "responsePhase": "1:Munfiq"
+    },
+    {
+      "phase": "1:Munfiq",
+      "path": "/api/records/activity-log/log-4",
+      "method": "PATCH",
+      "status": 403,
+      "start": 4178.531685,
+      "end": 4178.831908,
+      "responsePhase": "1:Munfiq"
+    }
+  ],
+  "classification": "Fresh requests from readValue/login effects; no rejected request crossed an actor phase. Missing rejection owners, not a proven stale-response cause."
+}
