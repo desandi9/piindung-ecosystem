@@ -284,3 +284,36 @@ test("production provisional fee policy blocks new settlement evidence", async (
   }, { runtime: { deploymentEnvironment: "PRODUCTION", enabled: true } }), "SETTLEMENT_PROVISIONAL_POLICY_DISABLED")
   assert.equal(await prisma.gorutPackageSettlementEvidence.count({ where: { packageId: row.packageRow.id } }), 0)
 })
+
+test("settlement tolerates transaction latency beyond five seconds without changing workflow", async () => {
+  const row = await fixture()
+  const delayed = new PrismaClient()
+  let delayNextPackageRead = true
+  delayed.$use(async (params, next) => {
+    if (delayNextPackageRead && params.runInTransaction && params.model === "GorutUpzisPackage" && params.action === "findUnique") {
+      delayNextPackageRead = false
+      await new Promise((resolve) => setTimeout(resolve, 5_200))
+    }
+    return next(params)
+  })
+  try {
+    const result = await recordGorutPackageSettlement(delayed, row.pcContext, {
+      packageCode: row.packageRow.packageCode,
+      mode: GorutPackageSettlementMode.PC_PICKUP,
+      actualAmount: "27500.00",
+      occurredAt: new Date("2026-09-08T05:00:00.000Z"),
+      handedOverByMemberId: row.upzisUser.memberId,
+      expectedVersion: 3,
+      idempotencyKey: `${row.packageRow.packageCode}:latency`,
+    }, { runtime })
+    assert.equal(delayNextPackageRead, false)
+    assert.equal(result.currentState, GorutTransactionState.WAITING_PC_APPROVAL)
+    assert.equal(result.version, 4)
+    assert.equal(result.revision, 2)
+    assert.equal(result.settlement.expectedAmount, "27500.00")
+    assert.equal(await prisma.gorutPackageSettlementEvidence.count({ where: { packageId: row.packageRow.id } }), 1)
+    assert.equal(await prisma.gorutWorkflowEvent.count({ where: { packageId: row.packageRow.id } }), 0)
+  } finally {
+    await delayed.$disconnect()
+  }
+})
