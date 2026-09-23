@@ -513,7 +513,11 @@ export async function materializeGorutUpzisPackage(
     try {
       return await prisma.$transaction(
         (tx) => materializeInTransaction(tx, input, policy, options.now ?? new Date()),
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          maxWait: 10_000,
+          timeout: 60_000,
+        },
       )
     } catch (error) {
       if (!isRetryable(error)) throw error

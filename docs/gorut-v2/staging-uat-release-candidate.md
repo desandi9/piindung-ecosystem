@@ -84,6 +84,10 @@ Dataset utama:
 
 - [ ] PLPK membuat authoritative collection, menyelesaikan semua entry, lalu confirm.
 - [ ] Kordes scope yang sesuai melakukan verify; pastikan transaction bridge tercipta dan source hash cocok.
+- [ ] Sebelum SUBMIT, cocokkan coverage package dengan **seluruh Ranting aktif** di Kecamatan untuk periode yang sama. Fixture `UAT-KEC-01` memiliki `UAT-R01`, `UAT-R02`, dan `UAT-R03`; menyelesaikan PLPK Financial `UAT-P01` hanya menyediakan sumber untuk `UAT-R01`.
+- [ ] Untuk setiap Ranting yang belum tercakup, selesaikan collection melalui PLPK → Kordes berdasarkan fakta skenario UAT yang disetujui, atau catat pengecualian melalui endpoint coverage dengan alasan operasional dan referensi keputusan yang sah. Jangan menganggap collection yang belum dibuat berarti Ranting tidak beroperasi; jangan menambah transaksi nol, menonaktifkan Ranting, atau mengarang exclusion agar gate lolos.
+- [ ] Jika memakai pengecualian yang sah, UPZIS mencatat `POST /api/gorut/packages/{packageCode}/coverage` dengan `rantingCode`, `reason`, `reference`, `expectedVersion` terbaru, dan `idempotencyKey` unik per keputusan. Ambil ulang version setelah setiap perubahan. Jika keputusan operasional belum tersedia, hentikan sebelum mutasi coverage.
+- [ ] `financial.status=READY` dan `coverage.unresolved=0` belum membuktikan kelengkapan roster: `unresolved` hanya menghitung baris coverage yang sudah ada. Pastikan `workflow.blockingReasons` tidak memuat `ROSTER_COVERAGE_INCOMPLETE` dan periksa `availableActions` server.
 - [ ] Pastikan package berada pada `DRAFT` dengan financial `READY`, coverage resolved, dan `availableActions=[SUBMIT]` untuk UPZIS.
 - [ ] Actor A (`628990010001`) melakukan `SUBMIT` dengan version current.
 - [ ] Pastikan state `WAITING_UPZIS_VERIFICATION` dan workflow event `SUBMIT` tercatat.

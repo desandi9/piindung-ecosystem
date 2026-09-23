@@ -28,6 +28,7 @@ import { recordGorutPackageSettlement } from "./gorut-package-settlement-server"
 import { validateGorutPackageSettlement } from "./gorut-package-validation-server"
 import { getGorutPackageDetail, listGorutPackages } from "./gorut-package-server"
 import { reconcileVerifiedCollection } from "./gorut-verified-collection-reconciliation"
+import { materializeGorutUpzisPackage } from "./gorut-package-materializer"
 import type { GorutOperationalContext } from "./gorut/server-pure"
 
 process.env.GORUT_DEPLOYMENT_ENV = "UAT"
@@ -387,6 +388,76 @@ test("different periods materialize different deterministic packages", async () 
   ])
   assert.notEqual(augustResult.reconciliation.packageCode, septemberResult.reconciliation.packageCode)
   assert.equal(await prisma.gorutUpzisPackage.count({ where: { kecamatanId: fixture.kecamatan.id } }), 2)
+})
+
+test("verified collection materializes after database work exceeds the default five-second transaction window", async () => {
+  const fixture = await createFixture([1])
+  const prepared = await prepareWaitingCollection(fixture, 0, "2026-09", "15000.00")
+  const { decideCollectionByKordes } = await import("./gorut-collection-server")
+  await decideCollectionByKordes(prisma, prepared.kordesContext, {
+    collectionCode: prepared.collectionCode,
+    decision: "VERIFY",
+    moneyMatches: true,
+    hasDamagedMoney: false,
+    cashReceived: true,
+    note: null,
+    expectedVersion: prepared.expectedVersion,
+    idempotencyKey: `${fixture.token}:verify-before-slow-materialization`,
+  })
+
+  const delayedMaterializerClient = {
+    $transaction: (
+      run: (tx: Prisma.TransactionClient) => Promise<unknown>,
+      options: { isolationLevel?: Prisma.TransactionIsolationLevel; timeout?: number; maxWait?: number },
+    ) => prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_sleep(5.1)`
+      return run(tx)
+    }, options),
+  } as unknown as PrismaClient
+  let materializationError: unknown
+  const result = await reconcileVerifiedCollection(prisma, prepared.collectionCode, {
+    runtime,
+    services: {
+      materialize: async (_client, input, policy, options) => {
+        try {
+          return await materializeGorutUpzisPackage(delayedMaterializerClient, input, policy, options)
+        } catch (error) {
+          materializationError = error
+          throw error
+        }
+      },
+    },
+  })
+
+  assert.equal(result.bridgeStatus, "CREATED")
+  assert.equal(materializationError, undefined)
+  assert.equal(result.packageStatus, "CREATED", JSON.stringify(result))
+  assert.equal(result.financialStatus, "READY")
+  assert.deepEqual(result.blockingReasons, [])
+  const packageRow = await prisma.gorutUpzisPackage.findUniqueOrThrow({
+    where: { packageCode: result.packageCode! },
+    include: { transactionMemberships: true, workflowEvents: true },
+  })
+  assert.equal(packageRow.recordOrigin, "COLLECTION_BRIDGE")
+  assert.equal(packageRow.currentState, GorutTransactionState.DRAFT)
+  assert.equal(packageRow.transactionMemberships.length, 1)
+  assert.equal(packageRow.grossAmount?.toFixed(2), "15000.00")
+  assert.equal(packageRow.totalPlpkFee?.toFixed(2), "2500.00")
+  assert.equal(packageRow.netAmount?.toFixed(2), "12500.00")
+  assert.equal(packageRow.workflowEvents.length, 0)
+
+  const beforeReplay = await prisma.gorutCollectionBatch.findUniqueOrThrow({
+    where: { collectionCode: prepared.collectionCode },
+  })
+  const replay = await reconcileVerifiedCollection(prisma, prepared.collectionCode, { runtime })
+  assert.equal(replay.idempotentReplay, true)
+  const afterReplay = await prisma.gorutCollectionBatch.findUniqueOrThrow({
+    where: { collectionCode: prepared.collectionCode },
+    include: { revisions: true },
+  })
+  assert.equal(afterReplay.version, beforeReplay.version)
+  assert.equal(afterReplay.revisions.filter(row => row.action === "VERIFY_BY_KORDES").length, 1)
+  assert.equal(await prisma.gorutUpzisPackageTransaction.count({ where: { packageId: packageRow.id } }), 1)
 })
 
 test("non-verified and production provisional-policy sources fail closed before bridge", async () => {
