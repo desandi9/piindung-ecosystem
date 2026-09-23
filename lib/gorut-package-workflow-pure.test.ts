@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { GorutTransactionState, GorutWorkflowAction } from "@prisma/client"
 // @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
-import { calculateGorutPackageAvailableActions, gorutPhase2bActions, phase2bTargetState, validateGorutReturnReason } from "./gorut-package-workflow-pure.ts"
+import { calculateGorutPackageAvailableActions, calculateGorutPcFinalApprovalReadiness, gorutPhase2bActions, phase2bTargetState, validateGorutReturnReason } from "./gorut-package-workflow-pure.ts"
 // @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
 import { parseTransitionBody } from "./gorut-package-workflow-api-pure.ts"
 import type { GorutOperationalContext } from "./gorut/server-pure.ts"
@@ -33,6 +33,8 @@ function pcAvailability(packageState: GorutTransactionState = GorutTransactionSt
     hasOpenCorrections: false,
     submitterUserId: "upzis-maker",
     blockingReasons: [],
+    pcAssignmentActive: true,
+    finalApprovalReadiness: { status: "READY", blockingReasons: [] },
   })
 }
 
@@ -40,16 +42,42 @@ void test("minimum Phase 2B matrix exposes only approved transitions", () => {
   assert.equal(phase2bTargetState(GorutTransactionState.DRAFT, GorutWorkflowAction.SUBMIT), GorutTransactionState.WAITING_UPZIS_VERIFICATION)
   assert.equal(phase2bTargetState(GorutTransactionState.RETURNED_TO_RANTING, GorutWorkflowAction.SUBMIT), GorutTransactionState.WAITING_UPZIS_VERIFICATION)
   assert.equal(phase2bTargetState(GorutTransactionState.WAITING_UPZIS_VERIFICATION, GorutWorkflowAction.APPROVE), GorutTransactionState.WAITING_PC_APPROVAL)
-  assert.equal(phase2bTargetState(GorutTransactionState.WAITING_PC_APPROVAL, GorutWorkflowAction.APPROVE), null)
+  assert.equal(phase2bTargetState(GorutTransactionState.WAITING_PC_APPROVAL, GorutWorkflowAction.APPROVE), GorutTransactionState.FINAL_APPROVED)
   assert.equal(phase2bTargetState(GorutTransactionState.WAITING_UPZIS_VERIFICATION, GorutWorkflowAction.RETURN), GorutTransactionState.RETURNED_TO_RANTING)
   assert.equal(gorutPhase2bActions.includes(GorutWorkflowAction.REJECT as never), false)
   assert.equal(gorutPhase2bActions.includes(GorutWorkflowAction.FINAL_CLOSE as never), false)
 })
 
-void test("PC finalization remains explicitly out of scope and fail-closed", () => {
+void test("PC exposes only APPROVE after current factual readiness and assignment checks", () => {
   const result = pcAvailability()
-  assert.deepEqual(result.availableActions, [])
-  assert.deepEqual(result.blockingReasons, ["PC_FINALIZATION_OUT_OF_SCOPE"])
+  assert.deepEqual(result.availableActions, [GorutWorkflowAction.APPROVE])
+  assert.deepEqual(result.blockingReasons, [])
+  const facts = { packageState: GorutTransactionState.WAITING_PC_APPROVAL, scopeMatches: false, packageEligible: true, hasOpenCorrections: false, submitterUserId: null, blockingReasons: [] }
+  for (const overrides of [
+    {},
+    { pcAssignmentActive: true },
+    { finalApprovalReadiness: { status: "READY" as const, blockingReasons: [] } },
+    { pcAssignmentActive: true, finalApprovalReadiness: { status: "BLOCKED" as const, blockingReasons: [] } },
+  ]) assert.deepEqual(calculateGorutPackageAvailableActions(pc(), runtime, { ...facts, ...overrides }).availableActions, [])
+  const ready = { ...facts, pcAssignmentActive: true, finalApprovalReadiness: { status: "READY" as const, blockingReasons: [] } }
+  assert.deepEqual(calculateGorutPackageAvailableActions(upzis(), runtime, ready).availableActions, [])
+  assert.deepEqual(calculateGorutPackageAvailableActions(pc(), { deploymentEnvironment: "PRODUCTION", enabled: true }, ready).availableActions, [])
+})
+
+void test("PC final readiness requires every financial, source, settlement and validation fact", () => {
+  const facts = {
+    packageState: GorutTransactionState.WAITING_PC_APPROVAL, financialReady: true, netAmountAvailable: true,
+    sourceClean: true, hasOpenCorrections: false, hasCurrentSettlement: true, settlementModeValid: true,
+    settlementExpectedMatchesNet: true, validationStatus: "CURRENT" as const, validationResult: "MATCHED" as const,
+    validationDifferenceIsZero: true, validationMatchesSettlement: true, validationActorFactual: true, validationTimestampFactual: true,
+  }
+  assert.deepEqual(calculateGorutPcFinalApprovalReadiness(facts), { status: "READY", blockingReasons: [] })
+  for (const key of ["financialReady", "netAmountAvailable", "sourceClean", "hasCurrentSettlement", "settlementModeValid", "settlementExpectedMatchesNet", "validationDifferenceIsZero", "validationMatchesSettlement", "validationActorFactual", "validationTimestampFactual"] as const) {
+    assert.equal(calculateGorutPcFinalApprovalReadiness({ ...facts, [key]: false }).status, "BLOCKED", key)
+  }
+  for (const override of [{ hasOpenCorrections: true }, { packageState: GorutTransactionState.FINAL_APPROVED }, { validationStatus: "STALE" as const }, { validationStatus: "NOT_VALIDATED" as const }, { validationResult: "MISMATCH" as const }, { validationResult: null }]) {
+    assert.equal(calculateGorutPcFinalApprovalReadiness({ ...facts, ...override }).status, "BLOCKED")
+  }
 })
 
 void test("FINAL_APPROVED exposes no RETURN, REJECT, FINAL_CLOSE, or further workflow action", () => {

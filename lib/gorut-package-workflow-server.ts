@@ -5,6 +5,7 @@ import {
   GorutPackageCorrectionTargetType,
   GorutPackageCoverageStatus,
   GorutPackageFinancialStatus,
+  GorutPackageSettlementMode,
   GorutReturnReasonCode,
   GorutTransactionState,
   GorutWorkflowAction,
@@ -12,7 +13,7 @@ import {
   Prisma,
   type PrismaClient,
 } from "@prisma/client"
-import type { GorutOperationalContext } from "./gorut/server-pure"
+import { serializePublicAccountStatus, type GorutOperationalContext } from "./gorut/server-pure"
 import {
   assertGorutProvisionalFeePolicyAllowed,
   GORUT_PROVISIONAL_PLPK_FEE_POLICY_VERSION,
@@ -21,6 +22,7 @@ import {
 } from "./gorut-provisional-plpk-fee-policy"
 import {
   calculateGorutPackageAvailableActions,
+  calculateGorutPcFinalApprovalReadiness,
   GorutPackageWorkflowError,
   phase2bTargetState,
   validateGorutReturnReason,
@@ -168,6 +170,19 @@ const workflowPackageSelect = {
     },
     orderBy: [{ createdAt: "desc" as const }, { id: "desc" as const }],
   },
+  settlementEvidence: {
+    select: {
+      evidenceCode: true, mode: true, revision: true, expectedAmountSnapshot: true, actualAmount: true,
+      supersededBy: { select: { evidenceCode: true } },
+      validation: { select: {
+        validationCode: true, settlementRevisionSnapshot: true, expectedAmountSnapshot: true,
+        actualAmountSnapshot: true, differenceAmount: true, result: true, validatedAt: true,
+        validatorUserId: true,
+        validatorAssignment: { select: { userId: true, role: true, kecamatanId: true, rantingId: true, plpkId: true } },
+      } },
+    },
+    orderBy: [{ revision: "desc" as const }, { evidenceCode: "desc" as const }],
+  },
   corrections: {
     select: {
       id: true,
@@ -222,8 +237,68 @@ function assertUpzisScope(context: GorutOperationalContext, packageRow: Workflow
   }
 }
 
-function assertTransitionScope(context: GorutOperationalContext, packageRow: WorkflowPackage) {
+async function pcAssignmentActive(tx: TxClient, context: GorutOperationalContext) {
+  if (context.operationalRole !== "PC" || context.kecamatanId || context.rantingId || context.plpkId) return false
+  const assignment = await tx.gorutOperationalAssignment.findFirst({
+    where: { id: context.assignmentId, userId: context.userId, role: "PC", isActive: true, kecamatanId: null, rantingId: null, plpkId: null },
+    select: { user: { select: { status: true } } },
+  })
+  return Boolean(assignment && serializePublicAccountStatus(assignment.user.status) === "aktif")
+}
+
+async function assertTransitionScope(tx: TxClient, context: GorutOperationalContext, packageRow: WorkflowPackage) {
+  if (context.operationalRole === "PC") {
+    if (!await pcAssignmentActive(tx, context)) throw new GorutPackageWorkflowError("PACKAGE_ACCESS_DENIED", "Active canonical PC assignment is required.")
+    if (packageRow.currentState !== "WAITING_PC_APPROVAL" && packageRow.currentState !== "FINAL_APPROVED") {
+      throw new GorutPackageWorkflowError("PACKAGE_ACTION_DISABLED", "PC may only approve a package waiting for PC approval.")
+    }
+    return
+  }
   assertUpzisScope(context, packageRow)
+}
+
+function currentSettlement(packageRow: WorkflowPackage) {
+  const current = packageRow.settlementEvidence.filter(row => !row.supersededBy)
+  return current.length === 1 ? current[0] : null
+}
+
+function finalApprovalReadiness(packageRow: WorkflowPackage, sourceClean: boolean) {
+  const settlement = currentSettlement(packageRow)
+  const validation = settlement?.validation
+  return calculateGorutPcFinalApprovalReadiness({
+    packageState: packageRow.currentState,
+    financialReady: packageRow.financialStatus === "READY",
+    netAmountAvailable: packageRow.netAmount !== null,
+    sourceClean: sourceClean && !packageRow.isHistorical && Boolean(packageRow.financialSourceHash),
+    hasOpenCorrections: packageRow.corrections.some(row => row.status === "OPEN"),
+    hasCurrentSettlement: Boolean(settlement),
+    settlementModeValid: Boolean(settlement && Object.values(GorutPackageSettlementMode).includes(settlement.mode)),
+    settlementExpectedMatchesNet: Boolean(settlement && packageRow.netAmount?.equals(settlement.expectedAmountSnapshot)),
+    validationStatus: validation ? "CURRENT" : packageRow.settlementEvidence.some(row => row.validation) ? "STALE" : "NOT_VALIDATED",
+    validationResult: validation?.result ?? null,
+    validationDifferenceIsZero: Boolean(validation?.differenceAmount.equals(0) && settlement?.actualAmount.equals(settlement.expectedAmountSnapshot)),
+    validationMatchesSettlement: Boolean(validation && settlement && validation.settlementRevisionSnapshot === settlement.revision &&
+      validation.expectedAmountSnapshot.equals(settlement.expectedAmountSnapshot) && validation.actualAmountSnapshot.equals(settlement.actualAmount) &&
+      validation.differenceAmount.equals(settlement.actualAmount.minus(settlement.expectedAmountSnapshot))),
+    validationActorFactual: Boolean(validation && validation.validatorAssignment.userId === validation.validatorUserId &&
+      validation.validatorAssignment.role === "PC" && !validation.validatorAssignment.kecamatanId && !validation.validatorAssignment.rantingId && !validation.validatorAssignment.plpkId),
+    validationTimestampFactual: Boolean(validation && Number.isFinite(validation.validatedAt.getTime())),
+  })
+}
+
+async function workflowAvailability(tx: TxClient, context: GorutOperationalContext, runtime: GorutProvisionalFeeRuntime, packageRow: WorkflowPackage, gates: Awaited<ReturnType<typeof evaluatePackageGates>>) {
+  const readiness = finalApprovalReadiness(packageRow, gates.eligible)
+  const availability = calculateGorutPackageAvailableActions(context, runtime, {
+    packageState: packageRow.currentState,
+    scopeMatches: context.operationalRole === "UPZIS" && context.kecamatanId === packageRow.kecamatanId,
+    packageEligible: gates.eligible,
+    hasOpenCorrections: packageRow.corrections.some(row => row.status === "OPEN"),
+    submitterUserId: latestSubmitEvent(packageRow)?.actorUserId ?? null,
+    blockingReasons: gates.blockingReasons,
+    pcAssignmentActive: context.operationalRole === "PC" ? await pcAssignmentActive(tx, context) : false,
+    finalApprovalReadiness: readiness,
+  })
+  return { ...availability, finalApprovalReadiness: readiness }
 }
 
 function latestSubmitEvent(packageRow: WorkflowPackage) {
@@ -231,6 +306,8 @@ function latestSubmitEvent(packageRow: WorkflowPackage) {
 }
 
 function publicWorkflowResult(packageRow: WorkflowPackage, availableActions: string[], blockingReasons: string[], idempotentReplay: boolean) {
+  const event = packageRow.workflowEvents.find(row => row.action === "APPROVE" && row.previousState === "WAITING_PC_APPROVAL" && row.resultingState === "FINAL_APPROVED")
+  const metadata = event?.metadata && typeof event.metadata === "object" && !Array.isArray(event.metadata) ? event.metadata : {}
   return {
     packageCode: packageRow.packageCode,
     currentState: packageRow.currentState,
@@ -240,14 +317,15 @@ function publicWorkflowResult(packageRow: WorkflowPackage, availableActions: str
     availableActions,
     blockingReasons,
     finalApproval: {
-      enabled: false,
-      approved: false,
-      approvedAt: null,
-      approvedBy: null,
-      sourceValidationCode: null,
-      settlementEvidenceCode: null,
-      packageVersion: null,
-      packageRevision: null,
+      enabled: packageRow.currentState === "WAITING_PC_APPROVAL" && availableActions.includes("APPROVE"),
+      approved: Boolean(event),
+      approvedAt: event?.createdAt.toISOString() ?? null,
+      approvedBy: event ? { memberId: event.actor.memberId, name: event.actor.name, role: event.actorAssignment?.role ?? null } : null,
+      sourceValidationCode: typeof metadata.validationCode === "string" ? metadata.validationCode : null,
+      settlementEvidenceCode: typeof metadata.settlementEvidenceCode === "string" ? metadata.settlementEvidenceCode : null,
+      packageVersion: typeof metadata.packageVersionBefore === "number" && typeof metadata.packageVersionAfter === "number"
+        ? { before: metadata.packageVersionBefore, after: metadata.packageVersionAfter } : null,
+      packageRevision: typeof metadata.packageRevision === "number" ? metadata.packageRevision : null,
       assertions: {
         bankSettled: false,
         fundsCleared: false,
@@ -432,7 +510,7 @@ function retryable(error: unknown) {
 async function serializable<T>(prisma: PrismaClient, run: (tx: TxClient) => Promise<T>) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      return await prisma.$transaction(run, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+      return await prisma.$transaction(run, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, maxWait: 10_000, timeout: 60_000 })
     } catch (error) {
       if (!retryable(error)) throw error
       if (attempt === 3) {
@@ -678,24 +756,14 @@ export async function getGorutPackageWorkflowAvailability(
   options: { runtime?: GorutProvisionalFeeRuntime } = {},
 ) {
   const runtime = options.runtime ?? resolveGorutProvisionalFeeRuntime()
-  const packageRow = await prisma.gorutUpzisPackage.findUnique({ where: { packageCode }, select: workflowPackageSelect })
-  if (!packageRow) return undefined
-  const gates = await prisma.$transaction((tx) => evaluatePackageGates(tx, packageRow, {
-    resubmissionPreview: packageRow.currentState === GorutTransactionState.RETURNED_TO_RANTING,
-  }))
-  const availability = calculateGorutPackageAvailableActions(context, runtime, {
-    packageState: packageRow.currentState,
-    scopeMatches: context.operationalRole === "UPZIS" && context.kecamatanId === packageRow.kecamatanId,
-    packageEligible: gates.eligible,
-    hasOpenCorrections: packageRow.corrections.some((row) => row.status === GorutPackageCorrectionStatus.OPEN),
-    submitterUserId: latestSubmitEvent(packageRow)?.actorUserId ?? null,
-    blockingReasons: gates.blockingReasons,
-  })
-  const finalApprovalReadiness = {
-    status: "BLOCKED" as const,
-    blockingReasons: ["PC_FINALIZATION_OUT_OF_SCOPE"],
-  }
-  return { ...availability, finalApprovalReadiness }
+  return prisma.$transaction(async (tx) => {
+    const packageRow = await tx.gorutUpzisPackage.findUnique({ where: { packageCode }, select: workflowPackageSelect })
+    if (!packageRow) return undefined
+    const gates = await evaluatePackageGates(tx, packageRow, {
+      resubmissionPreview: packageRow.currentState === GorutTransactionState.RETURNED_TO_RANTING,
+    })
+    return workflowAvailability(tx, context, runtime, packageRow, gates)
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, maxWait: 10_000, timeout: 60_000 })
 }
 
 export async function executeGorutPackageTransition(
@@ -723,30 +791,25 @@ export async function executeGorutPackageTransition(
 
   return serializable(prisma, async (tx) => {
     let packageRow = await loadPackage(tx, input.packageCode)
-    assertTransitionScope(context, packageRow)
+    await assertTransitionScope(tx, context, packageRow)
     const existingEvent = await tx.gorutWorkflowEvent.findUnique({
       where: { packageId_idempotencyKey: { packageId: packageRow.id, idempotencyKey } },
-      select: { commandHash: true },
+      select: { commandHash: true, stage: true },
     })
     if (existingEvent) {
+      if ((existingEvent.stage === "PC") !== (context.operationalRole === "PC")) throw new GorutPackageWorkflowError("PACKAGE_ACCESS_DENIED", "Replay requires the original workflow stage assignment.")
       if (existingEvent.commandHash !== commandHash) {
         throw new GorutPackageWorkflowError("PACKAGE_IDEMPOTENCY_CONFLICT", "Transition idempotency key was reused with different command facts.")
       }
       const replayGates = await evaluatePackageGates(tx, packageRow)
-      const replayAvailability = calculateGorutPackageAvailableActions(context, runtime, {
-        packageState: packageRow.currentState,
-        scopeMatches: true,
-        packageEligible: replayGates.eligible,
-        hasOpenCorrections: packageRow.corrections.some((row) => row.status === GorutPackageCorrectionStatus.OPEN),
-        submitterUserId: latestSubmitEvent(packageRow)?.actorUserId ?? null,
-        blockingReasons: replayGates.blockingReasons,
-      })
+      const replayAvailability = await workflowAvailability(tx, context, runtime, packageRow, replayGates)
       return publicWorkflowResult(packageRow, replayAvailability.availableActions, replayAvailability.blockingReasons, true)
     }
     if (packageRow.version !== input.expectedVersion) {
       throw new GorutPackageWorkflowError("PACKAGE_VERSION_CONFLICT", "Package version does not match expectedVersion.")
     }
     if (!packageRow.currentState) throw new GorutPackageWorkflowError("PACKAGE_STATE_INVALID", "Historical package without state cannot transition.")
+    if (packageRow.currentState === "WAITING_PC_APPROVAL" && context.operationalRole !== "PC") throw new GorutPackageWorkflowError("PACKAGE_ACCESS_DENIED", "Final approval requires an active canonical PC assignment.")
     const targetState = phase2bTargetState(packageRow.currentState, input.action)
     if (!targetState) throw new GorutPackageWorkflowError("PACKAGE_ACTION_DISABLED", "Action is not enabled from the current package state.")
 
@@ -793,6 +856,13 @@ export async function executeGorutPackageTransition(
     }
 
     const gates = await evaluatePackageGates(tx, packageRow)
+    const isFinalApproval = targetState === GorutTransactionState.FINAL_APPROVED
+    if (isFinalApproval) {
+      const availability = await workflowAvailability(tx, context, runtime, packageRow, gates)
+      if (!availability.availableActions.includes(GorutWorkflowAction.APPROVE)) {
+        throw new GorutPackageWorkflowError("PACKAGE_GATE_BLOCKED", "PC final approval prerequisites are not satisfied.", { blockingReasons: availability.blockingReasons })
+      }
+    }
     if (
       input.action !== GorutWorkflowAction.RETURN &&
       !gates.eligible
@@ -833,10 +903,16 @@ export async function executeGorutPackageTransition(
         previousState: packageRow.currentState,
         resultingState: targetState,
         action: input.action,
-        stage: GorutWorkflowStage.UPZIS,
+        stage: isFinalApproval ? GorutWorkflowStage.PC : GorutWorkflowStage.UPZIS,
         reasonCode: input.action === GorutWorkflowAction.RETURN ? input.reasonCode : null,
         reason: normalizedReason,
-        metadata: input.action === GorutWorkflowAction.RETURN
+        metadata: isFinalApproval ? {
+          validationCode: currentSettlement(packageRow)!.validation!.validationCode,
+          settlementEvidenceCode: currentSettlement(packageRow)!.evidenceCode,
+          packageVersionBefore: packageRow.version,
+          packageVersionAfter: nextVersion,
+          packageRevision: packageRow.revision,
+        } : input.action === GorutWorkflowAction.RETURN
           ? { correctionTargets: resolvedTargets.map((target) => ({ targetType: target.targetType, targetCode: target.targetCode })) }
           : input.action === GorutWorkflowAction.SUBMIT && packageRow.currentState === GorutTransactionState.RETURNED_TO_RANTING
             ? { resolvedCorrectionCodes: [...new Set(input.resolvedCorrectionCodes ?? [])].sort(), resolutionNote: input.resolutionNote!.trim(), sourceChanged }
@@ -894,14 +970,7 @@ export async function executeGorutPackageTransition(
     })
     const after = await loadPackage(tx, input.packageCode)
     const afterGates = await evaluatePackageGates(tx, after)
-    const availability = calculateGorutPackageAvailableActions(context, runtime, {
-      packageState: after.currentState,
-      scopeMatches: true,
-      packageEligible: afterGates.eligible,
-      hasOpenCorrections: after.corrections.some((row) => row.status === GorutPackageCorrectionStatus.OPEN),
-      submitterUserId: latestSubmitEvent(after)?.actorUserId ?? null,
-      blockingReasons: afterGates.blockingReasons,
-    })
+    const availability = await workflowAvailability(tx, context, runtime, after, afterGates)
     return publicWorkflowResult(after, availability.availableActions, availability.blockingReasons, false)
   })
 }

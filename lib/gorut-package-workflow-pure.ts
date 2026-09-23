@@ -115,6 +115,9 @@ export function phase2bTargetState(currentState: GorutTransactionState, action: 
   if (action === GorutWorkflowAction.APPROVE && currentState === GorutTransactionState.WAITING_UPZIS_VERIFICATION) {
     return GorutTransactionState.WAITING_PC_APPROVAL
   }
+  if (action === GorutWorkflowAction.APPROVE && currentState === GorutTransactionState.WAITING_PC_APPROVAL) {
+    return GorutTransactionState.FINAL_APPROVED
+  }
   if (action === GorutWorkflowAction.RETURN && currentState === GorutTransactionState.WAITING_UPZIS_VERIFICATION) {
     return GorutTransactionState.RETURNED_TO_RANTING
   }
@@ -133,6 +136,8 @@ export type GorutPackageWorkflowGateFacts = {
   hasOpenCorrections: boolean
   submitterUserId: string | null
   blockingReasons: string[]
+  pcAssignmentActive?: boolean
+  finalApprovalReadiness?: ReturnType<typeof calculateGorutPcFinalApprovalReadiness>
 }
 
 export function calculateGorutPackageAvailableActions(
@@ -142,9 +147,14 @@ export function calculateGorutPackageAvailableActions(
 ) {
   const runtimeAllowed = isGorutProvisionalFeePolicyAllowed(runtime)
   if (facts.packageState === GorutTransactionState.WAITING_PC_APPROVAL) {
-    const blockers = new Set(["PC_FINALIZATION_OUT_OF_SCOPE"])
+    const blockers = new Set(facts.finalApprovalReadiness?.blockingReasons ?? ["FINAL_APPROVAL_READINESS_NOT_EVALUATED"])
+    if (facts.finalApprovalReadiness?.status !== "READY" && blockers.size === 0) blockers.add("FINAL_APPROVAL_READINESS_NOT_EVALUATED")
     if (!runtimeAllowed) blockers.add("PROVISIONAL_FEE_POLICY_DISABLED")
-    return { availableActions: [] as GorutPhase2bAction[], blockingReasons: [...blockers].sort() }
+    if (context.operationalRole !== "PC" || !facts.pcAssignmentActive) blockers.add("PC_ASSIGNMENT_REQUIRED")
+    if (!facts.packageEligible) for (const reason of facts.blockingReasons) blockers.add(reason)
+    if (!facts.packageEligible && facts.blockingReasons.length === 0) blockers.add("SOURCE_RECONCILIATION_REQUIRED")
+    if (facts.hasOpenCorrections) blockers.add("UNRESOLVED_CORRECTION")
+    return { availableActions: blockers.size === 0 ? [GorutWorkflowAction.APPROVE] : [] as GorutPhase2bAction[], blockingReasons: [...blockers].sort() }
   }
 
   if (facts.packageState === GorutTransactionState.FINAL_APPROVED) {

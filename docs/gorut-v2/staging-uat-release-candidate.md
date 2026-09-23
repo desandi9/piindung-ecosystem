@@ -126,13 +126,16 @@ Untuk setiap baris, mulai dari canonical package yang sesuai dan kirim `SUBMIT` 
 - [ ] expected version stale → ditolak.
 - [ ] Untuk semua penolakan: state/version tidak berubah dan tidak ada success event.
 
-## Scenario 7 — PC boundary
+## Scenario 7 — PC final approval
 
-- [ ] Buka package pada `WAITING_PC_APPROVAL` sebagai PC/read-only consumer.
-- [ ] Verifikasi `availableActions=[]`.
-- [ ] Verifikasi blocking reason `PC_FINALIZATION_OUT_OF_SCOPE`.
+Focused debug dan evidence: [PC final approval](pc-final-approval-focused-debug-2026-09-13.md).
+
+- [ ] Buka package pada `WAITING_PC_APPROVAL` dengan assignment canonical PC aktif.
+- [ ] Verifikasi APPROVE tetap terblokir sebelum financial READY, settlement current, dan validation current + MATCHED dengan difference tepat nol.
+- [ ] Setelah seluruh gate terpenuhi, verifikasi `availableActions=[APPROVE]` dan final approval menuju `FINAL_APPROVED`, version +1, tepat satu event PC.
+- [ ] Replay command identik tidak membuat event kedua; settlement dan validation tidak berubah.
 - [ ] Coba command `FINAL_CLOSE` dan `REJECT`; server harus menolak.
-- [ ] Coba endpoint mutasi Setoran dan Validasi; server harus menolak sebagai out of scope.
+- [ ] Coba approval dengan assignment dicabut, stale version, atau policy production; server harus menolak tanpa mutasi.
 - [ ] Verifikasi F.011 tidak executable dan F.016 tidak diterbitkan.
 
 ## Production safety verification

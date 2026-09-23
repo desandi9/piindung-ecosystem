@@ -633,14 +633,14 @@ test("Phase 2C.4 Case A reaches WAITING_PC_APPROVAL with strict maker-checker an
   assert.equal(approved.currentState, GorutTransactionState.WAITING_PC_APPROVAL)
   assert.equal(approved.finalApproval.enabled, false)
   assert.deepEqual(approved.availableActions, [])
-  assert.ok(approved.blockingReasons.includes("PC_FINALIZATION_OUT_OF_SCOPE"))
+  assert.ok(approved.blockingReasons.includes("PC_ASSIGNMENT_REQUIRED"))
   const finalizationAttempt = await executeGorutPackageTransition(prisma, actorB, {
     packageCode,
     action: GorutWorkflowAction.APPROVE,
     expectedVersion: approved.version,
     idempotencyKey: `${fixture.token}:case-a:pc-finalization-must-stay-disabled`,
   }, { runtime }).catch((error) => error)
-  assert.equal(finalizationAttempt?.code, "PACKAGE_ACTION_DISABLED")
+  assert.equal(finalizationAttempt?.code, "PACKAGE_ACCESS_DENIED")
 
   const canonical = await getGorutPackageDetail(prisma, actorB, packageCode)
   assert.ok(canonical)
@@ -845,6 +845,10 @@ test("Phase 2D.3 PC_PICKUP reaches FINAL_APPROVED with one factual PC event and 
 
   const afterEvidence = await prisma.gorutPackageSettlementEvidence.findUniqueOrThrow({ where: { id: beforeEvidence.id } })
   const afterValidation = await prisma.gorutPackageSettlementValidation.findUniqueOrThrow({ where: { id: beforeValidation.id } })
+  assert.deepEqual(afterEvidence, beforeEvidence)
+  assert.deepEqual(afterValidation, beforeValidation)
+  assert.equal(first.version, validation.version + 1)
+  assert.equal(first.revision, packageBefore.revision)
   assert.equal(afterEvidence.actualAmount.toFixed(2), beforeEvidence.actualAmount.toFixed(2))
   assert.equal(afterEvidence.revision, beforeEvidence.revision)
   assert.equal(afterValidation.result, beforeValidation.result)

@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client"
+import { readJsonMutation } from "@/lib/request-security"
 import { getPrismaClient } from "@/lib/prisma"
 import { executeGorutPackageTransition } from "@/lib/gorut-package-workflow-server"
 import { gorutWorkflowErrorResponse, isPublicGorutCode, parseTransitionBody } from "@/lib/gorut-package-workflow-api"
@@ -12,19 +14,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ pac
   const packageCode = rawPackageCode.trim()
   if (!isPublicGorutCode(packageCode, 120)) return json({ error: "Kode package tidak valid." }, 400)
 
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return json({ error: "Payload JSON tidak valid." }, 400)
-  }
-  const parsed = parseTransitionBody(body)
+  const body = await readJsonMutation(request)
+  if (body.failure) return json({ error: body.failure.error }, body.failure.status)
+  const parsed = parseTransitionBody(body.value)
   if (!parsed) return json({ error: "Contract transition package tidak valid." }, 400)
 
   try {
     const result = await executeGorutPackageTransition(getPrismaClient(), auth.context, { packageCode, ...parsed })
     return json(result)
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) console.error("GORUT workflow database failure", { code: error.code })
     return gorutWorkflowErrorResponse(error)
   }
 }
