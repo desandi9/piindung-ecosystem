@@ -352,3 +352,34 @@ test("availability requires a current settlement and exposes mismatch clarificat
   assert.ok(blocked?.blockingReasons.includes("SETTLEMENT_AMOUNT_MISMATCH"))
   assert.ok(blocked?.blockingReasons.includes("SETTLEMENT_VALIDATION_REQUIRES_NEW_EVIDENCE"))
 })
+
+test("validation tolerates transaction latency beyond five seconds without changing workflow", async () => {
+  const row = await fixture()
+  const settlement = await bankSettlement(row, "27500.00")
+  const delayed = new PrismaClient()
+  let delayNextPackageRead = true
+  delayed.$use(async (params, next) => {
+    if (delayNextPackageRead && params.runInTransaction && params.model === "GorutUpzisPackage" && params.action === "findUnique") {
+      delayNextPackageRead = false
+      await new Promise((resolve) => setTimeout(resolve, 5_200))
+    }
+    return next(params)
+  })
+  try {
+    const result = await validateGorutPackageSettlement(delayed, row.pcContext, {
+      packageCode: row.packageRow.packageCode,
+      settlementEvidenceCode: settlement.settlement.evidenceCode,
+      expectedVersion: 4,
+      idempotencyKey: `${row.packageRow.packageCode}:validation:latency`,
+    }, { runtime })
+    assert.equal(delayNextPackageRead, false)
+    assert.equal(result.validation.result, "MATCHED")
+    assert.equal(result.currentState, GorutTransactionState.WAITING_PC_APPROVAL)
+    assert.equal(result.version, 5)
+    assert.equal(result.revision, 2)
+    assert.equal(await prisma.gorutPackageSettlementValidation.count({ where: { packageId: row.packageRow.id } }), 1)
+    assert.equal(await prisma.gorutWorkflowEvent.count({ where: { packageId: row.packageRow.id } }), 0)
+  } finally {
+    await delayed.$disconnect()
+  }
+})

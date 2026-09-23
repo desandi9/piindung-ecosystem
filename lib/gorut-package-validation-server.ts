@@ -188,7 +188,11 @@ function retryable(error: unknown) {
 async function serializable<T>(prisma: PrismaClient, run: (tx: TxClient) => Promise<T>): Promise<T> {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      return await prisma.$transaction(run, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+      return await prisma.$transaction(run, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 10_000,
+        timeout: 60_000,
+      })
     } catch (error) {
       if (!retryable(error)) throw error
       if (attempt === 3) {
