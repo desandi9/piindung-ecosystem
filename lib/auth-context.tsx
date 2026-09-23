@@ -1,8 +1,9 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
 import { roleDisplayNames } from "@/features/auth"
-import { addActivityLog, formatActivityDateTime } from "@/lib/activity-log"
+import { addActivityLog } from "@/lib/activity-log"
+import { invalidateActorSession, isAbortedRequest, runActorRequest, setRequestActor } from "@/services/api/actor-session"
 import { MANAGED_USERS_EVENT } from "@/lib/managed-users"
 import type { AppRole, AuthUser } from "@/types/auth"
 
@@ -181,56 +182,59 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   login: (identifier: string, password: string, options?: { remember?: boolean }) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
+  logout: () => Promise<boolean>
   setUser: (user: User | null) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, updateUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const setUser = useCallback((next: User | null) => {
+    setRequestActor(next ? `${next.id}:${next.role}` : null)
+    updateUser(next)
+  }, [])
 
   useEffect(() => {
     let isMounted = true
 
     async function loadSession() {
       try {
-        const response = await fetch("/api/auth/me", { credentials: "include" })
-        if (!response.ok) {
-          if (isMounted) setUser(null)
-          return
-        }
-
-        const payload = (await response.json()) as { user: User | null }
-        if (isMounted) setUser(payload.user)
-      } catch {
+        const nextUser = await runActorRequest(async (signal) => {
+          const response = await fetch("/api/auth/me", { credentials: "include", signal })
+          if (!response.ok) return null
+          return ((await response.json()) as { user: User | null }).user
+        }, controller.signal)
+        if (isMounted) setUser(nextUser)
+      } catch (error) {
+        if (isAbortedRequest(error)) return
         if (isMounted) setUser(null)
-      } finally {
-        if (isMounted) setIsLoading(false)
       }
+      if (isMounted) setIsLoading(false)
     }
 
+    const controller = new AbortController()
     void loadSession()
 
     return () => {
       isMounted = false
+      controller.abort()
     }
-  }, [])
+  }, [setUser])
 
   useEffect(() => {
+    const controller = new AbortController()
     async function syncCurrentSession() {
       try {
-        const response = await fetch("/api/auth/me", { credentials: "include" })
-        if (!response.ok) {
-          setUser(null)
-          return
-        }
-
-        const payload = (await response.json()) as { user: User | null }
-        setUser(payload.user)
-      } catch {
-        setUser(null)
+        const nextUser = await runActorRequest(async (signal) => {
+          const response = await fetch("/api/auth/me", { credentials: "include", signal })
+          if (!response.ok) return null
+          return ((await response.json()) as { user: User | null }).user
+        }, controller.signal)
+        setUser(nextUser)
+      } catch (error) {
+        if (!isAbortedRequest(error)) setUser(null)
       }
     }
 
@@ -238,10 +242,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       window.removeEventListener(MANAGED_USERS_EVENT, syncCurrentSession)
+      controller.abort()
     }
-  }, [])
+  }, [setUser])
 
   const login = async (identifier: string, password: string, options?: { remember?: boolean }): Promise<{ success: boolean; error?: string }> => {
+    invalidateActorSession()
+    setUser(null)
     setIsLoading(true)
 
     try {
@@ -283,24 +290,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    if (user) {
-      addActivityLog({
-        userName: user.name,
-        type: "Login",
-        action: "Logout dari Admin Dashboard",
-        roleLabel: roleDisplayNames[user.role],
-        loginAction: "Logout",
-        status: "Success",
-      })
-    }
-
+    invalidateActorSession()
     try {
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      const response = await fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      if (!response.ok) return false
     } catch {
-      // ignore logout transport errors and clear the client session anyway
+      return false
     }
 
     setUser(null)
+    return true
   }
 
   return (

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "w5qmd-1789416191480-1c5fdc564abf",
+    "timestamp": 1789416191480,
+    "deploymentId": "dpl_2Y9tLnER99pf9pLqn4WLBziSVs8D",
+    "requestPath": "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P03-202609",
+    "responseStatusCode": 500,
+    "message": "GORUT Munfiq own detail failed Error [PrismaClientKnownRequestError]: \nInvalid `prisma.appRecord.createMany()` invocation:\n\n\nTransaction API error: Transaction already closed: A query cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5214 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.\n    at async (.next/server/chunks/[root-of-the-server]__0-9e18x._.js:1:18820)\n    at async C (.next/server/chunks/[root-of-the-server]__07t8tgf._.js:1:22084)\n    at async u (.next/server/chunks/[root-of-the-server]__07t8tgf._.js:1:25733) {\n  code: 'P2028',\n  clientVersion: '5.22.0',\n  meta: {\n    modelName: 'AppRecord',\n    error: 'Transaction already closed: A query cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5214 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.'\n  }\n}"
+  },
+  {
+    "id": "cjldc-1789416176541-94bedcd3c8e0",
+    "timestamp": 1789416176541,
+    "deploymentId": "dpl_2Y9tLnER99pf9pLqn4WLBziSVs8D",
+    "requestPath": "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P01-202609",
+    "responseStatusCode": 500,
+    "message": "GORUT Munfiq own detail failed Error [PrismaClientKnownRequestError]: \nInvalid `prisma.appRecord.createMany()` invocation:\n\n\nTransaction API error: Transaction already closed: A query cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5213 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.\n    at async (.next/server/chunks/[root-of-the-server]__0-9e18x._.js:1:18820)\n    at async C (.next/server/chunks/[root-of-the-server]__07t8tgf._.js:1:22084)\n    at async u (.next/server/chunks/[root-of-the-server]__07t8tgf._.js:1:25733) {\n  code: 'P2028',\n  clientVersion: '5.22.0',\n  meta: {\n    modelName: 'AppRecord',\n    error: 'Transaction already closed: A query cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5213 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.'\n  }\n}"
+  },
+  {
+    "id": "767wf-1789416162745-93e0f8114c4a",
+    "timestamp": 1789416162745,
+    "deploymentId": "dpl_2Y9tLnER99pf9pLqn4WLBziSVs8D",
+    "requestPath": "/api/gorut/munfiq/me/collections",
+    "responseStatusCode": 500,
+    "message": "GORUT Munfiq own history failed Error [PrismaClientKnownRequestError]: \nInvalid `prisma.appRecord.createMany()` invocation:\n\n\nTransaction API error: Transaction already closed: A query cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5210 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.\n    at async (.next/server/chunks/[root-of-the-server]__0-9e18x._.js:1:18820)\n    at async C (.next/server/chunks/[root-of-the-server]__0-9e18x._.js:1:22053)\n    at async u (.next/server/chunks/[root-of-the-server]__0-9e18x._.js:1:25561) {\n  code: 'P2028',\n  clientVersion: '5.22.0',\n  meta: {\n    modelName: 'AppRecord',\n    error: 'Transaction already closed: A query cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5210 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.'\n  }\n}"
+  }
+]

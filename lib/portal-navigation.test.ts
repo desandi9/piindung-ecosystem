@@ -8,8 +8,8 @@ void test("primary navigation is exactly the four portal destinations", () => {
     primaryNavigation.map(({ label, href }) => ({ label, href })),
     [
       { label: "Beranda", href: "/dashboard" },
-      { label: "Member Area", href: "/member-area" },
-      { label: "Bantuan", href: "/bantuan" },
+      { label: "Landing Page", href: "/dashboard/landing-page" },
+      { label: "Bantuan", href: "/dashboard/bantuan" },
       { label: "Profil", href: "/profil" },
     ]
   )
@@ -25,6 +25,7 @@ void test("module presentation only accepts the existing GORUT route and roles",
   assert.equal(canPresentPortalModule("admin_upzis", "/gorut"), true)
   assert.equal(canPresentPortalModule("admin_kordes", "/gorut"), true)
   assert.equal(canPresentPortalModule("admin_pc", "/etasyaruf"), false)
+  assert.equal(canPresentPortalModule("munfiq", "/gorut"), false)
 })
 
 void test("classify public routes", () => {
@@ -34,20 +35,19 @@ void test("classify public routes", () => {
 })
 
 void test("classify authenticated routes across roles", () => {
-  const roles: AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
+  const roles: AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes", "munfiq"]
   for (const role of roles) {
     assert.equal(classifyCanonicalRoute("/dashboard", role), "authenticated")
-    assert.equal(classifyCanonicalRoute("/member-area", role), "authenticated")
     assert.equal(classifyCanonicalRoute("/profil", role), "authenticated")
     assert.equal(classifyCanonicalRoute("/notifikasi", role), "authenticated")
   }
 })
 
 void test("classify super-admin routes", () => {
-  assert.equal(classifyCanonicalRoute("/member-area/pengguna", "super_admin_pc"), "super-admin")
-  assert.equal(classifyCanonicalRoute("/member-area/pengguna", "admin_pc"), "unknown")
-  assert.equal(classifyCanonicalRoute("/member-area/pengguna", "admin_upzis"), "unknown")
-  assert.equal(classifyCanonicalRoute("/member-area/pengguna", "admin_kordes"), "unknown")
+  assert.equal(classifyCanonicalRoute("/dashboard/landing-page", "super_admin_pc"), "super-admin")
+  assert.equal(classifyCanonicalRoute("/dashboard/landing-page/beranda", "super_admin_pc"), "super-admin")
+  assert.equal(classifyCanonicalRoute("/dashboard/landing-page", "admin_pc"), "unknown")
+  assert.equal(classifyCanonicalRoute("/admin/pengguna"), "legacy-redirect")
 })
 
 void test("classify unknown routes and legacy redirect", () => {

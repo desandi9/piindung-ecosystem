@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { DEFAULT_SITE_CONTACT, type SocialLink } from "@/lib/site-contact"
+import { DEFAULT_SITE_CONTACT, type SocialLink, type SocialPlatform, ALLOWED_SOCIAL_PLATFORMS } from "@/lib/site-contact"
 import { readLegacyContactSocialRecords, requireSiteContactManager, updateSiteContact } from "@/lib/site-contact-server"
 import { getRecord } from "@/lib/record-store-server"
 
@@ -29,7 +29,13 @@ export async function POST() {
         if (url) skippedCount += 1
         return []
       }
-      return [{ id: platform, platform: platform as any, label: label as any, url, visible: true, position: index + 1 }]
+      if (!ALLOWED_SOCIAL_PLATFORMS.includes(platform as SocialPlatform)) {
+        skippedCount += 1
+        return []
+      }
+
+      const typedPlatform = platform as SocialPlatform
+      return [{ id: typedPlatform, platform: typedPlatform, label, url, visible: true, position: index + 1 }]
     })
 
     const address = typeof old.address === "string" && old.address.trim() ? old.address.trim() : DEFAULT_SITE_CONTACT.organization.address

@@ -36,11 +36,11 @@ export default function ArtikelBeritaPage() {
   }, [loadStatus])
 
   useEffect(() => {
-    if (status?.fullyRetired) router.replace("/member-area/konten/artikel")
+    if (status?.fullyRetired) router.replace("/dashboard/landing-page/artikel")
   }, [router, status])
 
   if (loading || status?.fullyRetired) {
-    return <DashboardLayout><div className="flex h-[400px] items-center justify-center px-4 text-center text-sm text-muted-foreground">{status?.fullyRetired ? "Mengalihkan ke Member Area..." : "Memuat status retirement artikel lama..."}</div></DashboardLayout>
+    return <DashboardLayout><div className="flex h-[400px] items-center justify-center px-4 text-center text-sm text-muted-foreground">{status?.fullyRetired ? "Mengalihkan ke CMS Landing Page..." : "Memuat status retirement artikel lama..."}</div></DashboardLayout>
   }
 
   return (
@@ -53,11 +53,11 @@ export default function ArtikelBeritaPage() {
               Sistem Lama
             </div>
             <h1 className="text-2xl font-bold text-foreground lg:text-3xl">CMS Artikel Lama</h1>
-            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Pengelolaan artikel publik telah dipindahkan ke Member Area. Selesaikan migrasi atau arsipkan record yang tersisa di sini agar sistem lama dapat dinonaktifkan.</p>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Pengelolaan artikel publik telah dipindahkan ke CMS Landing Page. Selesaikan migrasi atau arsipkan record yang tersisa di sini agar sistem lama dapat dinonaktifkan.</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button onClick={() => router.push("/member-area/konten/artikel/migrasi")} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-background px-4 text-sm font-semibold hover:bg-accent hover:text-foreground">Tinjau Migrasi</button>
-            <button onClick={() => router.push("/member-area/konten/artikel")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] px-4 text-sm font-semibold text-white transition hover:bg-[#107947]">Buka Pengelolaan Artikel Baru <ArrowRight className="h-4 w-4" /></button>
+            <button onClick={() => router.push("/dashboard/landing-page/artikel/migrasi")} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-input bg-background px-4 text-sm font-semibold hover:bg-accent hover:text-foreground">Tinjau Migrasi</button>
+            <button onClick={() => router.push("/dashboard/landing-page/artikel")} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#15945b] px-4 text-sm font-semibold text-white transition hover:bg-[#107947]">Buka Pengelolaan Artikel Baru <ArrowRight className="h-4 w-4" /></button>
           </div>
         </div>
 

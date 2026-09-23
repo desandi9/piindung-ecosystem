@@ -1,0 +1,433 @@
+/* Dokumen Administrasi desktop presentation only.
+   The catalog, document eligibility, and PDF pipeline remain unchanged. */
+
+@media (min-width: 901px) {
+  .gorut-documents-workspace {
+    width: min(100%, 1480px);
+    max-width: 1480px;
+    min-width: 0;
+    gap: 14px !important;
+    margin-inline: auto;
+  }
+
+  .gorut-documents-workspace > * {
+    min-width: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  /* Filters read as one unit and retain visible active-filter context. */
+  .gorut-documents-workspace .gorut-documents-filters {
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    gap: 12px;
+    overflow: hidden;
+    border-radius: 16px;
+    padding: 15px 16px;
+    backdrop-filter: none;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filters > header {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 16px;
+    border-bottom: 1px solid var(--gorut-line);
+    padding-bottom: 11px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filters > header h2 {
+    margin: 0;
+    color: var(--gorut-ink-strong);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.3;
+    letter-spacing: -.015em;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filters > header p {
+    margin: 4px 0 0;
+    color: var(--gorut-muted);
+    font-size: 9.5px;
+    line-height: 1.5;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filter-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filter-grid > label {
+    min-width: 0;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filter-grid select {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 10px;
+    background-color: var(--gorut-surface-raised);
+    color: var(--gorut-ink);
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filters > footer {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 14px;
+    margin-top: 0;
+    padding-top: 11px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-filters > footer strong {
+    color: var(--gorut-ink-strong);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .gorut-documents-workspace .gorut-munfiq-active-filters {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+  }
+
+  .gorut-documents-workspace .gorut-munfiq-active-filters > div {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  .gorut-documents-workspace .gorut-munfiq-active-filters button {
+    min-height: 27px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 22%, var(--gorut-line));
+    border-radius: 999px;
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand-hover);
+    padding-inline: 8px;
+    font-size: 8px;
+    font-weight: 700;
+  }
+
+  .gorut-documents-workspace .gorut-documents-note {
+    min-height: 42px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    border-color: color-mix(in srgb, var(--gorut-info) 20%, var(--gorut-line));
+    border-radius: 11px;
+    background: var(--gorut-info-soft);
+    padding: 11px 13px;
+    color: var(--gorut-ink);
+    font-size: 9.5px;
+    line-height: 1.55;
+  }
+
+  .gorut-documents-workspace .gorut-documents-note > svg {
+    flex: 0 0 14px;
+    margin-top: 1px;
+    color: var(--gorut-info);
+  }
+
+  /* Table toolbar and actions stay compact even with long document metadata. */
+  .gorut-documents-workspace .gorut-documents-panel {
+    overflow: hidden;
+    border-radius: 16px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-toolbar {
+    min-height: 68px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-toolbar .pjm-search {
+    width: clamp(280px, 36vw, 520px);
+    min-width: 220px;
+    height: 40px;
+    flex: 1 1 360px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-toolbar .pjm-search input {
+    width: 100%;
+    min-width: 0;
+    background: transparent;
+  }
+
+  .gorut-documents-workspace .gorut-documents-toolbar-actions {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .gorut-documents-workspace :is(.gorut-documents-ready-filter, .pjm-page-size) {
+    min-height: 40px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 10px;
+    background: var(--gorut-surface-raised);
+  }
+
+  .gorut-documents-workspace .gorut-documents-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(62vh, 660px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--gorut-line-strong) transparent;
+  }
+
+  .gorut-documents-workspace .gorut-documents-table {
+    min-width: 1280px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-table thead th {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    height: 44px;
+    background: var(--gorut-surface-sunken);
+  }
+
+  .gorut-documents-workspace .gorut-documents-table tbody td {
+    height: 72px;
+    padding-block: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .gorut-documents-workspace .gorut-documents-table tbody tr.is-waiting td {
+    background: color-mix(in srgb, var(--gorut-warning-soft) 38%, var(--gorut-surface));
+  }
+
+  .gorut-documents-workspace .gorut-documents-table tbody tr.is-unavailable td {
+    background: var(--gorut-surface-raised);
+    color: var(--gorut-muted);
+  }
+
+  .gorut-documents-workspace .gorut-documents-actions {
+    min-width: 210px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .gorut-documents-workspace .gorut-documents-action {
+    min-height: 32px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .gorut-documents-workspace .gorut-documents-action:disabled,
+  .gorut-documents-workspace .gorut-documents-action.is-disabled {
+    border-color: var(--gorut-line);
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-subtle);
+    box-shadow: none;
+    opacity: 1;
+    cursor: not-allowed;
+  }
+
+  .gorut-documents-workspace .gorut-documents-badge {
+    min-height: 24px;
+    text-transform: none;
+    letter-spacing: .01em;
+  }
+
+  .gorut-documents-workspace .gorut-collect-empty {
+    min-height: 236px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 30px 24px;
+    text-align: center;
+  }
+
+  .gorut-documents-workspace .gorut-collect-empty > svg {
+    width: 42px;
+    height: 42px;
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 18%, var(--gorut-line));
+    border-radius: 12px;
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand);
+    padding: 10px;
+  }
+
+  .gorut-documents-workspace .gorut-collect-empty h2 {
+    margin: 12px 0 0;
+    color: var(--gorut-ink-strong);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.35;
+  }
+
+  .gorut-documents-workspace .gorut-collect-empty p {
+    max-width: 52ch;
+    margin: 6px 0 0;
+    color: var(--gorut-muted);
+    font-size: 9.5px;
+    line-height: 1.55;
+  }
+
+  .gorut-documents-workspace .gorut-collect-empty > button {
+    margin-top: 15px;
+  }
+
+  .gorut-documents-workspace .gorut-collect-pagination {
+    min-height: 56px;
+    padding: 10px 15px;
+  }
+
+  .gorut-documents-workspace :is(button, input, select, a):focus-visible,
+  .gorut-viewport:has(.gorut-documents-workspace) :is(.gorut-documents-detail-close, .gorut-pdf-toolbar a, .gorut-pdf-toolbar button):focus-visible {
+    outline: 2px solid var(--gorut-focus);
+    outline-offset: 2px;
+  }
+
+  /* Detail and preview surfaces stay fully contained above the application shell. */
+  .gorut-documents-detail-backdrop {
+    z-index: 130;
+    padding: 24px;
+    background: rgb(16 42 31 / 48%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .gorut-documents-detail {
+    width: min(560px, calc(100vw - 48px));
+    max-height: min(84vh, 760px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    border-color: var(--gorut-line-strong);
+    border-radius: 16px;
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    box-shadow: 0 24px 64px rgb(16 42 31 / 20%);
+  }
+
+  .gorut-documents-detail > header {
+    position: sticky;
+    z-index: 3;
+    top: 0;
+    background: var(--gorut-surface);
+  }
+
+  .gorut-documents-detail > footer {
+    position: sticky;
+    z-index: 3;
+    bottom: 0;
+    justify-content: flex-end;
+    margin: 0;
+    border-top: 1px solid var(--gorut-line);
+    background: var(--gorut-surface-raised);
+    padding: 13px 18px;
+  }
+
+  .gorut-documents-detail-close {
+    display: grid;
+    place-items: center;
+    color: var(--gorut-ink);
+    font-size: 0;
+  }
+
+  .gorut-documents-detail dl > div {
+    background: var(--gorut-surface-raised);
+  }
+
+  .gorut-documents-detail dd {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-pdf-modal {
+    z-index: 140;
+    background: var(--gorut-canvas);
+    color: var(--gorut-ink);
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-pdf-toolbar {
+    min-height: 66px;
+    border-bottom: 1px solid var(--gorut-line);
+    background: var(--gorut-surface);
+    padding: 11px 18px;
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-pdf-toolbar nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-pdf-toolbar :is(a, button) {
+    min-height: 38px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 9px;
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    padding-inline: 11px;
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-pdf-toolbar button:disabled {
+    border-color: var(--gorut-line);
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-subtle);
+    opacity: 1;
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-pdf-stage {
+    min-width: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-html-fallback-note {
+    border-color: color-mix(in srgb, var(--gorut-warning) 22%, var(--gorut-line));
+    background: var(--gorut-warning-soft);
+    color: var(--gorut-ink);
+  }
+
+  .gorut-viewport:has(.gorut-documents-workspace) .gorut-placeholder-skeleton {
+    min-height: 420px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 16px;
+    background-color: var(--gorut-surface);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .gorut-documents-workspace .gorut-documents-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gorut-documents-workspace .gorut-documents-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gorut-documents-workspace .gorut-documents-toolbar .pjm-search {
+    width: 100%;
+  }
+
+  .gorut-documents-workspace .gorut-documents-toolbar-actions {
+    width: 100%;
+  }
+}

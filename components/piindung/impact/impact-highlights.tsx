@@ -8,7 +8,7 @@ const icons = [GitBranch, ClipboardCheck, MonitorCheck, FileText]
 
 export function ImpactHighlights() {
   return (
-    <section className="bg-[#f1f7f4] px-5 py-20 dark:bg-[#0a1826] sm:px-8 sm:py-24" aria-labelledby="impact-highlights-heading">
+    <section className="scroll-mt-[calc(72px+1rem)] bg-[#f1f7f4] px-5 py-20 dark:bg-[#0a1826] sm:px-8 sm:py-24 lg:scroll-mt-[calc(78px+1rem)]" aria-labelledby="impact-highlights-heading">
       <div className="mx-auto max-w-[1180px]">
         <LandingReveal className="mx-auto max-w-[680px] text-center">
           <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#07965d]">Ringkasan Dampak Utama</p>

@@ -1,0 +1,150 @@
+# GORUT V2 — Staging/UAT Release Candidate
+
+Dokumen ini hanya untuk staging/UAT. Policy fee bukan SOP resmi, tidak membawa metadata persetujuan resmi, dan tidak mengizinkan workflow production.
+
+## Environment contract
+
+Deployment prerequisite dan controlled migration procedure mengikuti `docs/gorut-v2/staging-deployment-runbook.md`. `npm run build` tidak menjalankan migration; `prisma migrate deploy` harus dijalankan sebagai langkah eksplisit hanya setelah project dan database non-production dikonfirmasi.
+
+Policy `GORUT-PLPK-FEE-V1-PROVISIONAL` aktif hanya jika kedua kondisi berikut benar:
+
+```text
+GORUT_DEPLOYMENT_ENV=STAGING
+# atau GORUT_DEPLOYMENT_ENV=UAT
+
+GORUT_ENABLE_PROVISIONAL_FEE_POLICY=true
+DATABASE_URL=<staging secret>
+```
+
+Nilai lain, flag yang tidak ada/false, `GORUT_DEPLOYMENT_ENV=PRODUCTION`, atau `VERCEL_ENV=production` harus fail-closed. Jangan simpan nilai `DATABASE_URL`, `AUTH_SECRET`, password, token, atau secret lain di repository.
+
+Sebelum migration atau fixture, owner harus mengonfirmasi satu `CANONICAL_GORUT_STAGING_PROJECT`, mapping branch Preview, dan dedicated PostgreSQL staging/UAT. Vercel Authentication tetap aktif; tester internal harus mempunyai authorized Preview access.
+
+API dan UI harus menampilkan authority policy persis sebagai `PROVISIONAL_PENDING_SOP_CONFIRMATION`. Istilah finansial canonical:
+
+- Gross / Total Penghimpunan: total authoritative collection sebelum bisyaroh.
+- Bisyaroh PLPK: Rp2.500 untuk setiap Munfiq/kaleng dengan aggregate authoritative collected amount per periode lebih besar dari Rp7.000.
+- Net / Bersih: Gross dikurangi Bisyaroh PLPK; nominal bersih operasional menuju Cabang dalam contract provisional saat ini.
+- `GorutTransaction.totalAmount`: tetap `Jumlah Tercatat`, bukan reinterpretasi gross atau net.
+
+## Data UAT non-production
+
+Fixture idempotent menyediakan satu Kecamatan, tiga Ranting, empat PLPK, dua belas Munfiq, tiga Kordes, empat PLPK actor, dan dua UPZIS actor untuk maker-checker. Fixture tidak membuat collection/transaksi dan tidak mengambil data production.
+
+Jalankan hanya setelah database staging/UAT non-production dikonfirmasi:
+
+```sh
+GORUT_DEPLOYMENT_ENV=UAT \
+GORUT_ENABLE_PROVISIONAL_FEE_POLICY=true \
+GORUT_UAT_FIXTURE_CONFIRM=NON_PRODUCTION_ONLY \
+GORUT_UAT_FIXTURE_PASSWORD='<runtime-only-password-minimum-12-chars>' \
+npm run uat:seed:gorut-v2
+```
+
+Ganti `UAT` dengan `STAGING` bila targetnya staging. Jangan menaruh password aktual pada file atau shell history bersama. Nomor login sintetis dicetak oleh script; password tidak pernah dicetak.
+
+Dataset utama:
+
+- `UAT-KEC-01`
+- Ranting `UAT-R01`, `UAT-R02`, `UAT-R03`
+- PLPK `UAT-P01`–`UAT-P04`
+- Munfiq `UAT-M001`–`UAT-M012`
+- Maker `628990010001`; checker `628990010002`
+- Financial example `UAT-M001=15.000`, `UAT-M002=12.500`, `UAT-M003=5.000`
+- Boundary `UAT-M004=7.000`, `UAT-M005=7.001`; `UAT-M006=9.000`
+- Correction `UAT-M007=8.000`, `UAT-M008=6.000`, `UAT-M009=10.000`
+
+## Evidence yang dicatat setiap scenario
+
+- timestamp, actor/member ID, Kecamatan/Ranting/PLPK, package/collection code;
+- request/action dan HTTP status atau pesan UI;
+- version sebelum/sesudah, source hash sebelum/sesudah;
+- gross, Bisyaroh PLPK, net, financial status, available actions, blocking reasons;
+- workflow event sequence, actor, previous/resulting state, reason/reason code.
+
+## Scenario 1 — Fee boundary
+
+- [ ] Login sebagai PLPK Boundary (`628990010007`), buat authoritative collection untuk periode UAT baru.
+- [ ] Catat `UAT-M004` sebagai `COLLECTED` Rp7.000.
+- [ ] Verifikasi snapshot: `eligibleForPlpkFee=false`, `plpkFee=0`, policy version provisional.
+- [ ] Catat `UAT-M005` sebagai `COLLECTED` Rp7.001.
+- [ ] Verifikasi snapshot: `eligibleForPlpkFee=true`, `plpkFee=2500`, policy version provisional.
+- [ ] Verifikasi gross Rp14.001, total Bisyaroh Rp2.500, net Rp11.501, `financialStatus=READY` setelah semua entry selesai.
+
+## Scenario 2 — Garut financial example
+
+- [ ] Login sebagai PLPK Financial (`628990010006`) dan gunakan `UAT-M001`–`UAT-M003`.
+- [ ] Catat nominal authoritative: Rp15.000, Rp12.500, Rp5.000.
+- [ ] Verifikasi Gross Rp32.500.
+- [ ] Verifikasi dua Munfiq eligible dan total Bisyaroh PLPK Rp5.000.
+- [ ] Verifikasi Net/Bersih Rp27.500 dan `financialStatus=READY`.
+- [ ] Verifikasi label authority `PROVISIONAL_PENDING_SOP_CONFIRMATION` di API/UI.
+
+## Scenario 3 — Happy path minimum Phase 2B
+
+- [ ] PLPK membuat authoritative collection, menyelesaikan semua entry, lalu confirm.
+- [ ] Kordes scope yang sesuai melakukan verify; pastikan transaction bridge tercipta dan source hash cocok.
+- [ ] Sebelum SUBMIT, cocokkan coverage package dengan **seluruh Ranting aktif** di Kecamatan untuk periode yang sama. Fixture `UAT-KEC-01` memiliki `UAT-R01`, `UAT-R02`, dan `UAT-R03`; menyelesaikan PLPK Financial `UAT-P01` hanya menyediakan sumber untuk `UAT-R01`.
+- [ ] Untuk setiap Ranting yang belum tercakup, selesaikan collection melalui PLPK → Kordes berdasarkan fakta skenario UAT yang disetujui, atau catat pengecualian melalui endpoint coverage dengan alasan operasional dan referensi keputusan yang sah. Jangan menganggap collection yang belum dibuat berarti Ranting tidak beroperasi; jangan menambah transaksi nol, menonaktifkan Ranting, atau mengarang exclusion agar gate lolos.
+- [ ] Jika memakai pengecualian yang sah, UPZIS mencatat `POST /api/gorut/packages/{packageCode}/coverage` dengan `rantingCode`, `reason`, `reference`, `expectedVersion` terbaru, dan `idempotencyKey` unik per keputusan. Ambil ulang version setelah setiap perubahan. Jika keputusan operasional belum tersedia, hentikan sebelum mutasi coverage.
+- [ ] `financial.status=READY` dan `coverage.unresolved=0` belum membuktikan kelengkapan roster: `unresolved` hanya menghitung baris coverage yang sudah ada. Pastikan `workflow.blockingReasons` tidak memuat `ROSTER_COVERAGE_INCOMPLETE` dan periksa `availableActions` server.
+- [ ] Pastikan package berada pada `DRAFT` dengan financial `READY`, coverage resolved, dan `availableActions=[SUBMIT]` untuk UPZIS.
+- [ ] Actor A (`628990010001`) melakukan `SUBMIT` dengan version current.
+- [ ] Pastikan state `WAITING_UPZIS_VERIFICATION` dan workflow event `SUBMIT` tercatat.
+- [ ] Actor B (`628990010002`) melakukan `APPROVE` dengan version current.
+- [ ] Pastikan state `WAITING_PC_APPROVAL`, workflow event `APPROVE` tercatat, dan tidak ada PC finalization.
+
+## Scenario 4 — Maker-checker
+
+- [ ] Actor A melakukan `SUBMIT`.
+- [ ] Actor A mencoba `APPROVE` pada package yang sama.
+- [ ] Verifikasi server menolak dengan maker-checker blocker; state/version tidak berubah dan tidak ada event approval palsu.
+- [ ] Actor B pada Kecamatan yang sama membuka ulang canonical detail.
+- [ ] Verifikasi `APPROVE` tersedia bila seluruh gate lain terpenuhi, lalu approval berhasil.
+
+## Scenario 5 — Return/correction
+
+- [ ] Pada `WAITING_UPZIS_VERIFICATION`, actor checker melakukan `RETURN` dengan reason code, reason, dan correction target collection/Munfiq yang tepat.
+- [ ] Verifikasi state `RETURNED_TO_RANTING`, correction `OPEN`, dan event RETURN lengkap.
+- [ ] Login sebagai PLPK Correction (`628990010008`), perbaiki hanya target yang dikembalikan.
+- [ ] Verifikasi correction resolved secara traceable, revision bertambah, source hash berubah, dan financial dihitung ulang.
+- [ ] Kordes Correction (`628990010004`) melakukan re-verification.
+- [ ] Verifikasi transaction/package reconciliation memakai source hash terbaru.
+- [ ] Actor UPZIS melakukan resubmit dengan version terbaru.
+- [ ] Verifikasi state kembali `WAITING_UPZIS_VERIFICATION`; history lama tidak ditimpa.
+
+## Scenario 6 — Invalid submit
+
+Untuk setiap baris, mulai dari canonical package yang sesuai dan kirim `SUBMIT` dengan expected version eksplisit:
+
+- [ ] financial `BLOCKED` → ditolak.
+- [ ] correction masih `OPEN` → ditolak.
+- [ ] coverage `UNRESOLVED` → ditolak.
+- [ ] source hash drift → ditolak.
+- [ ] Kordes verification belum ada → ditolak.
+- [ ] actor di luar Kecamatan → ditolak.
+- [ ] expected version stale → ditolak.
+- [ ] Untuk semua penolakan: state/version tidak berubah dan tidak ada success event.
+
+## Scenario 7 — PC final approval
+
+Focused debug dan evidence: [PC final approval](pc-final-approval-focused-debug-2026-09-13.md).
+
+- [ ] Buka package pada `WAITING_PC_APPROVAL` dengan assignment canonical PC aktif.
+- [ ] Verifikasi APPROVE tetap terblokir sebelum financial READY, settlement current, dan validation current + MATCHED dengan difference tepat nol.
+- [ ] Setelah seluruh gate terpenuhi, verifikasi `availableActions=[APPROVE]` dan final approval menuju `FINAL_APPROVED`, version +1, tepat satu event PC.
+- [ ] Replay command identik tidak membuat event kedua; settlement dan validation tidak berubah.
+- [ ] Coba command `FINAL_CLOSE` dan `REJECT`; server harus menolak.
+- [ ] Coba approval dengan assignment dicabut, stale version, atau policy production; server harus menolak tanpa mutasi.
+- [ ] Verifikasi F.011 tidak executable dan F.016 tidak diterbitkan.
+
+## Production safety verification
+
+- [ ] `PRODUCTION` + flag `true` → policy tidak aktif.
+- [ ] `VERCEL_ENV=production`, sekalipun deployment env `STAGING` + flag `true` → policy tidak aktif.
+- [ ] `STAGING` + flag `false` → policy tidak aktif.
+- [ ] `UAT` + flag `false` → policy tidak aktif.
+- [ ] `STAGING` + flag `true` → policy aktif.
+- [ ] `UAT` + flag `true` → policy aktif.
+
+Release candidate ini tidak mengizinkan `FINAL_CLOSE`, `REJECT`, PC finalization, Setoran mutation, Validasi mutation, F.011, F.016, atau production fee enable.

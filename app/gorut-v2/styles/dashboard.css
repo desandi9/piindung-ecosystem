@@ -1,0 +1,1272 @@
+.gorut-command-dashboard {
+  width: min(100%, 1320px);
+  min-width: 0;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+.gorut-command-intro {
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 2px 8px;
+}
+
+.gorut-command-intro h1 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--gorut-ink-strong);
+  font-size: clamp(25px, 2.4vw, 36px);
+  font-weight: 780;
+  letter-spacing: -.035em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.gorut-command-intro p {
+  max-width: 68ch;
+  margin: 9px 0 0;
+  color: var(--gorut-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.gorut-command-intro-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.gorut-command-period,
+.gorut-command-intro-actions > a {
+  min-height: 42px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gorut-command-period {
+  gap: 9px;
+  border: 1px solid var(--gorut-line);
+  background: var(--gorut-surface);
+  color: var(--gorut-brand);
+  padding: 6px 11px;
+}
+
+.gorut-command-period span {
+  display: grid;
+  gap: 1px;
+}
+
+.gorut-command-period small {
+  color: var(--gorut-muted);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.gorut-command-period strong {
+  color: var(--gorut-ink);
+  font-size: 11px;
+}
+
+.gorut-command-intro-actions > a {
+  gap: 7px;
+  background: var(--gorut-brand);
+  color: #FFFFFF;
+  padding: 0 14px;
+  font-size: 11px;
+  font-weight: 750;
+  text-decoration: none;
+  transition:
+    transform var(--gorut-motion-press) var(--gorut-ease-out),
+    background-color var(--gorut-motion-fast) ease;
+}
+
+.gorut-command-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.gorut-command-section-head h2 {
+  margin: 0;
+  color: var(--gorut-ink-strong);
+  font-size: 15px;
+  font-weight: 760;
+  letter-spacing: -.02em;
+  line-height: 1.25;
+}
+
+.gorut-command-section-head p {
+  margin: 5px 0 0;
+  color: var(--gorut-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.gorut-command-section-head > a {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gorut-brand);
+  font-size: 10px;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.gorut-command-priority,
+.gorut-command-health,
+.gorut-command-trend,
+.gorut-command-workflow,
+.gorut-command-regions,
+.gorut-command-shortcuts {
+  border: 1px solid var(--gorut-line);
+  border-radius: var(--gorut-radius-panel);
+  background: var(--gorut-surface);
+  box-shadow: var(--gorut-shadow-sm);
+}
+
+.gorut-command-priority {
+  padding: 18px 18px 6px;
+}
+
+.gorut-command-priority-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+.gorut-command-priority-list li {
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--gorut-line);
+  padding: 11px 2px;
+}
+
+.gorut-command-priority-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+}
+
+.gorut-command-priority-list .is-critical .gorut-command-priority-icon {
+  background: var(--gorut-critical-soft);
+  color: var(--gorut-critical);
+}
+
+.gorut-command-priority-list .is-warning .gorut-command-priority-icon {
+  background: var(--gorut-warning-soft);
+  color: var(--gorut-warning);
+}
+
+.gorut-command-priority-list .is-info .gorut-command-priority-icon {
+  background: var(--gorut-info-soft);
+  color: var(--gorut-info);
+}
+
+.gorut-command-priority-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.gorut-command-priority-copy > span {
+  color: var(--gorut-muted);
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.gorut-command-priority-copy strong {
+  overflow: hidden;
+  color: var(--gorut-ink);
+  font-size: 11px;
+  font-weight: 720;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gorut-command-priority-copy small {
+  overflow: hidden;
+  color: var(--gorut-muted);
+  font-size: 9px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gorut-command-priority-list li > a {
+  min-height: 38px;
+  border: 1px solid var(--gorut-line);
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gorut-ink);
+  padding: 0 10px;
+  font-size: 9px;
+  font-weight: 720;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform var(--gorut-motion-press) var(--gorut-ease-out),
+    border-color var(--gorut-motion-fast) ease,
+    background-color var(--gorut-motion-fast) ease,
+    color var(--gorut-motion-fast) ease;
+}
+
+.gorut-command-priority-clear {
+  min-height: 92px;
+  margin-top: 14px;
+  border-top: 1px solid var(--gorut-line);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--gorut-positive);
+}
+
+.gorut-command-priority-clear div {
+  display: grid;
+  gap: 3px;
+}
+
+.gorut-command-priority-clear strong {
+  color: var(--gorut-ink);
+  font-size: 12px;
+}
+
+.gorut-command-priority-clear span {
+  color: var(--gorut-muted);
+  font-size: 10px;
+}
+
+.gorut-command-health {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  overflow: hidden;
+}
+
+.gorut-command-health-primary {
+  position: relative;
+  min-width: 0;
+  padding: 22px;
+  background: var(--gorut-emphasis);
+  color: var(--gorut-on-emphasis);
+}
+
+.gorut-command-health-primary::after {
+  content: '';
+  position: absolute;
+  right: -70px;
+  bottom: -120px;
+  width: 260px;
+  height: 260px;
+  border: 48px solid color-mix(in srgb, var(--gorut-brand) 22%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.gorut-command-health-primary header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.gorut-command-health-primary header > span {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gorut-brand) 24%, transparent);
+  color: var(--gorut-brand);
+  display: grid;
+  place-items: center;
+}
+
+.gorut-command-health-primary h2 {
+  margin: 0;
+  color: #FFFFFF;
+  font-size: 15px;
+}
+
+.gorut-command-health-primary header p {
+  margin: 5px 0 0;
+  color: color-mix(in srgb, #FFFFFF 68%, transparent);
+  font-size: 10px;
+}
+
+.gorut-command-health-amount {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  margin-top: 30px;
+}
+
+.gorut-command-health-amount > span {
+  color: color-mix(in srgb, #FFFFFF 68%, transparent);
+  font-size: 10px;
+}
+
+.gorut-command-health-amount strong {
+  color: #FFFFFF;
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 780;
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+
+.gorut-command-health-amount small {
+  color: color-mix(in srgb, #FFFFFF 70%, transparent);
+  font-size: 10px;
+}
+
+.gorut-command-health-track {
+  position: relative;
+  z-index: 1;
+  height: 7px;
+  margin-top: 20px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 12%);
+}
+
+.gorut-command-health-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gorut-brand);
+}
+
+.gorut-command-health-facts {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0 0;
+}
+
+.gorut-command-health-facts > div {
+  display: grid;
+  gap: 4px;
+}
+
+.gorut-command-health-facts dt {
+  color: color-mix(in srgb, #FFFFFF 58%, transparent);
+  font-size: 9px;
+}
+
+.gorut-command-health-facts dd {
+  margin: 0;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gorut-command-health-metrics {
+  min-width: 0;
+  display: grid;
+  align-content: stretch;
+  padding: 10px 20px;
+}
+
+.gorut-command-health-metrics article {
+  min-height: 78px;
+  border-bottom: 1px solid var(--gorut-line);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gorut-command-health-metrics article:last-child {
+  border-bottom: 0;
+}
+
+.gorut-command-metric-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--gorut-brand-soft);
+  color: var(--gorut-brand);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.gorut-command-health-metrics .is-warning .gorut-command-metric-icon {
+  background: var(--gorut-warning-soft);
+  color: var(--gorut-warning);
+}
+
+.gorut-command-health-metrics article > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 3px 12px;
+  flex: 1;
+}
+
+.gorut-command-health-metrics span {
+  color: var(--gorut-muted);
+  font-size: 9px;
+}
+
+.gorut-command-health-metrics strong {
+  color: var(--gorut-ink-strong);
+  font-size: 22px;
+  letter-spacing: -.03em;
+}
+
+.gorut-command-health-metrics small {
+  grid-column: 1 / -1;
+  color: var(--gorut-muted);
+  font-size: 9px;
+}
+
+.gorut-command-statuses {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+  border-top: 1px solid var(--gorut-line);
+  padding: 16px 20px;
+}
+
+.gorut-command-status-total {
+  display: grid;
+  gap: 3px;
+}
+
+.gorut-command-status-total span {
+  color: var(--gorut-muted);
+  font-size: 9px;
+}
+
+.gorut-command-status-total strong {
+  color: var(--gorut-ink-strong);
+  font-size: 24px;
+  letter-spacing: -.03em;
+}
+
+.gorut-command-statuses ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.gorut-command-statuses li {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 8px;
+}
+
+.gorut-command-statuses li > div:first-child {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.gorut-command-statuses li span,
+.gorut-command-statuses li small {
+  overflow: hidden;
+  color: var(--gorut-muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gorut-command-statuses li strong {
+  color: var(--gorut-ink);
+  font-size: 9px;
+}
+
+.gorut-command-status-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--gorut-surface-sunken);
+}
+
+.gorut-command-status-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gorut-subtle);
+}
+
+.gorut-command-statuses .is-waiting .gorut-command-status-track > span { background: var(--gorut-info); }
+.gorut-command-statuses .is-correction .gorut-command-status-track > span { background: var(--gorut-warning); }
+.gorut-command-statuses .is-verified .gorut-command-status-track > span { background: var(--gorut-positive); }
+
+.gorut-command-trend {
+  padding: 20px;
+}
+
+.gorut-command-chart-switch {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--gorut-line);
+  border-radius: 10px;
+  background: var(--gorut-surface-raised);
+  padding: 3px;
+}
+
+.gorut-command-chart-switch button {
+  min-height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gorut-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--gorut-motion-fast) ease, color var(--gorut-motion-fast) ease;
+}
+
+.gorut-command-chart-switch button[aria-pressed='true'] {
+  background: var(--gorut-surface);
+  color: var(--gorut-brand);
+  box-shadow: var(--gorut-shadow-sm);
+}
+
+.gorut-command-trend-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 3px 9px;
+  margin-top: 18px;
+}
+
+.gorut-command-trend-summary > span {
+  color: var(--gorut-muted);
+  font-size: 9px;
+}
+
+.gorut-command-trend-summary strong {
+  color: var(--gorut-ink-strong);
+  font-size: 24px;
+  letter-spacing: -.035em;
+}
+
+.gorut-command-trend-summary small {
+  grid-column: 1 / -1;
+  color: var(--gorut-muted);
+  font-size: 9px;
+}
+
+.gorut-command-chart {
+  min-height: 260px;
+  margin-top: 14px;
+}
+
+.gorut-command-line-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 720 / 260;
+  min-height: 240px;
+}
+
+.gorut-command-line-stage svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gorut-command-line-stage svg line {
+  stroke: var(--gorut-line);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.gorut-command-line-path {
+  fill: none;
+  stroke: var(--gorut-brand);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1200;
+  animation: gorut-command-chart-draw var(--gorut-motion-base) var(--gorut-ease-out) both;
+}
+
+.gorut-command-chart-point {
+  position: absolute;
+  z-index: 2;
+  left: var(--gorut-point-x);
+  top: var(--gorut-point-y);
+  width: 15px;
+  height: 15px;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--gorut-surface);
+  border-radius: 50%;
+  background: var(--gorut-brand);
+  box-shadow: 0 0 0 1px var(--gorut-brand);
+  cursor: pointer;
+}
+
+.gorut-command-chart-tooltip {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translate(-50%, 4px) scale(.97);
+  opacity: 0;
+  pointer-events: none;
+  border: 1px solid var(--gorut-line);
+  border-radius: 8px;
+  background: var(--gorut-ink-strong);
+  color: var(--gorut-surface);
+  padding: 7px 9px;
+  box-shadow: var(--gorut-shadow-md);
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 720;
+  white-space: nowrap;
+  transition: opacity var(--gorut-motion-fast) var(--gorut-ease-out), transform var(--gorut-motion-fast) var(--gorut-ease-out);
+}
+
+.gorut-command-chart-point:focus-visible .gorut-command-chart-tooltip,
+.gorut-command-bars-stage button:focus-visible .gorut-command-chart-tooltip {
+  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
+}
+
+.gorut-command-chart-labels {
+  position: absolute;
+  right: 2%;
+  bottom: 4px;
+  left: 6.6%;
+  display: flex;
+  justify-content: space-between;
+  color: var(--gorut-muted);
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.gorut-command-bars-stage {
+  height: 260px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(44px, 1fr));
+  gap: 12px;
+  border-bottom: 1px solid var(--gorut-line);
+  padding: 8px 28px 0 48px;
+}
+
+.gorut-command-bars-stage button {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.gorut-command-bars-stage button > i {
+  width: min(42px, 72%);
+  height: var(--gorut-bar-height);
+  min-height: 4px;
+  border-radius: 8px 8px 3px 3px;
+  background: var(--gorut-brand);
+  transform-origin: bottom;
+  animation: gorut-command-bar-enter var(--gorut-motion-base) var(--gorut-ease-out) both;
+}
+
+.gorut-command-bars-stage button > small {
+  color: var(--gorut-muted);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 650;
+}
+
+.gorut-command-bars-stage .gorut-command-chart-tooltip {
+  bottom: 45%;
+}
+
+.gorut-command-workflow {
+  padding: 20px;
+}
+
+.gorut-command-workflow ol {
+  list-style: none;
+  margin: 17px 0 0;
+  padding: 0;
+}
+
+.gorut-command-workflow li {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: 34px minmax(170px, .8fr) minmax(220px, 1fr) 40px;
+  align-items: center;
+  gap: 14px;
+  border-top: 1px solid var(--gorut-line);
+}
+
+.gorut-command-workflow-rail {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gorut-command-workflow-rail > span {
+  width: 28px;
+  height: 28px;
+  margin-top: 16px;
+  border: 1px solid var(--gorut-line-strong);
+  border-radius: 50%;
+  background: var(--gorut-surface);
+  color: var(--gorut-muted);
+  display: grid;
+  place-items: center;
+}
+
+.gorut-command-workflow-rail > i {
+  width: 1px;
+  flex: 1;
+  margin-top: 4px;
+  background: var(--gorut-line);
+}
+
+.gorut-command-workflow li.is-verified .gorut-command-workflow-rail > span {
+  border-color: var(--gorut-positive);
+  background: var(--gorut-positive-soft);
+  color: var(--gorut-positive);
+}
+
+.gorut-command-workflow li.is-bottleneck .gorut-command-workflow-rail > span {
+  border-color: var(--gorut-warning);
+  background: var(--gorut-warning-soft);
+  color: var(--gorut-warning);
+}
+
+.gorut-command-workflow-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.gorut-command-workflow-copy > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.gorut-command-workflow-copy strong {
+  color: var(--gorut-ink-strong);
+  font-size: 12px;
+}
+
+.gorut-command-workflow-copy b {
+  border-radius: 99px;
+  background: var(--gorut-warning-soft);
+  color: var(--gorut-warning);
+  padding: 3px 6px;
+  font-size: 7px;
+  font-weight: 750;
+}
+
+.gorut-command-workflow-copy > span {
+  color: var(--gorut-ink);
+  font-size: 10px;
+}
+
+.gorut-command-workflow-copy small,
+.gorut-command-workflow-progress > span {
+  color: var(--gorut-muted);
+  font-size: 8px;
+}
+
+.gorut-command-workflow-progress {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.gorut-command-workflow-progress > div {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--gorut-surface-sunken);
+}
+
+.gorut-command-workflow-progress > div i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gorut-brand);
+}
+
+.gorut-command-workflow li > a {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--gorut-line);
+  border-radius: 10px;
+  color: var(--gorut-muted);
+  display: grid;
+  place-items: center;
+  transition: border-color var(--gorut-motion-fast) ease, background-color var(--gorut-motion-fast) ease, color var(--gorut-motion-fast) ease;
+}
+
+.gorut-command-supporting {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.gorut-command-regions,
+.gorut-command-shortcuts {
+  padding: 20px;
+}
+
+.gorut-command-regions .gorut-command-section-head > svg {
+  color: var(--gorut-brand);
+}
+
+.gorut-command-regions ul {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.gorut-command-regions li {
+  min-height: 76px;
+  border-top: 1px solid var(--gorut-line);
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(180px, .8fr);
+  align-items: center;
+  gap: 10px 18px;
+  padding: 11px 0;
+}
+
+.gorut-command-regions li > div:first-child,
+.gorut-command-regions li > div:last-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gorut-command-regions li > div:first-child {
+  min-width: 0;
+  display: grid;
+  justify-content: initial;
+  gap: 3px;
+}
+
+.gorut-command-regions li > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.gorut-command-regions li strong {
+  color: var(--gorut-ink);
+  font-size: 11px;
+}
+
+.gorut-command-regions li span,
+.gorut-command-regions li small {
+  color: var(--gorut-muted);
+  font-size: 8px;
+}
+
+.gorut-command-regions li b {
+  color: var(--gorut-ink);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.gorut-command-region-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.gorut-command-region-progress > span {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--gorut-surface-sunken);
+}
+
+.gorut-command-region-progress > span i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gorut-brand);
+}
+
+.gorut-command-region-progress > strong {
+  text-align: right;
+  font-size: 9px;
+}
+
+.gorut-command-shortcuts nav {
+  display: grid;
+  gap: 0;
+  margin-top: 16px;
+}
+
+.gorut-command-shortcuts nav > a {
+  min-height: 58px;
+  border-top: 1px solid var(--gorut-line);
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 10px;
+  color: var(--gorut-ink);
+  text-decoration: none;
+  transition: color var(--gorut-motion-fast) ease, transform var(--gorut-motion-press) var(--gorut-ease-out);
+}
+
+.gorut-command-shortcuts nav > a > span {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--gorut-brand-soft);
+  color: var(--gorut-brand);
+  display: grid;
+  place-items: center;
+}
+
+.gorut-command-shortcuts nav > a > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.gorut-command-shortcuts nav strong {
+  color: var(--gorut-ink);
+  font-size: 10px;
+}
+
+.gorut-command-shortcuts nav small {
+  overflow: hidden;
+  color: var(--gorut-muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gorut-command-shortcuts nav > a > svg {
+  color: var(--gorut-subtle);
+}
+
+.gorut-command-loading-head {
+  width: 62%;
+  height: 68px;
+}
+
+.gorut-command-loading-priority {
+  height: 210px;
+}
+
+.gorut-command-loading-grid {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 20px;
+}
+
+.gorut-command-loading-grid > div {
+  height: 320px;
+}
+
+@keyframes gorut-command-chart-draw {
+  from { stroke-dashoffset: 1200; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes gorut-command-bar-enter {
+  from { opacity: 0; transform: scaleY(.08); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .gorut-command-intro-actions > a:hover {
+    background: var(--gorut-brand-hover);
+    transform: translateY(-1px);
+  }
+
+  .gorut-command-priority-list li > a:hover,
+  .gorut-command-workflow li > a:hover {
+    border-color: var(--gorut-brand);
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand);
+  }
+
+  .gorut-command-chart-point:hover .gorut-command-chart-tooltip,
+  .gorut-command-bars-stage button:hover .gorut-command-chart-tooltip {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+
+  .gorut-command-shortcuts nav > a:hover {
+    color: var(--gorut-brand);
+    transform: translateX(2px);
+  }
+}
+
+@media (max-width: 1120px) {
+  .gorut-command-health {
+    grid-template-columns: minmax(0, 1.1fr) minmax(250px, .9fr);
+  }
+
+  .gorut-command-statuses {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+
+  .gorut-command-supporting {
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-shortcuts nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+  }
+}
+
+@media (max-width: 800px) {
+  .gorut-command-dashboard {
+    gap: 14px;
+  }
+
+  .gorut-command-intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .gorut-command-intro-actions {
+    width: 100%;
+  }
+
+  .gorut-command-intro-actions > a {
+    margin-left: auto;
+  }
+
+  .gorut-command-priority-list li {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .gorut-command-priority-list li > a {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .gorut-command-health {
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-health-primary,
+  .gorut-command-health-metrics {
+    grid-column: 1;
+  }
+
+  .gorut-command-statuses {
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-statuses ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gorut-command-workflow li {
+    grid-template-columns: 32px minmax(0, 1fr) 40px;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .gorut-command-workflow-progress {
+    grid-column: 2;
+  }
+
+  .gorut-command-workflow li > a {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
+  .gorut-command-bars-stage {
+    gap: 7px;
+    padding-left: 18px;
+    padding-right: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .gorut-command-intro h1 {
+    font-size: 26px;
+  }
+
+  .gorut-command-intro-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-intro-actions > a {
+    width: 100%;
+    margin: 0;
+    justify-content: center;
+  }
+
+  .gorut-command-period {
+    justify-content: center;
+  }
+
+  .gorut-command-priority,
+  .gorut-command-trend,
+  .gorut-command-workflow,
+  .gorut-command-regions,
+  .gorut-command-shortcuts {
+    padding: 16px;
+  }
+
+  .gorut-command-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .gorut-command-section-head > a {
+    min-height: 30px;
+  }
+
+  .gorut-command-priority-list li {
+    gap: 10px;
+    padding: 13px 0;
+  }
+
+  .gorut-command-priority-copy strong,
+  .gorut-command-priority-copy small {
+    overflow: visible;
+    text-overflow: initial;
+    white-space: normal;
+  }
+
+  .gorut-command-priority-list li > a {
+    min-height: 42px;
+  }
+
+  .gorut-command-health-primary {
+    padding: 20px 16px;
+  }
+
+  .gorut-command-health-amount strong {
+    font-size: 30px;
+  }
+
+  .gorut-command-health-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-health-metrics {
+    padding: 8px 16px;
+  }
+
+  .gorut-command-statuses {
+    padding: 16px;
+  }
+
+  .gorut-command-statuses ul {
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-chart-switch {
+    width: 100%;
+  }
+
+  .gorut-command-chart-switch button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .gorut-command-chart {
+    min-height: 230px;
+  }
+
+  .gorut-command-line-stage,
+  .gorut-command-bars-stage {
+    min-height: 220px;
+    height: 220px;
+  }
+
+  .gorut-command-chart-labels {
+    left: 5%;
+    right: 1%;
+  }
+
+  .gorut-command-workflow-copy > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .gorut-command-regions li {
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-region-progress,
+  .gorut-command-regions li > div:last-child {
+    grid-column: 1;
+  }
+
+  .gorut-command-shortcuts nav {
+    grid-template-columns: 1fr;
+  }
+
+  .gorut-command-loading-head {
+    width: 100%;
+  }
+
+  .gorut-command-loading-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gorut-command-line-path,
+  .gorut-command-bars-stage button > i {
+    animation: none;
+  }
+}
+
+html[data-animations="off"] .gorut-command-line-path,
+html[data-animations="off"] .gorut-command-bars-stage button > i {
+  animation: none;
+}

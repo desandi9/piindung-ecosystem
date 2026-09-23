@@ -31,7 +31,7 @@ export function ImpactHero() {
   }, [reduced])
 
   return (
-    <section className="relative isolate overflow-hidden bg-[#f8fbf9] pt-32 pb-20 dark:bg-[#07131f] sm:pt-40 sm:pb-24 lg:pt-48 lg:pb-28" aria-labelledby="impact-hero-heading">
+    <section className="relative isolate scroll-mt-[calc(72px+1rem)] overflow-hidden bg-[#f8fbf9] pt-[calc(72px+2.75rem)] pb-20 dark:bg-[#07131f] sm:pt-[calc(72px+3.75rem)] sm:pb-24 lg:scroll-mt-[calc(78px+1rem)] lg:pt-[calc(78px+4.5rem)] lg:pb-28" aria-labelledby="impact-hero-heading">
       <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(8,33,59,.035)_1px,transparent_1px),linear-gradient(90deg,rgba(8,33,59,.035)_1px,transparent_1px)] [background-size:56px_56px] dark:opacity-20" />
       <div className="hero-soft-blob hero-soft-blob-one" aria-hidden="true" />
       <div className="hero-soft-blob hero-soft-blob-two" aria-hidden="true" />

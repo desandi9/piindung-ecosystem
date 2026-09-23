@@ -5,7 +5,7 @@ import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 import { getRecord } from "@/lib/record-store-server"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
-const LEGACY_MUTATION_MESSAGE = "Pengelolaan artikel lama telah dipindahkan ke Member Area."
+const LEGACY_MUTATION_MESSAGE = "Pengelolaan artikel lama telah dipindahkan ke CMS Landing Page."
 const HOMEPAGE_CONTENT_TYPES = ["Banner", "Artikel", "Berita"] as const
 
 type MutationOperation = "create" | "update" | "delete"

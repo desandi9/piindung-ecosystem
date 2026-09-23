@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { getAuthCookieOptions, getClearAuthCookieOptions } from "./session-token"
+// @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
+import { getAuthCookieOptions, getClearAuthCookieOptions } from "./session-token.ts"
 
 void test("getAuthCookieOptions persistent vs session and secure flag", () => {
   const persistentProd = getAuthCookieOptions(true, true)

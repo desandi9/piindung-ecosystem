@@ -10,7 +10,7 @@ export type NotificationSeverity = typeof notificationSeverities[number]
 export type NotificationAudience = typeof notificationAudiences[number]
 
 const inputFields = new Set(["title", "body", "category", "severity", "audience", "actionPath", "targetUserId", "targetRole", "expiresAt"])
-const commonPaths = new Set(["/profil", "/pengaturan-profil", "/member-area", "/member-area/identitas", "/notifikasi"])
+const commonPaths = new Set(["/dashboard", "/profil", "/profil/identitas", "/pengaturan-profil", "/notifikasi"])
 const unsafeTextPattern = /<\/?[a-z][\s\S]*>|<script\b|javascript:|on\w+\s*=|[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/i
 const safeWordingPattern = /[\w.+-]+@[\w-]+\.[\w.-]+|\b(?:https?:\/\/|www\.)|\b(?:Rp|IDR)\s?\d|\b(?:081|08\d{2})\d{6,}/i
 
@@ -85,9 +85,9 @@ function decodeURIComponentSafe(path: string) {
 
 export function canUseActionPath(path: string | null | undefined, role: string, grants: string[]) {
   if (!path || commonPaths.has(path)) return path ?? null
-  const module = registeredModules.find((item) => path === item.route || path.startsWith(`${item.route}/`))
-  if (!module) return null
-  return role === "super_admin_pc" || grants.includes(module.key) ? path : null
+  const mod = registeredModules.find((item) => path === item.route || path.startsWith(`${item.route}/`))
+  if (!mod) return null
+  return role === "super_admin_pc" || grants.includes(mod.key) ? path : null
 }
 
 export function isEligibleForNotification(audience: NotificationAudience, targetUserId: string | null, targetRole: string | null, userId: string, role: string) {

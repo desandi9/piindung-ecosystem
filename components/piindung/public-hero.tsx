@@ -6,9 +6,9 @@ import { ArrowRight, BarChart3, Bell, Check, FileText, Gauge, LogIn, Send, Users
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react"
 import { useEffect, useState } from "react"
 import { useCanHoverFine } from "@/components/piindung/landing-motion"
+import { useHeroContent, DEFAULT_HERO_CONTENT } from "@/lib/hero-content"
 
 const chart = [42, 58, 51, 70, 62, 82]
-const marqueeItems = ["PENGHIMPUNAN", "PENGELOLAAN", "PENYALURAN", "PELAPORAN", "TRANSPARANSI", "PELAYANAN UMAT"]
 const menuItems = [
   { label: "Dashboard", icon: Gauge, active: true },
   { label: "Munfiq", icon: Users },
@@ -61,6 +61,8 @@ function MagneticCta({ href, className, children }: { href: string; className: s
 }
 
 export function HeroSection() {
+  const hero = useHeroContent()
+  const marqueeItems = hero.marqueeItems?.length ? hero.marqueeItems : DEFAULT_HERO_CONTENT.marqueeItems
   const reduced = useReducedMotion()
   const [canTilt, setCanTilt] = useState(false)
   const pointerX = useMotionValue(0)
@@ -116,39 +118,39 @@ export function HeroSection() {
             className="relative mx-auto w-full max-w-[600px] text-center lg:mx-0 lg:text-left"
           >
             <div className="inline-flex items-center text-[11px] font-bold uppercase tracking-[.20em] text-[#078f61]">
-              Ekosistem Digital LAZISNU Garut
+              {hero.eyebrow}
             </div>
 
             <h1
               id="hero-heading"
               className="mt-11 max-w-[600px] text-[clamp(2.625rem,5vw,4.875rem)] font-bold leading-[1.02] tracking-[-.06em] sm:text-[clamp(2.75rem,5vw,4.25rem)] lg:mt-12 lg:text-[clamp(3.5rem,5vw,4.875rem)] xl:text-[clamp(3.5rem,5vw,4.875rem)]"
             >
-              <span className="block">Satu Ekosistem</span>
-              <span className="block">untuk Pelayanan</span>
+              <span className="block">{hero.headingLine1}</span>
+              <span className="block">{hero.headingLine2}</span>
               <span className="block">
-                yang{" "}
+                {hero.headingLine3}{" "}
                 <span className="bg-gradient-to-r from-[#049961] via-[#13b97a] to-[#55ce91] bg-clip-text text-transparent">
-                  Lebih Unggul.
+                  {hero.headingAccent}
                 </span>
               </span>
             </h1>
 
             <p className="mx-auto mt-8 max-w-[620px] text-[15px] leading-[1.8] text-[#687789] dark:text-slate-300 sm:text-[16px] lg:mx-0">
-              PIINDUNG menyatukan data, proses, dan layanan NU Care–LAZISNU Garut agar kerja pengurus lebih tertib, cepat, dan mudah dipantau.
+              {hero.description}
             </p>
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
               <MagneticCta
-                href="/produk"
+                href={hero.ctaPrimaryHref}
                 className="group inline-flex h-[50px] items-center justify-center gap-3 rounded-[14px] bg-[#08a969] px-6 text-[13px] font-semibold text-white shadow-[0_14px_28px_rgba(8,169,105,.22)] transition hover:-translate-y-0.5 hover:bg-[#079c61] hover:shadow-[0_18px_36px_rgba(8,169,105,.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#08a969] focus-visible:ring-offset-4"
               >
-                Jelajahi PIINDUNG <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {hero.ctaPrimaryLabel} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </MagneticCta>
               <MagneticCta
-                href="/login"
+                href={hero.ctaSecondaryHref}
                 className="group inline-flex h-[50px] items-center justify-center gap-3 rounded-[14px] border border-[#d9e5df] bg-white/80 px-6 text-[13px] font-semibold text-[#08213b] shadow-sm transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#08a969] focus-visible:ring-offset-4 dark:border-white/10 dark:bg-white/5 dark:text-white"
               >
-                Masuk ke Sistem
+                {hero.ctaSecondaryLabel}
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-[#e5f7ef] text-[#08a969] transition-transform duration-300 group-hover:scale-110 dark:bg-emerald-400/10">
                   <LogIn className="h-3 w-3" />
                 </span>
@@ -316,7 +318,7 @@ export function HeroSection() {
                 style={{ x: floatTopX, y: floatTopY }}
               >
                 <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#18c483] shadow-[0_0_0_4px_rgba(24,196,131,.12)]" />
-                Sistem terhubung
+                {hero.badgeTop}
               </motion.div>
               <motion.div
                 className="hero-float-badge hero-float-badge-bottom absolute bottom-2 right-1 z-10 flex items-center gap-1.5 rounded-lg border border-white/90 bg-white/92 px-2.5 py-1.5 shadow-md backdrop-blur dark:border-white/10 dark:bg-[#102536]/90 sm:bottom-3 sm:right-2 sm:gap-2 sm:px-3 sm:py-2"
@@ -326,8 +328,8 @@ export function HeroSection() {
                   <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </span>
                 <span className="text-[6.5px] text-[#8b98a4] sm:text-[7px]">
-                  Data hari ini
-                  <strong className="block text-[7.5px] text-[#21394e] dark:text-white sm:text-[8px]">Sudah diperbarui</strong>
+                  {hero.badgeBottom}
+                  <strong className="block text-[7.5px] text-[#21394e] dark:text-white sm:text-[8px]">{hero.badgeBottomSub}</strong>
                 </span>
               </motion.div>
             </div>

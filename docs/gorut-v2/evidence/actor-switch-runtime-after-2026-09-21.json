@@ -1,0 +1,485 @@
+{
+  "target": "http://localhost:3038",
+  "database": "existing preview database; connection never persisted in evidence",
+  "deploymentChanged": false,
+  "cycles": 3,
+  "checks": [
+    {
+      "phase": "1:Munfiq",
+      "label": "1:Munfiq login",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "Munfiq identity",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "own history identity",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "notifications available",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK",
+      "label": "1:PLPK login",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK",
+      "label": "PLPK independent identity",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK",
+      "label": "PLPK denied Munfiq data",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK",
+      "label": "PLPK operational data",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK",
+      "label": "PLPK notifications available",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK",
+      "label": "notification isolation",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "1:PLPK:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "1:Munfiq login",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "Munfiq return identity",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "return own data preserved",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "return notifications preserved",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "Munfiq denied PLPK access",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "foreign detail denied",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq",
+      "label": "no error overlay",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "1:Munfiq:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "2:Munfiq login",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "Munfiq identity",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "own history identity",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "notifications available",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK",
+      "label": "2:PLPK login",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK",
+      "label": "PLPK independent identity",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK",
+      "label": "PLPK denied Munfiq data",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK",
+      "label": "PLPK operational data",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK",
+      "label": "PLPK notifications available",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK",
+      "label": "notification isolation",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "2:PLPK:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "2:Munfiq login",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "Munfiq return identity",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "return own data preserved",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "return notifications preserved",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "Munfiq denied PLPK access",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "foreign detail denied",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq",
+      "label": "no error overlay",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "2:Munfiq:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "3:Munfiq login",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "Munfiq identity",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "own history identity",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "notifications available",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK",
+      "label": "3:PLPK login",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK",
+      "label": "PLPK independent identity",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK",
+      "label": "PLPK denied Munfiq data",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK",
+      "label": "PLPK operational data",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK",
+      "label": "PLPK notifications available",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK",
+      "label": "notification isolation",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK:logout",
+      "label": "logout clears identity",
+      "pass": true
+    },
+    {
+      "phase": "3:PLPK:logout",
+      "label": "no previous actor data after logout",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "3:Munfiq login",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "Munfiq return identity",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "return own data preserved",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "return notifications preserved",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "Munfiq denied PLPK access",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "foreign detail denied",
+      "pass": true
+    },
+    {
+      "phase": "3:Munfiq",
+      "label": "no error overlay",
+      "pass": true
+    }
+  ],
+  "unhandledExceptions": [],
+  "consoleErrors": [],
+  "serverErrors": [],
+  "deniedResponses": {
+    "GET /api/auth/me 401": 25,
+    "POST /api/records/activity-log 403": 9,
+    "GET /api/gorut/munfiq/me/collections 403": 3,
+    "GET /api/gorut/collections 403": 3,
+    "GET /api/gorut/munfiq/me/collections/GORUT-COL-UAT-P03-202609 404": 3,
+    "PATCH /api/records/maintenance-mode/singleton 401": 1
+  },
+  "race": {
+    "checks": [
+      {
+        "phase": "race setup:Munfiq",
+        "label": "race setup:Munfiq login",
+        "pass": true
+      },
+      {
+        "phase": "delayed Munfiq history at logout",
+        "label": "history response held in flight",
+        "pass": true
+      },
+      {
+        "phase": "delayed Munfiq history at logout:logout",
+        "label": "logout clears identity",
+        "pass": true
+      },
+      {
+        "phase": "delayed Munfiq history at logout:logout",
+        "label": "no previous actor data after logout",
+        "pass": true
+      },
+      {
+        "phase": "delayed Munfiq history at logout:logout",
+        "label": "logout aborts actual in-flight history request",
+        "pass": true
+      },
+      {
+        "phase": "delayed Munfiq history at logout:logout",
+        "label": "late response does not restore old data",
+        "pass": true
+      },
+      {
+        "phase": "race:PLPK",
+        "label": "race:PLPK login",
+        "pass": true
+      },
+      {
+        "phase": "race:PLPK",
+        "label": "PLPK identity after canceled Munfiq request",
+        "pass": true
+      },
+      {
+        "phase": "race:PLPK:logout",
+        "label": "logout clears identity",
+        "pass": true
+      },
+      {
+        "phase": "race:PLPK:logout",
+        "label": "no previous actor data after logout",
+        "pass": true
+      },
+      {
+        "phase": "race:Munfiq",
+        "label": "race:Munfiq login",
+        "pass": true
+      },
+      {
+        "phase": "race:Munfiq",
+        "label": "Munfiq identity after race",
+        "pass": true
+      },
+      {
+        "phase": "race:Munfiq",
+        "label": "foreign detail remains denied after race",
+        "pass": true
+      }
+    ],
+    "unhandledExceptions": [],
+    "consoleErrors": [],
+    "canceledRequests": [
+      {
+        "phase": "race setup:Munfiq",
+        "path": "/api/gorut/munfiq/me/collections",
+        "method": "GET",
+        "canceled": true,
+        "failed": "net::ERR_ABORTED"
+      },
+      {
+        "phase": "delayed Munfiq history at logout",
+        "path": "/api/gorut/munfiq/me/collections",
+        "method": "GET",
+        "canceled": true,
+        "failed": "net::ERR_ABORTED"
+      },
+      {
+        "phase": "delayed Munfiq history at logout",
+        "path": "/api/gorut/munfiq/me/collections",
+        "method": "GET",
+        "canceled": true,
+        "failed": "net::ERR_ABORTED"
+      },
+      {
+        "phase": "race:PLPK",
+        "path": "/api/gorut/collections",
+        "method": "GET",
+        "canceled": true,
+        "failed": "net::ERR_ABORTED"
+      },
+      {
+        "phase": "race:Munfiq",
+        "path": "/api/gorut/munfiq/me/collections",
+        "method": "GET",
+        "canceled": true,
+        "failed": "net::ERR_ABORTED"
+      }
+    ]
+  },
+  "focusedTests": {
+    "passed": 19,
+    "failed": 0
+  },
+  "typecheck": "PASS",
+  "scopedLint": "PASS",
+  "diffCheck": "PASS",
+  "serverAuthorizationModified": false,
+  "gitStageCommitPush": false,
+  "originalEndpointProbes": [
+    {
+      "method": "PATCH",
+      "path": "/api/records/maintenance-mode/singleton",
+      "session": "omitted",
+      "status": 401
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/records/activity-log/runtime-auth-probe",
+      "session": "Munfiq",
+      "status": 403
+    }
+  ]
+}
