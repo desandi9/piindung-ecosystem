@@ -13,7 +13,8 @@ export async function GET() {
     const prisma = getPrismaClient()
     await syncGorutMunfiqMilestoneNotifications(prisma, auth.context.munfiqId)
     return json(await listGorutMunfiqOwnCollections(prisma, auth.context))
-  } catch {
+  } catch (error) {
+    console.error("GORUT Munfiq own history failed", error)
     return errorResponse()
   }
 }

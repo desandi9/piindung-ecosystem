@@ -120,6 +120,7 @@ export function MunfiqMobileApp({ identity }: { identity: { munfiqCode: string; 
 
   const openDetail = useCallback(async (collectionCode: string) => {
     setTab('collections');
+    setError('');
     setDetailLoading(true);
     setDetail(null);
     try {
@@ -167,18 +168,18 @@ export function MunfiqMobileApp({ identity }: { identity: { munfiqCode: string; 
               <div><small>Assalamu&apos;alaikum</small><h1>{displayName}</h1><p>{identity.munfiqCode}</p></div>
             </section>
             <section className="munfiq-summary" aria-label="Ringkasan infak">
-              <div><span>Total infak tercatat</span>{loading || !data ? <i className="munfiq-line-skeleton" /> : <strong>{money(data.summary.totalAmount)}</strong>}</div>
-              <div><span>Riwayat infak</span>{loading || !data ? <i className="munfiq-line-skeleton short" /> : <strong>{data.summary.collectionCount} kali</strong>}</div>
+              <div><span>Total infak tercatat</span>{loading ? <i className="munfiq-line-skeleton" /> : <strong>{data ? money(data.summary.totalAmount) : 'Tidak tersedia'}</strong>}</div>
+              <div><span>Riwayat infak</span>{loading ? <i className="munfiq-line-skeleton short" /> : <strong>{data ? `${data.summary.collectionCount} kali` : 'Tidak tersedia'}</strong>}</div>
             </section>
             <div className="munfiq-section-heading"><h2>Infak terbaru</h2>{data?.collections.length ? <button type="button" onClick={() => selectTab('collections')}>Lihat semua</button> : null}</div>
-            {loading ? <LoadingCards /> : data?.collections.length ? data.collections.slice(0, 2).map((item) => <CollectionCard key={item.collectionCode} item={item} onOpen={() => void openDetail(item.collectionCode)} />) : <div className="munfiq-empty"><strong>Belum ada riwayat</strong><p>Catatan infak Anda akan muncul di sini setelah tersedia.</p></div>}
+            {loading ? <LoadingCards /> : data?.collections.length ? data.collections.slice(0, 2).map((item) => <CollectionCard key={item.collectionCode} item={item} onOpen={() => void openDetail(item.collectionCode)} />) : data && !error ? <div className="munfiq-empty"><strong>Belum ada riwayat</strong><p>Catatan infak Anda akan muncul di sini setelah tersedia.</p></div> : null}
           </>
         ) : null}
 
         {tab === 'collections' && !detail ? (
           <>
             <div className="munfiq-title"><h1>Infak Saya</h1><p>Nominal dan perjalanan infak milik Anda.</p></div>
-            {detailLoading || loading ? <LoadingCards /> : data?.collections.length ? data.collections.map((item) => <CollectionCard key={item.collectionCode} item={item} onOpen={() => void openDetail(item.collectionCode)} />) : <div className="munfiq-empty"><strong>Belum ada riwayat</strong><p>Catatan infak Anda akan muncul di sini setelah tersedia.</p></div>}
+            {detailLoading || loading ? <LoadingCards /> : data?.collections.length ? data.collections.map((item) => <CollectionCard key={item.collectionCode} item={item} onOpen={() => void openDetail(item.collectionCode)} />) : data && !error ? <div className="munfiq-empty"><strong>Belum ada riwayat</strong><p>Catatan infak Anda akan muncul di sini setelah tersedia.</p></div> : null}
           </>
         ) : null}
 
@@ -198,7 +199,7 @@ export function MunfiqMobileApp({ identity }: { identity: { munfiqCode: string; 
         {tab === 'notifications' ? (
           <>
             <div className="munfiq-title"><h1>Notifikasi</h1><p>Pembaruan proses infak dan akun Anda.</p></div>
-            {loading ? <LoadingCards /> : visibleNotifications.length ? <div className="munfiq-notification-list">{visibleNotifications.map((item) => <article key={item.id} className={!item.read ? 'is-unread' : undefined}><span className="munfiq-notification-icon"><MobileServiceIcon icon={Notification02Icon} label="Notifikasi" size={19} /></span><div><strong>{item.title}</strong><p>{item.body}</p><time dateTime={item.publishedAt ?? item.createdAt}>{date(item.publishedAt ?? item.createdAt, true)} WIB</time></div></article>)}</div> : <div className="munfiq-empty"><strong>Belum ada notifikasi</strong><p>Pembaruan penting akan tampil di sini.</p></div>}
+            {loading ? <LoadingCards /> : visibleNotifications.length ? <div className="munfiq-notification-list">{visibleNotifications.map((item) => <article key={item.id} className={!item.read ? 'is-unread' : undefined}><span className="munfiq-notification-icon"><MobileServiceIcon icon={Notification02Icon} label="Notifikasi" size={19} /></span><div><strong>{item.title}</strong><p>{item.body}</p><time dateTime={item.publishedAt ?? item.createdAt}>{date(item.publishedAt ?? item.createdAt, true)} WIB</time></div></article>)}</div> : notifications && !error ? <div className="munfiq-empty"><strong>Belum ada notifikasi</strong><p>Pembaruan penting akan tampil di sini.</p></div> : null}
           </>
         ) : null}
       </section>

@@ -95,5 +95,10 @@ export async function syncGorutMunfiqMilestoneNotifications(prisma: PrismaClient
       }
     }
     return { created }
+  }, {
+    // Preview database round trips can exceed Prisma's five-second default.
+    // Keep each notification and its deduplication claim in the same transaction.
+    maxWait: 10_000,
+    timeout: 60_000,
   })
 }

@@ -148,3 +148,37 @@ test("milestone notification sync targets only linked Munfiq account and is idem
   assert.equal(targetedB, 0)
   assert.equal(broad, 0)
 })
+
+test("milestone sync rolls back claims on failure and survives database latency beyond five seconds", async () => {
+  const row = await fixture()
+  const delayed = new PrismaClient()
+  let failNotification = true
+  let delayNextRead = false
+  delayed.$use(async (params, next) => {
+    if (params.runInTransaction && params.model === "PortalNotification" && params.action === "create" && failNotification) {
+      throw new Error("Injected notification write failure")
+    }
+    if (params.runInTransaction && params.model === "GorutCollectionEntry" && params.action === "findMany" && delayNextRead) {
+      delayNextRead = false
+      await new Promise((resolve) => setTimeout(resolve, 5_200))
+    }
+    return next(params)
+  })
+  const claimsWhere = { scope: "gorut-munfiq-milestone-notification", key: { startsWith: `${row.userB.id}:` } }
+  try {
+    await assert.rejects(syncGorutMunfiqMilestoneNotifications(delayed, row.munfiqB.id), /Injected notification write failure/)
+    assert.equal(await prisma.appRecord.count({ where: claimsWhere }), 0)
+    assert.equal(await prisma.portalNotification.count({ where: { targetUserId: row.userB.id } }), 0)
+
+    failNotification = false
+    delayNextRead = true
+    const result = await syncGorutMunfiqMilestoneNotifications(delayed, row.munfiqB.id)
+    assert.equal(delayNextRead, false)
+    assert.equal(result.created, 6)
+    assert.equal((await syncGorutMunfiqMilestoneNotifications(delayed, row.munfiqB.id)).created, 0)
+    assert.equal(await prisma.appRecord.count({ where: claimsWhere }), 6)
+    assert.equal(await prisma.portalNotification.count({ where: { targetUserId: row.userB.id } }), 6)
+  } finally {
+    await delayed.$disconnect()
+  }
+})
