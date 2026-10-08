@@ -48,6 +48,7 @@ const capabilities: Record<AppRole, readonly PortalPermission[]> = {
   admin_upzis: ["portal.access", ...basicPermissions],
   admin_kordes: ["portal.access", ...basicPermissions],
   munfiq: ["portal.access", "profile.view", "notifications.view", "munfiq.transparency.own.view"],
+  plpk: ["portal.access", "profile.view", "notifications.view"],
 }
 const operationalModuleEligibleRoles: readonly AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
 

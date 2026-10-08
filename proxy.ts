@@ -31,6 +31,7 @@ const gorutV2Prefix = "/gorut-v2"
 /** Role yang boleh membuka seluruh /gorut-v2/**. Sengaja daftar tertutup, bukan turunan izin /gorut lama. */
 const gorutV2AllowedRoles = new Set(["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"])
 const gorutMunfiqMobilePrefix = "/gorut-v2/mobile/munfiq"
+const gorutPlpkMobilePrefix = "/gorut-v2/mobile/plpk"
 
 function isGorutV2Path(pathname: string) {
   return pathname === gorutV2Prefix || pathname.startsWith(`${gorutV2Prefix}/`)
@@ -38,6 +39,7 @@ function isGorutV2Path(pathname: string) {
 
 export function canAccessGorutV2Path(role: string | null | undefined, pathname: string) {
   if (pathname === gorutMunfiqMobilePrefix || pathname.startsWith(`${gorutMunfiqMobilePrefix}/`)) return role === "munfiq"
+  if (pathname === gorutPlpkMobilePrefix || pathname.startsWith(`${gorutPlpkMobilePrefix}/`)) return role === "plpk"
   return typeof role === "string" && gorutV2AllowedRoles.has(role)
 }
 

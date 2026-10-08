@@ -56,10 +56,10 @@ const actorFixtures = [
   { memberId: "PID-BBBBBBBBA234", name: "[UAT] Kordes Boundary", phone: "628990010003", appRole: "admin_kordes", role: "RANTING", scopeCode: "UAT-R01" },
   { memberId: "PID-BBBBBBBBC234", name: "[UAT] Kordes Correction", phone: "628990010004", appRole: "admin_kordes", role: "RANTING", scopeCode: "UAT-R02" },
   { memberId: "PID-BBBBBBBBD234", name: "[UAT] Kordes Scope", phone: "628990010005", appRole: "admin_kordes", role: "RANTING", scopeCode: "UAT-R03" },
-  { memberId: "PID-CCCCCCCCA234", name: "[UAT] PLPK Financial", phone: "628990010006", appRole: "admin_upzis", role: "PLPK", scopeCode: "UAT-P01" },
-  { memberId: "PID-CCCCCCCCB234", name: "[UAT] PLPK Boundary", phone: "628990010007", appRole: "admin_upzis", role: "PLPK", scopeCode: "UAT-P02" },
-  { memberId: "PID-CCCCCCCCD234", name: "[UAT] PLPK Correction", phone: "628990010008", appRole: "admin_upzis", role: "PLPK", scopeCode: "UAT-P03" },
-  { memberId: "PID-CCCCCCCCE234", name: "[UAT] PLPK Scope", phone: "628990010009", appRole: "admin_upzis", role: "PLPK", scopeCode: "UAT-P04" },
+  { memberId: "PID-CCCCCCCCA234", name: "[UAT] PLPK Financial", phone: "628990010006", appRole: "plpk", role: "PLPK", scopeCode: "UAT-P01" },
+  { memberId: "PID-CCCCCCCCB234", name: "[UAT] PLPK Boundary", phone: "628990010007", appRole: "plpk", role: "PLPK", scopeCode: "UAT-P02" },
+  { memberId: "PID-CCCCCCCCD234", name: "[UAT] PLPK Correction", phone: "628990010008", appRole: "plpk", role: "PLPK", scopeCode: "UAT-P03" },
+  { memberId: "PID-CCCCCCCCE234", name: "[UAT] PLPK Scope", phone: "628990010009", appRole: "plpk", role: "PLPK", scopeCode: "UAT-P04" },
 ]
 
 const pcActorFixture = {
@@ -261,7 +261,7 @@ export async function verifyGorutV2UatFixture({ prisma, kecamatanId }) {
     prisma.gorutPlpk.count({ where: { code: { in: plpkFixtures.map((fixture) => fixture.code) } } }),
     prisma.gorutMunfiq.count({ where: { code: { in: munfiqFixtures.map((fixture) => fixture.code) } } }),
     prisma.gorutOperationalAssignment.count({
-      where: { role: "PLPK", isActive: true, user: { memberId: { in: plpkMemberIds } } },
+      where: { role: "PLPK", isActive: true, user: { memberId: { in: plpkMemberIds }, role: "plpk", status: "Aktif" } },
     }),
     prisma.gorutOperationalAssignment.count({
       where: { role: "RANTING", isActive: true, user: { memberId: { in: kordesMemberIds } } },

@@ -6,8 +6,9 @@ export const roleDisplayNames: Record<AppRole, string> = {
   admin_upzis: "Admin UPZIS",
   admin_kordes: "Admin Kordes / Ranting",
   munfiq: "Munfiq",
+  plpk: "Petugas Lapangan (PLPK)",
 }
 
 export const adminDashboardRoles: AppRole[] = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]
 export const operationalRoles: AppRole[] = ["admin_upzis", "admin_kordes"]
-export const allPlatformRoles: AppRole[] = [...adminDashboardRoles, "munfiq"]
+export const allPlatformRoles: AppRole[] = [...adminDashboardRoles, "munfiq", "plpk"]
