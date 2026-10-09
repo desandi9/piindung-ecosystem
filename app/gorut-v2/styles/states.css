@@ -1,0 +1,74 @@
+.gorut-viewport :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--gorut-focus) 72%, transparent);
+  outline-offset: 2px;
+}
+
+.gorut-viewport :where(button, input, select, textarea):disabled,
+.gorut-viewport [aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.gorut-state-skeleton {
+  background: var(--gorut-surface-sunken);
+  border-radius: var(--gorut-radius-row);
+  animation: gorut-motion-shimmer 1.2s ease-in-out infinite;
+}
+
+.gorut-state-empty,
+.gorut-state-error {
+  min-height: 220px;
+  border: 1px dashed var(--gorut-line-strong);
+  border-radius: var(--gorut-radius-panel);
+  background: var(--gorut-surface);
+  color: var(--gorut-muted);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 28px;
+  text-align: center;
+}
+
+.gorut-state-empty h2,
+.gorut-state-error h2 {
+  margin: 0;
+  color: var(--gorut-ink);
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.gorut-state-empty p,
+.gorut-state-error p {
+  max-width: 58ch;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.gorut-state-error {
+  border-color: color-mix(in srgb, var(--gorut-critical) 40%, var(--gorut-line));
+  background: var(--gorut-critical-soft);
+}
+
+.gorut-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gorut-state-skeleton {
+    animation: none;
+  }
+}
+
+html[data-animations="off"] .gorut-state-skeleton {
+  animation: none;
+}

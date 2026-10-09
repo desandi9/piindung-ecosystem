@@ -1,0 +1,98 @@
+.munfiq-app {
+  --m-green: #087f50;
+  --m-green-dark: #075f3e;
+  --m-green-soft: #eaf6f0;
+  --m-navy: #102a43;
+  --m-text: #334e68;
+  --m-muted: #718096;
+  --m-border: #dfe7e3;
+  --m-bg: #f5f7f6;
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  margin: 0 auto;
+  overflow-x: hidden;
+  background: var(--m-bg);
+  color: var(--m-text);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.munfiq-app *, .munfiq-app *::before, .munfiq-app *::after { box-sizing: border-box; }
+@media (min-width: 520px) { .munfiq-app { max-width: 430px; border-inline: 1px solid var(--m-border); } }
+.munfiq-header { position: sticky; top: 0; z-index: 20; display: flex; min-height: 72px; align-items: center; gap: 11px; padding: calc(12px + env(safe-area-inset-top)) 16px 12px; background: var(--m-green); color: #fff; }
+.munfiq-brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid rgba(255,255,255,.45); border-radius: 12px; font-size: 12px; font-weight: 800; }
+.munfiq-header > div:nth-child(2) { min-width: 0; flex: 1; }
+.munfiq-header strong, .munfiq-header span { display: block; }
+.munfiq-header strong { font-size: 15px; }
+.munfiq-header div span { margin-top: 2px; font-size: 11px; opacity: .85; }
+.munfiq-unread { display: grid !important; min-width: 26px; height: 26px; place-items: center; border-radius: 999px; background: #fff; color: var(--m-green-dark); font-size: 11px; font-weight: 800; }
+.munfiq-scroll { flex: 1; padding: 18px 16px calc(92px + env(safe-area-inset-bottom)); }
+.munfiq-welcome { display: flex; align-items: center; gap: 13px; padding: 18px; border-radius: 18px; background: var(--m-green-dark); color: #fff; }
+.munfiq-avatar { display: grid; width: 50px; height: 50px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: rgba(255,255,255,.18); font-weight: 800; }
+.munfiq-welcome small, .munfiq-welcome p { opacity: .82; }
+.munfiq-welcome h1 { margin: 2px 0; font-size: 19px; line-height: 1.25; }
+.munfiq-welcome p { margin: 0; font-size: 11px; }
+.munfiq-summary { display: grid; grid-template-columns: 1.45fr 1fr; gap: 10px; margin-top: 12px; }
+.munfiq-summary > div { min-height: 92px; padding: 15px; border: 1px solid var(--m-border); border-radius: 15px; background: #fff; }
+.munfiq-summary span, .munfiq-summary strong { display: block; }
+.munfiq-summary span { color: var(--m-muted); font-size: 11px; }
+.munfiq-summary strong { margin-top: 12px; color: var(--m-navy); font-size: 19px; }
+.munfiq-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 2px 10px; }
+.munfiq-section-heading h2 { margin: 0; color: var(--m-navy); font-size: 15px; }
+.munfiq-section-heading button { min-height: 44px; border: 0; background: transparent; color: var(--m-green); font-weight: 700; }
+.munfiq-collection-card { display: block; width: 100%; margin: 0 0 10px; padding: 16px; border: 1px solid var(--m-border); border-radius: 16px; background: #fff; color: inherit; text-align: left; cursor: pointer; }
+.munfiq-collection-card:focus-visible, .munfiq-nav button:focus-visible, .munfiq-back:focus-visible { outline: 3px solid rgba(8,127,80,.35); outline-offset: 2px; }
+.munfiq-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.munfiq-card-top strong { color: var(--m-navy); font-size: 18px; }
+.munfiq-card-top > span { max-width: 48%; padding: 5px 8px; border-radius: 999px; background: var(--m-green-soft); color: var(--m-green-dark); font-size: 10px; font-weight: 700; text-align: right; }
+.munfiq-card-period, .munfiq-card-meta, .munfiq-card-link { display: block; }
+.munfiq-card-period { margin-top: 9px; font-size: 12px; font-weight: 600; }
+.munfiq-card-meta { margin-top: 4px; color: var(--m-muted); font-size: 11px; }
+.munfiq-card-link { margin-top: 13px; color: var(--m-green); font-size: 12px; font-weight: 700; }
+.munfiq-title { margin: 2px 2px 18px; }
+.munfiq-title h1 { margin: 0; color: var(--m-navy); font-size: 24px; }
+.munfiq-title p { margin: 5px 0 0; color: var(--m-muted); font-size: 13px; }
+.munfiq-back { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; margin: -8px 0 8px; border: 0; background: transparent; color: var(--m-green); font-weight: 700; }
+.munfiq-back span { font-size: 24px; line-height: 1; }
+.munfiq-detail-card { padding: 20px 18px; border: 1px solid var(--m-border); border-radius: 18px; background: #fff; }
+.munfiq-detail-card > small { color: var(--m-muted); }
+.munfiq-detail-card h1 { margin: 7px 0 4px; color: var(--m-navy); font-size: 30px; }
+.munfiq-detail-card > p { margin: 0; color: var(--m-green-dark); font-size: 12px; font-weight: 700; }
+.munfiq-detail-card dl { display: grid; gap: 12px; margin: 19px 0 0; padding-top: 16px; border-top: 1px solid var(--m-border); }
+.munfiq-detail-card dl div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; }
+.munfiq-detail-card dt { color: var(--m-muted); font-size: 11px; }
+.munfiq-detail-card dd { margin: 0; color: var(--m-navy); font-size: 12px; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+.munfiq-timeline { margin: 0; padding: 5px 0 0 5px; list-style: none; }
+.munfiq-timeline li { position: relative; display: grid; grid-template-columns: 22px 1fr; gap: 10px; min-height: 65px; }
+.munfiq-timeline li::before { position: absolute; top: 14px; bottom: -3px; left: 6px; width: 2px; background: #cbd9d2; content: ''; }
+.munfiq-timeline li:last-child::before { display: none; }
+.munfiq-timeline li > span { position: relative; z-index: 1; width: 14px; height: 14px; margin-top: 2px; border: 3px solid #fff; border-radius: 50%; background: #9bada4; box-shadow: 0 0 0 1px #9bada4; }
+.munfiq-timeline li.is-current > span { background: var(--m-green); box-shadow: 0 0 0 2px var(--m-green); }
+.munfiq-timeline strong, .munfiq-timeline time { display: block; }
+.munfiq-timeline strong { color: var(--m-navy); font-size: 13px; }
+.munfiq-timeline time { margin-top: 4px; color: var(--m-muted); font-size: 11px; }
+.munfiq-factual-note { padding: 12px 13px; border-left: 3px solid var(--m-green); background: var(--m-green-soft); color: #526b5f; font-size: 11px; line-height: 1.5; }
+.munfiq-notification-list { display: grid; gap: 9px; }
+.munfiq-notification-list article { display: grid; grid-template-columns: 38px 1fr; gap: 11px; padding: 15px; border: 1px solid var(--m-border); border-radius: 15px; background: #fff; }
+.munfiq-notification-list article.is-unread { border-color: #a9d7c3; background: #f0faf5; }
+.munfiq-notification-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; background: var(--m-green-soft); color: var(--m-green); }
+.munfiq-notification-list strong { color: var(--m-navy); font-size: 13px; }
+.munfiq-notification-list p { margin: 5px 0; color: var(--m-text); font-size: 12px; line-height: 1.45; }
+.munfiq-notification-list time { color: var(--m-muted); font-size: 10px; }
+.munfiq-empty { padding: 34px 24px; border: 1px dashed #bdcbc4; border-radius: 16px; background: #fff; text-align: center; }
+.munfiq-empty strong { color: var(--m-navy); font-size: 14px; }
+.munfiq-empty p { margin: 7px 0 0; color: var(--m-muted); font-size: 12px; line-height: 1.5; }
+.munfiq-error { margin-bottom: 14px; padding: 13px; border: 1px solid #efb4b4; background: #fff2f2; color: #9a2d2d; font-size: 12px; }
+.munfiq-error p { margin: 0; }
+.munfiq-error button { min-height: 44px; border: 0; background: transparent; color: inherit; font-weight: 800; text-decoration: underline; }
+.munfiq-nav { position: fixed; z-index: 30; right: 0; bottom: 0; left: 0; display: grid; height: calc(72px + env(safe-area-inset-bottom)); grid-template-columns: repeat(3, 1fr); padding: 5px max(6px, calc((100vw - 430px) / 2)) env(safe-area-inset-bottom); border-top: 1px solid var(--m-border); background: rgba(255,255,255,.97); }
+.munfiq-nav button { display: flex; min-width: 0; min-height: 54px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; background: transparent; color: var(--m-muted); font-size: 10px; cursor: pointer; }
+.munfiq-nav button.is-active { color: var(--m-green); font-weight: 800; }
+.munfiq-nav-icon { position: relative; display: grid; place-items: center; }
+.munfiq-nav-icon i { position: absolute; top: -2px; right: -5px; width: 7px; height: 7px; border: 2px solid #fff; border-radius: 50%; background: #e04f4f; }
+.munfiq-skeleton-list { display: grid; gap: 10px; }
+.munfiq-skeleton-list span { display: block; height: 116px; border-radius: 16px; background: linear-gradient(90deg, #e7ece9 25%, #f5f7f6 50%, #e7ece9 75%); background-size: 200% 100%; animation: munfiq-shimmer 1.2s linear infinite; }
+.munfiq-line-skeleton { display: block; width: 110px; height: 20px; margin-top: 14px; border-radius: 5px; background: #e5ebe8; }
+.munfiq-line-skeleton.short { width: 58px; }
+@keyframes munfiq-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .munfiq-skeleton-list span { animation: none; } }

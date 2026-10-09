@@ -1,6 +1,7 @@
 "use client"
 
-import { createCollectionClient } from "@/services/api/record-client"
+import { createCollectionClient, RecordRequestError } from "@/services/api/record-client"
+import { isAbortedRequest } from "@/services/api/actor-session"
 
 export type ActivityType = "Login" | "Settings" | "User" | "Article/Banner" | "System" | "Permission" | "Inbox"
 export type ActivityStatus = "Success" | "Warning" | "Failed"
@@ -29,50 +30,9 @@ export interface ActivityLogItem {
 export const ACTIVITY_LOG_STORAGE_KEY = "piindung-activity-log"
 export const ACTIVITY_LOG_EVENT = "piindung-activity-log-updated"
 
-const DEFAULT_ACTIVITY_LOGS: ActivityLogItem[] = [
-  {
-    id: "log-1",
-    userName: "Desandi Herdiansyah",
-    type: "Login",
-    action: "Login ke Admin Dashboard",
-    dateTime: "14 Mei 2026, 09:30",
-    device: "Chrome on Windows",
-    roleLabel: "Super Admin PC",
-    loginAction: "Login",
-    status: "Success",
-  },
-  {
-    id: "log-2",
-    userName: "Admin PC",
-    type: "Settings",
-    action: "Mengubah theme sistem ke Blue",
-    dateTime: "14 Mei 2026, 09:10",
-    device: "Edge on Windows",
-    status: "Success",
-  },
-  {
-    id: "log-3",
-    userName: "Admin PC",
-    type: "Article/Banner",
-    action: "Memperbarui status Banner Homepage",
-    dateTime: "13 Mei 2026, 16:45",
-    device: "Chrome on Android",
-    status: "Success",
-  },
-  {
-    id: "log-4",
-    userName: "System",
-    type: "System",
-    action: "Backup konfigurasi sistem berhasil dibuat",
-    dateTime: "13 Mei 2026, 08:00",
-    device: "Server",
-    status: "Success",
-  },
-]
-
 const activityLogClient = createCollectionClient<ActivityLogItem>({
   scope: "activity-log",
-  defaultItems: DEFAULT_ACTIVITY_LOGS,
+  defaultItems: [],
   eventName: ACTIVITY_LOG_EVENT,
 })
 
@@ -100,17 +60,19 @@ function getDeviceLabel() {
   return `${browser} on ${platform}`
 }
 
-function dispatchActivityLogEvent(logs: ActivityLogItem[]) {
-  if (typeof window === "undefined") return
-  window.dispatchEvent(new CustomEvent<ActivityLogItem[]>(ACTIVITY_LOG_EVENT, { detail: logs }))
-}
-
 export function readActivityLogs() {
   return activityLogClient.readItemsSync()
 }
 
 export function writeActivityLogs(logs: ActivityLogItem[]) {
-  void activityLogClient.writeItems(logs)
+  void activityLogClient.writeItems(logs).catch(handleActivityWriteFailure)
+}
+
+function handleActivityWriteFailure(error: unknown) {
+  // Logging must not turn a successful login/logout into a rejected promise.
+  // The server remains authoritative: never retain an optimistic denied write.
+  if (isAbortedRequest(error) || (error instanceof RecordRequestError && [401, 403].includes(error.status))) return
+  console.error("Activity log could not be saved", error)
 }
 
 export function addActivityLog(log: Omit<ActivityLogItem, "id" | "dateTime" | "device"> & Partial<Pick<ActivityLogItem, "dateTime" | "device">>) {
@@ -121,7 +83,8 @@ export function addActivityLog(log: Omit<ActivityLogItem, "id" | "dateTime" | "d
     ...log,
   }
 
-  writeActivityLogs([nextLog, ...readActivityLogs()].slice(0, 100))
+  // Append only this event, rather than rewriting cached events from another login.
+  void activityLogClient.createItem(nextLog).catch(handleActivityWriteFailure)
 }
 
 export function clearActivityLogs() {

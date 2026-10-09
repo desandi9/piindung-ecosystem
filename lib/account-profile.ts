@@ -33,7 +33,7 @@ export type AccountProfile = {
 export type ProfilePatch = { name?: string; email?: string; phone?: string; address?: string | null; avatar?: string | null }
 
 export function serializeAccountProfile(user: { memberId: string; name: string; email: string | null; phone: string; role: string; status: string; address?: string | null; avatar: string | null; createdAt: Date; updatedAt: Date }, verification: string): AccountProfile {
-  return { memberId: user.memberId, name: user.name, email: user.email ?? "", phone: user.phone, role: user.role, status: user.status, address: user.address ?? "", avatar: user.avatar, createdAt: user.createdAt.toISOString(), updatedAt: user.updatedAt.toISOString(), verificationUrl: verification, identityPath: "/member-area/identitas" }
+  return { memberId: user.memberId, name: user.name, email: user.email ?? "", phone: user.phone, role: user.role, status: user.status, address: user.address ?? "", avatar: user.avatar, createdAt: user.createdAt.toISOString(), updatedAt: user.updatedAt.toISOString(), verificationUrl: verification, identityPath: "/profil/identitas" }
 }
 
 export function validateAvatarReference(value: unknown): { value?: string | null; error?: string } {

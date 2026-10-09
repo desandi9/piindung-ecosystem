@@ -26,7 +26,7 @@ void test("Profile serialization: safe serializer includes allowed profile field
   assert.equal(serialized.createdAt, "2026-01-01T00:00:00.000Z")
   assert.equal(serialized.updatedAt, "2026-07-21T00:00:00.000Z")
   assert.equal(serialized.verificationUrl, "https://example.com/verify/PID-23456789ABCD")
-  assert.equal(serialized.identityPath, "/member-area/identitas")
+  assert.equal(serialized.identityPath, "/profil/identitas")
 })
 
 void test("Profile serialization: safe serializer omits internal User ID", () => {

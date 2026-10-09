@@ -1,0 +1,450 @@
+{
+  "verifiedAt": "2026-09-14T20:13:32.293764+00:00",
+  "deployment": "dpl_5qRz5RY1a99seUNpQ6Z3ugFu2LcT",
+  "target": "preview",
+  "base": "https://piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app",
+  "before": {
+    "/api/auth/me": 200,
+    "/api/notifications/me?page=1&limit=20": 200,
+    "/api/gorut/munfiq/me/collections": 500,
+    "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P01-202609": 500,
+    "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P03-202609": 500
+  },
+  "after": [
+    {
+      "path": "/api/auth/me",
+      "status": 200,
+      "requestId": null,
+      "body": {
+        "user": {
+          "id": "cmtohov2n002612jsdrnm9fnm",
+          "name": "[UAT] Munfiq Transparency",
+          "email": "eeeeeeeea234@gorut-uat.invalid",
+          "role": "munfiq"
+        }
+      }
+    },
+    {
+      "path": "/api/notifications/me?page=1&limit=20",
+      "status": 200,
+      "requestId": null,
+      "body": {
+        "notifications": [
+          {
+            "id": "95931ace-0770-44a1-a917-5300118c3bd1",
+            "title": "Infak sudah diteruskan ke PC",
+            "body": "Penghimpunan yang memuat infak Anda telah diteruskan ke tingkat PC.",
+            "category": "system",
+            "severity": "info",
+            "actionPath": null,
+            "publishedAt": "2026-09-07T14:19:52.534Z",
+            "createdAt": "2026-09-14T13:19:54.825Z",
+            "readAt": null,
+            "read": false
+          },
+          {
+            "id": "eb9dbbc6-eab3-471a-ae11-7ad60a489c9f",
+            "title": "Infak sedang diproses UPZIS",
+            "body": "Penghimpunan yang memuat infak Anda sedang diproses di tingkat UPZIS.",
+            "category": "system",
+            "severity": "info",
+            "actionPath": null,
+            "publishedAt": "2026-09-07T14:19:45.011Z",
+            "createdAt": "2026-09-14T13:19:54.743Z",
+            "readAt": null,
+            "read": false
+          },
+          {
+            "id": "b0c001e5-9c4a-453c-a418-ed292e8eea59",
+            "title": "Infak sudah diverifikasi",
+            "body": "Catatan infak Anda telah selesai diverifikasi.",
+            "category": "system",
+            "severity": "info",
+            "actionPath": null,
+            "publishedAt": "2026-09-07T06:30:39.275Z",
+            "createdAt": "2026-09-14T13:19:54.635Z",
+            "readAt": null,
+            "read": false
+          },
+          {
+            "id": "374ffab1-75bf-4c50-875e-472f6dd6d52b",
+            "title": "Infak sedang diverifikasi",
+            "body": "Catatan infak Anda sedang diperiksa oleh petugas terkait.",
+            "category": "system",
+            "severity": "info",
+            "actionPath": null,
+            "publishedAt": "2026-09-07T06:25:25.469Z",
+            "createdAt": "2026-09-14T13:19:54.521Z",
+            "readAt": null,
+            "read": false
+          },
+          {
+            "id": "b78ce00d-92e9-4d2f-9abb-d51ba56a115d",
+            "title": "Infak Anda sudah tercatat",
+            "body": "Catatan infak Anda sudah masuk ke proses penghimpunan GORUT.",
+            "category": "system",
+            "severity": "info",
+            "actionPath": null,
+            "publishedAt": "2026-09-07T06:22:33.251Z",
+            "createdAt": "2026-09-14T13:19:54.387Z",
+            "readAt": null,
+            "read": false
+          }
+        ],
+        "unreadCount": 5,
+        "page": 1,
+        "limit": 20,
+        "hasMore": false
+      }
+    },
+    {
+      "path": "/api/gorut/munfiq/me/collections",
+      "status": 200,
+      "requestId": null,
+      "body": {
+        "owner": {
+          "munfiqCode": "UAT-M001",
+          "name": "[UAT] Munfiq Gross 15000"
+        },
+        "summary": {
+          "collectionCount": 1,
+          "totalAmount": "15000.00",
+          "currency": "IDR"
+        },
+        "collections": [
+          {
+            "collectionCode": "GORUT-COL-UAT-P01-202609",
+            "periodStart": "2026-09-01",
+            "amount": "15000.00",
+            "currency": "IDR",
+            "status": "Sudah diteruskan ke PC",
+            "statusAt": "2026-09-07T14:19:52.534Z",
+            "historicalPlpk": {
+              "code": "UAT-P01",
+              "name": "[UAT] PLPK Financial"
+            },
+            "location": {
+              "ranting": "[UAT] Ranting Boundary",
+              "kecamatan": "[UAT] Kecamatan Release Candidate"
+            },
+            "timeline": [
+              {
+                "key": "recorded",
+                "label": "Infak sudah tercatat",
+                "at": "2026-09-07T06:22:33.251Z"
+              },
+              {
+                "key": "verifying",
+                "label": "Sedang diverifikasi",
+                "at": "2026-09-07T06:25:25.469Z"
+              },
+              {
+                "key": "verified",
+                "label": "Sudah diverifikasi",
+                "at": "2026-09-07T06:30:39.275Z"
+              },
+              {
+                "key": "upzis",
+                "label": "Sedang diproses UPZIS",
+                "at": "2026-09-07T14:19:45.011Z"
+              },
+              {
+                "key": "pc",
+                "label": "Sudah diteruskan ke PC",
+                "at": "2026-09-07T14:19:52.534Z"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "path": "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P01-202609",
+      "status": 200,
+      "requestId": null,
+      "body": {
+        "owner": {
+          "munfiqCode": "UAT-M001",
+          "name": "[UAT] Munfiq Gross 15000"
+        },
+        "collection": {
+          "collectionCode": "GORUT-COL-UAT-P01-202609",
+          "periodStart": "2026-09-01",
+          "amount": "15000.00",
+          "currency": "IDR",
+          "status": "Sudah diteruskan ke PC",
+          "statusAt": "2026-09-07T14:19:52.534Z",
+          "historicalPlpk": {
+            "code": "UAT-P01",
+            "name": "[UAT] PLPK Financial"
+          },
+          "location": {
+            "ranting": "[UAT] Ranting Boundary",
+            "kecamatan": "[UAT] Kecamatan Release Candidate"
+          },
+          "timeline": [
+            {
+              "key": "recorded",
+              "label": "Infak sudah tercatat",
+              "at": "2026-09-07T06:22:33.251Z"
+            },
+            {
+              "key": "verifying",
+              "label": "Sedang diverifikasi",
+              "at": "2026-09-07T06:25:25.469Z"
+            },
+            {
+              "key": "verified",
+              "label": "Sudah diverifikasi",
+              "at": "2026-09-07T06:30:39.275Z"
+            },
+            {
+              "key": "upzis",
+              "label": "Sedang diproses UPZIS",
+              "at": "2026-09-07T14:19:45.011Z"
+            },
+            {
+              "key": "pc",
+              "label": "Sudah diteruskan ke PC",
+              "at": "2026-09-07T14:19:52.534Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P03-202609",
+      "status": 404,
+      "requestId": null,
+      "body": {
+        "error": "Riwayat infak tidak ditemukan."
+      }
+    }
+  ],
+  "amount": "Rp15.000",
+  "timeline": [
+    {
+      "key": "recorded",
+      "label": "Infak sudah tercatat",
+      "at": "2026-09-07T06:22:33.251Z"
+    },
+    {
+      "key": "verifying",
+      "label": "Sedang diverifikasi",
+      "at": "2026-09-07T06:25:25.469Z"
+    },
+    {
+      "key": "verified",
+      "label": "Sudah diverifikasi",
+      "at": "2026-09-07T06:30:39.275Z"
+    },
+    {
+      "key": "upzis",
+      "label": "Sedang diproses UPZIS",
+      "at": "2026-09-07T14:19:45.011Z"
+    },
+    {
+      "key": "pc",
+      "label": "Sudah diteruskan ke PC",
+      "at": "2026-09-07T14:19:52.534Z"
+    }
+  ],
+  "notificationsAfter": {
+    "notifications": [
+      {
+        "id": "95931ace-0770-44a1-a917-5300118c3bd1",
+        "title": "Infak sudah diteruskan ke PC",
+        "body": "Penghimpunan yang memuat infak Anda telah diteruskan ke tingkat PC.",
+        "category": "system",
+        "severity": "info",
+        "actionPath": null,
+        "publishedAt": "2026-09-07T14:19:52.534Z",
+        "createdAt": "2026-09-14T13:19:54.825Z",
+        "readAt": null,
+        "read": false
+      },
+      {
+        "id": "eb9dbbc6-eab3-471a-ae11-7ad60a489c9f",
+        "title": "Infak sedang diproses UPZIS",
+        "body": "Penghimpunan yang memuat infak Anda sedang diproses di tingkat UPZIS.",
+        "category": "system",
+        "severity": "info",
+        "actionPath": null,
+        "publishedAt": "2026-09-07T14:19:45.011Z",
+        "createdAt": "2026-09-14T13:19:54.743Z",
+        "readAt": null,
+        "read": false
+      },
+      {
+        "id": "b0c001e5-9c4a-453c-a418-ed292e8eea59",
+        "title": "Infak sudah diverifikasi",
+        "body": "Catatan infak Anda telah selesai diverifikasi.",
+        "category": "system",
+        "severity": "info",
+        "actionPath": null,
+        "publishedAt": "2026-09-07T06:30:39.275Z",
+        "createdAt": "2026-09-14T13:19:54.635Z",
+        "readAt": null,
+        "read": false
+      },
+      {
+        "id": "374ffab1-75bf-4c50-875e-472f6dd6d52b",
+        "title": "Infak sedang diverifikasi",
+        "body": "Catatan infak Anda sedang diperiksa oleh petugas terkait.",
+        "category": "system",
+        "severity": "info",
+        "actionPath": null,
+        "publishedAt": "2026-09-07T06:25:25.469Z",
+        "createdAt": "2026-09-14T13:19:54.521Z",
+        "readAt": null,
+        "read": false
+      },
+      {
+        "id": "b78ce00d-92e9-4d2f-9abb-d51ba56a115d",
+        "title": "Infak Anda sudah tercatat",
+        "body": "Catatan infak Anda sudah masuk ke proses penghimpunan GORUT.",
+        "category": "system",
+        "severity": "info",
+        "actionPath": null,
+        "publishedAt": "2026-09-07T06:22:33.251Z",
+        "createdAt": "2026-09-14T13:19:54.387Z",
+        "readAt": null,
+        "read": false
+      }
+    ],
+    "unreadCount": 5,
+    "page": 1,
+    "limit": 20,
+    "hasMore": false
+  },
+  "notificationsUnchanged": true,
+  "browserStates": {
+    "failure": {
+      "alert": "Data belum dapat dimuat.\n\nCoba lagi",
+      "empty": false
+    },
+    "empty": {
+      "text": "Belum ada riwayat\n\nCatatan infak Anda akan muncul di sini setelah tersedia.",
+      "error": false
+    },
+    "recovery": {
+      "amount": "Rp15.000\nSudah diteruskan ke PC\nPeriode 1 September 2026\nDijemput oleh [UAT] PLPK Financial\nLihat riwayat ›",
+      "error": false,
+      "overlay": false
+    }
+  },
+  "regression": {
+    "passed": 8,
+    "failed": 0,
+    "latencyMs": 5200,
+    "originalServiceNegativeControl": "P2028 at 5202ms",
+    "atomicRollbackPassed": true,
+    "lint": "PASS",
+    "typescript": "PASS"
+  },
+  "serverLogs": [
+    {
+      "id": "qxlfc-1789416712217-3c386808f090",
+      "timestamp": 1789416712217,
+      "deploymentId": "dpl_5qRz5RY1a99seUNpQ6Z3ugFu2LcT",
+      "projectId": "prj_ndtzHGjeAHNXT5w1d2de4GKztRr1",
+      "level": "info",
+      "message": "",
+      "source": "serverless-middleware",
+      "domain": "piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app",
+      "requestMethod": "GET",
+      "requestPath": "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P03-202609",
+      "responseStatusCode": 404,
+      "environment": "preview",
+      "branch": "",
+      "cache": "MISS",
+      "cacheReason": "",
+      "pprState": "",
+      "traceId": "",
+      "logs": []
+    },
+    {
+      "id": "rxmm8-1789416693336-7b695e2e34d3",
+      "timestamp": 1789416693336,
+      "deploymentId": "dpl_5qRz5RY1a99seUNpQ6Z3ugFu2LcT",
+      "projectId": "prj_ndtzHGjeAHNXT5w1d2de4GKztRr1",
+      "level": "info",
+      "message": "",
+      "source": "serverless-middleware",
+      "domain": "piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app",
+      "requestMethod": "GET",
+      "requestPath": "/api/gorut/munfiq/me/collections/GORUT-COL-UAT-P01-202609",
+      "responseStatusCode": 200,
+      "environment": "preview",
+      "branch": "",
+      "cache": "MISS",
+      "cacheReason": "",
+      "pprState": "",
+      "traceId": "",
+      "logs": []
+    },
+    {
+      "id": "2s7j4-1789416675190-fb9f43ef067a",
+      "timestamp": 1789416675190,
+      "deploymentId": "dpl_5qRz5RY1a99seUNpQ6Z3ugFu2LcT",
+      "projectId": "prj_ndtzHGjeAHNXT5w1d2de4GKztRr1",
+      "level": "info",
+      "message": "",
+      "source": "serverless-middleware",
+      "domain": "piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app",
+      "requestMethod": "GET",
+      "requestPath": "/api/gorut/munfiq/me/collections",
+      "responseStatusCode": 200,
+      "environment": "preview",
+      "branch": "",
+      "cache": "MISS",
+      "cacheReason": "",
+      "pprState": "",
+      "traceId": "",
+      "logs": []
+    },
+    {
+      "id": "2k7rp-1789416661954-11ee3c2114b0",
+      "timestamp": 1789416661954,
+      "deploymentId": "dpl_5qRz5RY1a99seUNpQ6Z3ugFu2LcT",
+      "projectId": "prj_ndtzHGjeAHNXT5w1d2de4GKztRr1",
+      "level": "info",
+      "message": "",
+      "source": "serverless-middleware",
+      "domain": "piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app",
+      "requestMethod": "GET",
+      "requestPath": "/api/notifications/me",
+      "responseStatusCode": 200,
+      "environment": "preview",
+      "branch": "",
+      "cache": "MISS",
+      "cacheReason": "",
+      "pprState": "",
+      "traceId": "",
+      "logs": []
+    },
+    {
+      "id": "c8tnw-1789416654692-823d20e45857",
+      "timestamp": 1789416654692,
+      "deploymentId": "dpl_5qRz5RY1a99seUNpQ6Z3ugFu2LcT",
+      "projectId": "prj_ndtzHGjeAHNXT5w1d2de4GKztRr1",
+      "level": "info",
+      "message": "",
+      "source": "serverless-middleware",
+      "domain": "piindung-ecosystem-8cgt-fd5cyi7lm-dsndihrdynsh-4735s-projects.vercel.app",
+      "requestMethod": "GET",
+      "requestPath": "/api/auth/me",
+      "responseStatusCode": 200,
+      "environment": "preview",
+      "branch": "",
+      "cache": "MISS",
+      "cacheReason": "",
+      "pprState": "",
+      "traceId": "",
+      "logs": []
+    }
+  ],
+  "safeToResumeFieldGate": true,
+  "stageCommitPush": false,
+  "productionChanged": false
+}

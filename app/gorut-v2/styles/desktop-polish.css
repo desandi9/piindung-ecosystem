@@ -1,0 +1,688 @@
+/* GoRUT V2 desktop polish.
+   Dashboard and Munfiq are the visual authority. This layer intentionally
+   leaves dedicated mobile routes and motion behavior untouched. */
+
+@media (min-width: 901px) {
+  .gorut-viewport,
+  .gorut-viewport.gorut-theme-light,
+  html[data-gorut-theme='light'] .gorut-viewport {
+    --gorut-canvas: #f5f7f5;
+    --gorut-surface: #ffffff;
+    --gorut-surface-raised: #f8faf8;
+    --gorut-surface-sunken: #edf2ef;
+    --gorut-ink: #34483e;
+    --gorut-ink-strong: #102a1f;
+    --gorut-emphasis: #173f31;
+    --gorut-muted: #66786e;
+    --gorut-subtle: #94a39b;
+    --gorut-line: #e2e9e5;
+    --gorut-line-strong: #d4ded8;
+    --gorut-brand: #0b7a4f;
+    --gorut-brand-hover: #08633f;
+    --gorut-brand-pressed: #064d33;
+    --gorut-brand-soft: #e4f3eb;
+    --gorut-positive: #18885b;
+    --gorut-positive-soft: #e7f5ed;
+    --gorut-warning: #a96318;
+    --gorut-warning-soft: #fbf1e5;
+    --gorut-critical: #ad4646;
+    --gorut-critical-soft: #faeceb;
+    --gorut-info: #477363;
+    --gorut-info-soft: #edf4f0;
+    --gorut-focus: #0b7a4f;
+    --gorut-nav-label: #65786f;
+    --gorut-nav-unavailable: #94a39b;
+    --gorut-shadow-sm: 0 4px 14px rgb(16 42 31 / 5%);
+    --gorut-shadow-md: 0 12px 30px rgb(16 42 31 / 7%);
+    --gorut-radius-control: 10px;
+    --gorut-radius-row: 14px;
+    --gorut-radius-panel: 18px;
+    --gorut-radius-hero: 20px;
+    --gorut-section-gap: 16px;
+    --gorut-control-height: 42px;
+    --g-primary: var(--gorut-brand);
+    --g-hover: var(--gorut-brand-hover);
+    --g-bright: #16885b;
+    --g-soft: var(--gorut-brand-soft);
+    --g-muted: var(--gorut-muted);
+    --g-subtle: var(--gorut-subtle);
+    --g-navy: var(--gorut-ink-strong);
+    --g-text: var(--gorut-ink);
+    --g-bg: var(--gorut-canvas);
+    --g-border: var(--gorut-line);
+    --g-grid: var(--gorut-surface-sunken);
+  }
+
+  .gorut-viewport.gorut-theme-dark,
+  html[data-gorut-theme='dark'] .gorut-viewport,
+  .dark .gorut-viewport {
+    --gorut-canvas: #0b1510;
+    --gorut-surface: #132219;
+    --gorut-surface-raised: #192a20;
+    --gorut-surface-sunken: #0f1c15;
+    --gorut-ink: #dcebe3;
+    --gorut-ink-strong: #f5fbf7;
+    --gorut-emphasis: #0d2d20;
+    --gorut-muted: #9eb2a7;
+    --gorut-subtle: #748a7e;
+    --gorut-line: #293d32;
+    --gorut-line-strong: #3a5145;
+    --gorut-brand: #36c98a;
+    --gorut-brand-hover: #56d79f;
+    --gorut-brand-pressed: #72e0b0;
+    --gorut-brand-soft: #173e30;
+    --gorut-positive: #4ed59a;
+    --gorut-positive-soft: #173e30;
+    --gorut-warning: #e6aa5a;
+    --gorut-warning-soft: #3f301c;
+    --gorut-critical: #ef8585;
+    --gorut-critical-soft: #452728;
+    --gorut-info: #79b7a2;
+    --gorut-info-soft: #203a31;
+    --gorut-focus: #55d69f;
+    --gorut-nav-label: #b8ccc1;
+    --gorut-nav-unavailable: #748a7e;
+  }
+
+  /* Shared shell and page rhythm. */
+  .gorut-viewport .gorut-main {
+    width: 100%;
+    max-width: 100%;
+    padding: 22px 28px 28px;
+    color: var(--gorut-ink);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .gorut-viewport :is(
+    .gorut-command-dashboard,
+    .gorut-munfiq-workspace,
+    .gorut-collection-workspace
+  ) {
+    width: min(100%, 1480px);
+    max-width: 1480px;
+    min-width: 0;
+    margin-inline: auto;
+  }
+
+  .gorut-viewport :is(.gorut-command-dashboard, .gorut-munfiq-workspace) {
+    gap: var(--gorut-section-gap);
+  }
+
+  .gorut-viewport .gorut-collection-workspace {
+    padding-top: 22px;
+  }
+
+  .gorut-viewport .gorut-operation-heading:has(.gorut-operation-heading-actions) {
+    margin-bottom: 14px;
+  }
+
+  .gorut-viewport :is(
+    .gorut-munfiq-workspace,
+    .gorut-collection-workspace,
+    .gorut-command-dashboard
+  ) :is(h2, h3) {
+    color: var(--gorut-ink-strong);
+  }
+
+  .gorut-viewport :is(
+    .gorut-munfiq-filters,
+    .pjm-filters,
+    .gorut-munfiq-table-toolbar,
+    .pjm-toolbar,
+    .gorut-settings-card,
+    .gorut-help-section,
+    .gorut-help-flow,
+    .gorut-monitoring-progress,
+    .gorut-monitoring-attention,
+    .gorut-monitoring-recent,
+    .gorut-monitoring-shortcuts
+  ) h2 {
+    margin: 0;
+    color: var(--gorut-ink-strong);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.3;
+    letter-spacing: -.015em;
+  }
+
+  .gorut-viewport :is(
+    .gorut-munfiq-filters,
+    .pjm-filters,
+    .gorut-munfiq-table-toolbar,
+    .pjm-toolbar,
+    .gorut-settings-card,
+    .gorut-help-section,
+    .gorut-help-flow,
+    .gorut-monitoring-progress,
+    .gorut-monitoring-attention,
+    .gorut-monitoring-recent,
+    .gorut-monitoring-shortcuts
+  ) p {
+    color: var(--gorut-muted);
+    font-size: 9.5px;
+    line-height: 1.5;
+  }
+
+  /* Header/sidebar stay neutral; active navigation uses the deep emerald system. */
+  .gorut-viewport .gorut-target-card {
+    display: none;
+  }
+
+  .gorut-viewport :is(.gorut-nav-item, .gorut-mobile-bottom-nav a, .gorut-mobile-bottom-nav button)[data-nav-tone] {
+    --gorut-nav-accent: var(--gorut-brand);
+    --gorut-nav-soft: var(--gorut-brand-soft);
+    --gorut-nav-accent-strong: var(--gorut-brand-hover);
+  }
+
+  .gorut-viewport .gorut-nav-item.is-active {
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 24%, var(--gorut-line));
+    background: var(--gorut-surface);
+    color: var(--gorut-brand-hover);
+    box-shadow: 0 6px 18px rgb(16 42 31 / 6%);
+  }
+
+  .gorut-viewport .gorut-nav-item.is-active > svg:first-child {
+    background: var(--gorut-brand);
+    color: #fff;
+    box-shadow: none;
+  }
+
+  .gorut-viewport .gorut-sidebar-brand strong {
+    color: var(--gorut-ink-strong);
+    font-size: 12px;
+    font-weight: 760;
+    letter-spacing: .01em;
+  }
+
+  .gorut-viewport .gorut-sidebar-brand span {
+    color: var(--gorut-muted);
+    font-size: 8.5px;
+  }
+
+  /* One card contract for operational surfaces. */
+  .gorut-viewport :is(
+    .gorut-munfiq-results,
+    .pjm-panel,
+    .gorut-collect-panel,
+    .gorut-documents-panel,
+    .gorut-monitoring-panel,
+    .gorut-reports-panel,
+    .gorut-admin-panel,
+    .gorut-settings-card,
+    .gorut-help-flow,
+    .gorut-help-section,
+    .gorut-monitoring-progress,
+    .gorut-monitoring-attention,
+    .gorut-monitoring-recent,
+    .gorut-monitoring-shortcuts
+  ) {
+    border: 1px solid var(--gorut-line);
+    border-radius: 18px;
+    background: var(--gorut-surface);
+    box-shadow: var(--gorut-shadow-sm);
+  }
+
+  .gorut-viewport :is(
+    .gorut-settings-profile > div,
+    .gorut-theme-choice-grid button,
+    .gorut-help-guide-grid article,
+    .gorut-help-faq details,
+    .gorut-monitoring-progress-grid article,
+    .gorut-monitoring-attention-list li,
+    .gorut-monitoring-recent li
+  ) {
+    border-color: var(--gorut-line);
+    background: var(--gorut-surface-raised);
+    box-shadow: none;
+  }
+
+  /* KPI and summary system shared by every route. */
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-operation-summary,
+    .pjm-summary
+  ) {
+    gap: 12px;
+    margin-bottom: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-operation-summary,
+    .pjm-summary
+  ) article,
+  .gorut-viewport .gorut-command-dashboard .gorut-purity-kpis article {
+    min-height: 108px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 18px;
+    background: var(--gorut-surface);
+    padding: 16px 17px;
+    box-shadow: var(--gorut-shadow-sm);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-operation-summary,
+    .pjm-summary
+  ) article:first-child,
+  .gorut-viewport .gorut-command-dashboard .gorut-purity-kpis article.is-primary {
+    border-color: color-mix(in srgb, var(--gorut-brand) 20%, var(--gorut-line));
+    background: color-mix(in srgb, var(--gorut-brand-soft) 48%, var(--gorut-surface));
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-operation-summary,
+    .pjm-summary
+  ) article.is-warning,
+  .gorut-viewport .gorut-command-dashboard .gorut-purity-kpis article.is-warning {
+    border-color: color-mix(in srgb, var(--gorut-warning) 20%, var(--gorut-line));
+    background: color-mix(in srgb, var(--gorut-warning-soft) 34%, var(--gorut-surface));
+  }
+
+  .gorut-viewport :is(
+    .gorut-operation-summary-icon,
+    .pjm-summary-heading > span,
+    .gorut-purity-kpi-icon
+  ) {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 14%, var(--gorut-line));
+    border-radius: 12px;
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand);
+    box-shadow: none;
+  }
+
+  .gorut-viewport :is(
+    .gorut-operation-summary-icon,
+    .pjm-summary-heading > span,
+    .gorut-purity-kpi-icon
+  ) > svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-operation-summary,
+    .pjm-summary
+  ) :is(.is-warning) :is(.gorut-operation-summary-icon, .pjm-summary-heading > span) {
+    border-color: color-mix(in srgb, var(--gorut-warning) 16%, var(--gorut-line));
+    background: var(--gorut-warning-soft);
+    color: var(--gorut-warning);
+  }
+
+  .gorut-viewport :is(.gorut-operation-summary, .pjm-summary, .gorut-purity-kpis) :is(
+    article > div > span,
+    .pjm-summary-heading p
+  ) {
+    color: var(--gorut-muted);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .gorut-viewport :is(.gorut-operation-summary, .pjm-summary, .gorut-purity-kpis) article > strong,
+  .gorut-viewport :is(.gorut-operation-summary, .gorut-purity-kpis) article > div > strong {
+    color: var(--gorut-ink-strong);
+    font-size: clamp(24px, 1.8vw, 27px);
+    font-weight: 790;
+    line-height: 1.08;
+    letter-spacing: -.035em;
+  }
+
+  .gorut-viewport :is(.gorut-operation-summary, .pjm-summary, .gorut-purity-kpis) article small {
+    color: var(--gorut-muted);
+    font-size: 9px;
+    line-height: 1.4;
+  }
+
+  /* Filter Data follows one compact, discoverable pattern. */
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-munfiq-filters,
+    .pjm-filters
+  ) {
+    gap: 12px;
+    margin-bottom: 0;
+    border: 1px solid var(--gorut-line);
+    border-radius: 18px;
+    background: var(--gorut-surface);
+    padding: 16px;
+    box-shadow: var(--gorut-shadow-sm);
+    backdrop-filter: none;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-filters, .pjm-filters) :is(
+    .gorut-munfiq-filter-field > span,
+    .pjm-filter-label
+  ) {
+    color: var(--gorut-ink);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-filters, .pjm-filters) :is(input, select),
+  .gorut-viewport :is(.gorut-admin-filters, .gorut-documents-filters, .gorut-monitoring-filters, .gorut-reports-filters) :is(input, select) {
+    min-height: var(--gorut-control-height);
+    height: var(--gorut-control-height);
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 10px;
+    background-color: var(--gorut-surface-raised);
+    color: var(--gorut-ink);
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-search, .pjm-search) input::placeholder {
+    color: var(--gorut-subtle);
+    opacity: 1;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-filters, .pjm-filters) :is(input, select):focus-visible {
+    border-color: var(--gorut-brand);
+    outline: 2px solid color-mix(in srgb, var(--gorut-focus) 18%, transparent);
+    outline-offset: 1px;
+    box-shadow: none;
+  }
+
+  .gorut-viewport :is(
+    .gorut-munfiq-filters > header button,
+    .pjm-filter-panel-heading .gorut-collect-reset
+  ) {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 9px;
+    background: var(--gorut-surface-raised);
+    color: var(--gorut-brand-hover);
+    padding-inline: 10px;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  /* Table containers and rows match the latest Munfiq grid. */
+  .gorut-viewport :is(.gorut-munfiq-results, .pjm-panel, .gorut-admin-panel) {
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-toolbar, .pjm-toolbar, .gorut-admin-toolbar) {
+    min-height: 68px;
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--gorut-line);
+    border-radius: 0;
+    background: var(--gorut-surface);
+    padding: 13px 17px;
+    box-shadow: none;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap, .pjm-table-wrap, .gorut-admin-table-wrap) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 0;
+    border-radius: 0;
+    background: var(--gorut-surface);
+    box-shadow: none;
+    overscroll-behavior-inline: contain;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: var(--gorut-ink);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) thead th {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    height: 46px;
+    border-bottom: 1px solid var(--gorut-line-strong);
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-muted);
+    padding: 13px 16px;
+    font-size: 8.5px;
+    font-weight: 760;
+    line-height: 1.3;
+    letter-spacing: .045em;
+    text-transform: none;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) tbody td {
+    height: 72px;
+    border-bottom: 1px solid var(--gorut-line);
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    padding: 14px 16px;
+    font-size: 10px;
+    line-height: 1.45;
+    vertical-align: middle;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) :is(th, td):not(:last-child) {
+    border-right: 1px solid var(--gorut-line);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) td strong {
+    color: var(--gorut-ink-strong);
+    font-size: 10.5px;
+    font-weight: 680;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) td small {
+    color: var(--gorut-muted);
+    font-size: 8.5px;
+    line-height: 1.4;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) :is(.is-amount, .is-numeric) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .gorut-viewport :is(.gorut-munfiq-table-wrap table, .pjm-table, .kordes-table, .kordes-inner-table) tbody tr:hover td {
+      background: color-mix(in srgb, var(--gorut-brand-soft) 30%, var(--gorut-surface));
+    }
+  }
+
+  /* Buttons: emerald primary, clean bordered secondary, compact table action. */
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    button.gorut-button,
+    a.gorut-button,
+    .gorut-documents-action,
+    .pjm-export
+  ) {
+    min-height: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: 10px;
+    padding-inline: 12px;
+    font-size: 9.5px;
+    font-weight: 700;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-primary-button,
+    .gorut-reports-download,
+    .gorut-documents-action.is-primary
+  ) {
+    border-color: var(--gorut-brand);
+    background: var(--gorut-brand);
+    color: #fff;
+    box-shadow: 0 4px 12px rgb(11 122 79 / 12%);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-workspace, .gorut-collection-workspace) :is(
+    .gorut-secondary-button,
+    .pjm-export,
+    .gorut-documents-action:not(.is-primary)
+  ) {
+    border: 1px solid var(--gorut-line-strong);
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    box-shadow: none;
+  }
+
+  .gorut-viewport :is(
+    .gorut-munfiq-detail-button,
+    .gorut-admin-detail-button,
+    .gorut-documents-action
+  ) {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 9px;
+    background: var(--gorut-surface);
+    color: var(--gorut-brand-hover);
+    padding-inline: 10px;
+    font-size: 8.5px;
+    font-weight: 700;
+    box-shadow: none;
+  }
+
+  .gorut-viewport :is(
+    .gorut-button,
+    .gorut-munfiq-detail-button,
+    .gorut-admin-detail-button,
+    .gorut-documents-action,
+    .pjm-export
+  ) > svg {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+  }
+
+  /* Status badges use one semantic vocabulary. */
+  .gorut-viewport :is(
+    .gorut-munfiq-status,
+    .pjm-badge,
+    .kordes-status,
+    .gorut-documents-badge,
+    .gorut-admin-badge,
+    .gorut-reports-badge
+  ) {
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 8px;
+    font-weight: 720;
+    line-height: 1.2;
+    letter-spacing: .015em;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-status, .pjm-badge, .kordes-status, .gorut-documents-badge, .gorut-admin-badge, .gorut-reports-badge):is(
+    .is-active,
+    .is-success,
+    .is-ready,
+    .is-verified,
+    .is-collected,
+    .is-complete,
+    .is-positive
+  ) {
+    border-color: color-mix(in srgb, var(--gorut-positive) 18%, var(--gorut-line));
+    background: var(--gorut-positive-soft);
+    color: var(--gorut-positive);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-status, .pjm-badge, .kordes-status, .gorut-documents-badge, .gorut-admin-badge, .gorut-reports-badge):is(
+    .is-warning,
+    .is-waiting,
+    .is-unpaid,
+    .is-correction,
+    .is-pending
+  ) {
+    border-color: color-mix(in srgb, var(--gorut-warning) 20%, var(--gorut-line));
+    background: var(--gorut-warning-soft);
+    color: var(--gorut-warning);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-status, .pjm-badge, .kordes-status, .gorut-documents-badge, .gorut-admin-badge, .gorut-reports-badge):is(
+    .is-critical,
+    .is-error,
+    .is-returned,
+    .is-rejected
+  ) {
+    border-color: color-mix(in srgb, var(--gorut-critical) 20%, var(--gorut-line));
+    background: var(--gorut-critical-soft);
+    color: var(--gorut-critical);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-status, .pjm-badge, .kordes-status, .gorut-documents-badge, .gorut-admin-badge, .gorut-reports-badge):is(
+    .is-info,
+    .is-new,
+    .is-processing,
+    .is-scheduled,
+    .is-collecting
+  ) {
+    border-color: color-mix(in srgb, var(--gorut-info) 18%, var(--gorut-line));
+    background: var(--gorut-info-soft);
+    color: var(--gorut-info);
+  }
+
+  .gorut-viewport :is(.gorut-munfiq-status, .pjm-badge, .kordes-status, .gorut-documents-badge, .gorut-admin-badge, .gorut-reports-badge):is(
+    .is-inactive,
+    .is-neutral,
+    .is-unavailable,
+    .is-draft
+  ) {
+    border-color: var(--gorut-line);
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-muted);
+  }
+
+  /* Footer controls and focused content remain inside their rounded surface. */
+  .gorut-viewport .gorut-collect-pagination {
+    min-height: 58px;
+    border-top: 1px solid var(--gorut-line);
+    background: var(--gorut-surface-raised);
+    padding: 11px 16px;
+  }
+
+  .gorut-viewport .gorut-pagination-buttons button {
+    min-height: 32px;
+    border: 1px solid var(--gorut-line);
+    border-radius: 8px;
+    background: var(--gorut-surface);
+    color: var(--gorut-ink);
+    font-size: 8.5px;
+  }
+
+  .gorut-viewport .gorut-pagination-buttons button:disabled {
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-subtle);
+    opacity: .7;
+  }
+
+  .gorut-viewport :is(.gorut-workspace, .gorut-main, .gorut-main > *, .gorut-munfiq-workspace, .gorut-collection-workspace) {
+    min-width: 0;
+  }
+}

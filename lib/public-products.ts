@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { DEFAULT_PUBLIC_PRODUCTS, PUBLIC_PRODUCTS_EVENT, type PublicProduct, type PublicProductId } from "@/lib/public-products-data"
 
-export { DEFAULT_PUBLIC_PRODUCTS, PUBLIC_PRODUCTS_EVENT, PUBLIC_PRODUCTS_STORAGE_KEY, type PublicProduct, type PublicProductCategory, type PublicProductId, type PublicProductStatus } from "@/lib/public-products-data"
+export { DEFAULT_PUBLIC_PRODUCTS, isValidPublicProductRoute, PUBLIC_PRODUCTS_EVENT, PUBLIC_PRODUCTS_STORAGE_KEY, type PublicProduct, type PublicProductCategory, type PublicProductId, type PublicProductStatus } from "@/lib/public-products-data"
 
 let publicProductsCache: PublicProduct[] = []
 

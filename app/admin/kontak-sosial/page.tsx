@@ -8,13 +8,13 @@ export default function KontakRetiredPage() {
   const router = useRouter()
 
   useEffect(() => {
-    router.replace("/member-area/konten/kontak")
+    router.replace("/dashboard/landing-page/pengaturan")
   }, [router])
 
   return (
     <DashboardLayout>
       <div className="flex h-[400px] items-center justify-center text-sm text-muted-foreground">
-        Mengalihkan ke Kontak & Footer Member Area...
+        Mengalihkan ke Pengaturan CMS Landing Page...
       </div>
     </DashboardLayout>
   )

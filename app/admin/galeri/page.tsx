@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
 export default function AdminGaleriPage() {
-  redirect("/member-area/konten/galeri")
+  redirect("/dashboard/landing-page/galeri")
 }

@@ -1,0 +1,456 @@
+/* Approval desktop presentation only.
+   Decisions stay disabled until source completeness and endpoints exist. */
+
+@media (min-width: 901px) {
+  .gorut-approval-workspace {
+    width: min(100%, 1480px);
+    max-width: 1480px;
+    min-width: 0;
+    gap: 14px !important;
+    margin-inline: auto;
+  }
+
+  .gorut-approval-workspace > * {
+    min-width: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .gorut-approval-workspace .gorut-admin-source-pill {
+    min-height: 34px;
+    border-radius: 9px;
+    background: var(--gorut-info-soft);
+    color: var(--gorut-info);
+  }
+
+  .gorut-approval-workspace .gorut-operation-summary {
+    gap: 12px;
+  }
+
+  .gorut-approval-workspace .gorut-operation-summary article {
+    min-height: 104px;
+    border-radius: 16px;
+    padding: 15px 16px;
+  }
+
+  .gorut-approval-workspace .gorut-operation-summary-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .gorut-approval-workspace .gorut-operation-summary strong {
+    font-size: clamp(22px, 1.65vw, 26px);
+  }
+
+  .gorut-approval-workspace .gorut-admin-filters {
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    gap: 12px;
+    overflow: hidden;
+    border-radius: 16px;
+    padding: 15px 16px;
+    backdrop-filter: none;
+  }
+
+  .gorut-approval-workspace .gorut-admin-filters > header {
+    align-items: flex-start;
+    gap: 16px;
+    border-bottom: 1px solid var(--gorut-line);
+    padding-bottom: 11px;
+  }
+
+  .gorut-approval-workspace .gorut-admin-filters > header h2 {
+    margin: 0;
+    color: var(--gorut-ink-strong);
+    font-size: 14px;
+    font-weight: 760;
+    line-height: 1.3;
+  }
+
+  .gorut-approval-workspace .gorut-admin-filters > header p {
+    margin: 4px 0 0;
+    color: var(--gorut-muted);
+    font-size: 9.5px;
+    line-height: 1.5;
+  }
+
+  .gorut-approval-workspace .gorut-admin-filter-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .gorut-approval-workspace .pjm-filter {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  .gorut-approval-workspace .pjm-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gorut-ink);
+    font-size: 9px;
+    font-weight: 720;
+    line-height: 1.35;
+  }
+
+  .gorut-approval-workspace .pjm-filter-label > svg {
+    flex: 0 0 14px;
+    color: var(--gorut-brand);
+  }
+
+  .gorut-approval-workspace .pjm-filter select {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    border: 1px solid var(--gorut-line-strong);
+    border-radius: 10px;
+    background-color: var(--gorut-surface-raised);
+    color: var(--gorut-ink);
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .gorut-approval-workspace .gorut-approval-disabled-filter select {
+    border-color: var(--gorut-line);
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-subtle);
+    opacity: 1;
+    cursor: not-allowed;
+  }
+
+  .gorut-approval-workspace .gorut-admin-filters > footer {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 14px;
+    margin-top: 0;
+    padding-top: 11px;
+  }
+
+  .gorut-approval-workspace .gorut-admin-filters > footer strong {
+    color: var(--gorut-ink-strong);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .gorut-approval-active-filters {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+  }
+
+  .gorut-approval-active-filters > div {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  .gorut-approval-active-filters button {
+    min-height: 27px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 22%, var(--gorut-line));
+    border-radius: 999px;
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand-hover);
+    padding-inline: 8px;
+    font-size: 8px;
+    font-weight: 700;
+  }
+
+  .gorut-approval-workspace .gorut-admin-note {
+    min-height: 46px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    border-color: color-mix(in srgb, var(--gorut-warning) 20%, var(--gorut-line));
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--gorut-warning-soft) 42%, var(--gorut-surface));
+    padding: 12px 13px;
+    color: var(--gorut-ink);
+    font-size: 9.5px;
+    line-height: 1.58;
+  }
+
+  .gorut-approval-workspace .gorut-admin-note > svg {
+    flex: 0 0 15px;
+    margin-top: 1px;
+    color: var(--gorut-warning);
+  }
+
+  .gorut-approval-workspace .gorut-admin-panel {
+    overflow: hidden;
+    border-radius: 16px;
+  }
+
+  .gorut-approval-workspace .gorut-admin-toolbar {
+    min-height: 68px;
+    gap: 12px;
+    padding: 12px 15px;
+  }
+
+  .gorut-approval-workspace .gorut-admin-toolbar .pjm-search {
+    width: clamp(280px, 36vw, 520px);
+    min-width: 220px;
+    height: 40px;
+    flex: 1 1 360px;
+  }
+
+  .gorut-approval-workspace .gorut-admin-toolbar .pjm-search input {
+    width: 100%;
+    min-width: 0;
+    background: transparent;
+  }
+
+  .gorut-approval-workspace .gorut-admin-readiness {
+    min-height: 40px;
+    border-color: var(--gorut-line);
+    background: var(--gorut-surface-sunken);
+    color: var(--gorut-muted);
+    user-select: none;
+  }
+
+  .gorut-approval-workspace .gorut-admin-readiness > svg {
+    color: var(--gorut-muted);
+  }
+
+  .gorut-approval-workspace .gorut-admin-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(62vh, 660px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--gorut-line-strong) transparent;
+  }
+
+  .gorut-approval-workspace .gorut-admin-table {
+    min-width: 1200px;
+  }
+
+  .gorut-approval-workspace .gorut-admin-table thead th {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    height: 44px;
+    background: var(--gorut-surface-sunken);
+  }
+
+  .gorut-approval-workspace .gorut-admin-table tbody td {
+    height: 72px;
+    padding-block: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .gorut-approval-workspace .gorut-admin-table td.is-amount {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .gorut-approval-completeness {
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid color-mix(in srgb, var(--gorut-warning) 22%, var(--gorut-line));
+    border-radius: 999px;
+    background: var(--gorut-warning-soft);
+    color: var(--gorut-warning);
+    padding: 4px 8px;
+    font-size: 8px;
+    font-weight: 720;
+    white-space: nowrap;
+  }
+
+  .gorut-approval-workspace .gorut-operation-state {
+    min-height: 236px;
+    padding: 30px 24px;
+  }
+
+  .gorut-approval-workspace .gorut-operation-state > svg {
+    width: 42px;
+    height: 42px;
+    border: 1px solid color-mix(in srgb, var(--gorut-brand) 18%, var(--gorut-line));
+    border-radius: 12px;
+    background: var(--gorut-brand-soft);
+    color: var(--gorut-brand);
+    padding: 10px;
+  }
+
+  .gorut-approval-workspace .gorut-operation-state.is-error > svg {
+    border-color: color-mix(in srgb, var(--gorut-critical) 20%, var(--gorut-line));
+    background: var(--gorut-critical-soft);
+    color: var(--gorut-critical);
+  }
+
+  .gorut-approval-workspace :is(button, input, select):focus-visible,
+  .gorut-viewport:has(.gorut-approval-workspace) .gorut-admin-dialog button:focus-visible {
+    outline: 2px solid var(--gorut-focus);
+    outline-offset: 2px;
+  }
+
+  .gorut-approval-workspace :is(button, input, select):disabled,
+  .gorut-viewport:has(.gorut-approval-workspace) .gorut-admin-dialog button:disabled {
+    border-color: var(--gorut-line) !important;
+    background: var(--gorut-surface-sunken) !important;
+    color: var(--gorut-subtle) !important;
+    box-shadow: none !important;
+    opacity: 1;
+    cursor: not-allowed;
+  }
+
+  .gorut-viewport:has(.gorut-approval-workspace) .gorut-admin-modal-backdrop {
+    z-index: 130;
+    padding: 24px;
+    background: rgb(16 42 31 / 48%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .gorut-viewport:has(.gorut-approval-workspace) .gorut-admin-dialog {
+    width: min(720px, calc(100vw - 48px));
+    max-height: min(84vh, 820px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    border-color: var(--gorut-line-strong);
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgb(16 42 31 / 20%);
+  }
+
+  .gorut-viewport:has(.gorut-approval-workspace) .gorut-admin-dialog > header {
+    position: sticky;
+    z-index: 3;
+    top: 0;
+    background: var(--gorut-surface);
+  }
+
+  .gorut-viewport:has(.gorut-approval-workspace) .gorut-admin-dialog > footer {
+    position: sticky;
+    z-index: 3;
+    bottom: 0;
+    align-items: center;
+    background: var(--gorut-surface-raised);
+  }
+
+  .gorut-approval-data-gap {
+    margin: 0 22px 16px;
+    border: 1px solid color-mix(in srgb, var(--gorut-warning) 20%, var(--gorut-line));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--gorut-warning-soft) 42%, var(--gorut-surface));
+    padding: 13px;
+  }
+
+  .gorut-approval-data-gap h3 {
+    margin: 0;
+    color: var(--gorut-ink-strong);
+    font-size: 11px;
+    font-weight: 760;
+  }
+
+  .gorut-approval-data-gap > div > p {
+    margin: 4px 0 0;
+    color: var(--gorut-muted);
+    font-size: 9px;
+    line-height: 1.5;
+  }
+
+  .gorut-approval-data-gap ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+    margin: 11px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .gorut-approval-data-gap li {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--gorut-warning) 12%, var(--gorut-line));
+    padding: 8px 0;
+    font-size: 9px;
+  }
+
+  .gorut-approval-data-gap li span {
+    color: var(--gorut-muted);
+  }
+
+  .gorut-approval-data-gap li strong {
+    color: var(--gorut-ink);
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .gorut-approval-data-gap li strong.is-available {
+    color: var(--gorut-positive);
+  }
+
+  .gorut-approval-gap-reason {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 4px 0 0;
+    border-top: 1px solid color-mix(in srgb, var(--gorut-warning) 16%, var(--gorut-line));
+    padding-top: 10px;
+    color: var(--gorut-ink);
+    font-size: 9px;
+    line-height: 1.55;
+  }
+
+  .gorut-approval-gap-reason > svg {
+    flex: 0 0 14px;
+    margin-top: 1px;
+    color: var(--gorut-warning);
+  }
+
+  .gorut-approval-disabled-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .gorut-approval-workspace .gorut-admin-table tbody tr:hover td {
+      background: color-mix(in srgb, var(--gorut-brand-soft) 32%, var(--gorut-surface));
+    }
+
+    .gorut-approval-workspace .gorut-admin-detail-button:hover {
+      border-color: color-mix(in srgb, var(--gorut-brand) 30%, var(--gorut-line));
+      background: var(--gorut-brand-soft);
+      color: var(--gorut-brand-hover);
+    }
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1260px) {
+  .gorut-approval-workspace .gorut-admin-filter-grid,
+  .gorut-approval-workspace .gorut-operation-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gorut-approval-workspace .gorut-admin-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gorut-approval-workspace .gorut-admin-toolbar .pjm-search,
+  .gorut-approval-workspace .gorut-admin-toolbar-actions {
+    width: 100%;
+  }
+}

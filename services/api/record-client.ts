@@ -1,6 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { actorGeneration, runActorRequest, subscribeActorSession } from "./actor-session"
+
+export class RecordRequestError extends Error {
+  constructor(readonly status: number, readonly endpoint: string, message: string) {
+    super(message)
+    this.name = "RecordRequestError"
+  }
+}
 
 export interface RecordClientOptions<T> {
   scope: string
@@ -13,23 +21,28 @@ export interface SingletonClientOptions<T> {
   scope: string
   defaultValue: T
   eventName: string
+  publicRead?: boolean
 }
 
-async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit) {
-  const response = await fetch(input, {
-    credentials: "include",
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  })
+async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit, actorScoped = true) {
+  const request = async (signal?: AbortSignal) => {
+    const response = await fetch(input, {
+      credentials: "include",
+      ...init,
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+    })
 
-  if (!response.ok) {
-    throw new Error(await response.text())
+    if (!response.ok) {
+      throw new RecordRequestError(response.status, String(input), await response.text())
+    }
+
+    return (await response.json()) as T
   }
-
-  return (await response.json()) as T
+  return actorScoped ? runActorRequest(request, init?.signal) : request(init?.signal ?? undefined)
 }
 
 function dispatchItemsEvent<T>(eventName: string, items: T[]) {
@@ -39,8 +52,13 @@ function dispatchItemsEvent<T>(eventName: string, items: T[]) {
 
 export function createCollectionClient<T extends { id: string }>(options: RecordClientOptions<T>) {
   let cache = options.defaultItems
+  subscribeActorSession(() => {
+    cache = []
+    dispatchItemsEvent(options.eventName, cache)
+  })
 
   async function persistItems(items: T[]) {
+    const owner = actorGeneration()
     const nextItems = options.sort ? options.sort(items) : items
     const nextIds = new Set(nextItems.map((item) => item.id))
 
@@ -65,8 +83,10 @@ export function createCollectionClient<T extends { id: string }>(options: Record
 
       return cache
     } catch (error) {
-      cache = previousCache
-      dispatchItemsEvent(options.eventName, cache)
+      if (owner === actorGeneration()) {
+        cache = previousCache
+        dispatchItemsEvent(options.eventName, cache)
+      }
       throw error
     }
   }
@@ -78,12 +98,15 @@ export function createCollectionClient<T extends { id: string }>(options: Record
 
       if (cache.length === 0 && options.defaultItems.length > 0) {
         cache = options.defaultItems
-        void persistItems(options.defaultItems)
       }
 
       dispatchItemsEvent(options.eventName, cache)
       return cache
-    } catch {
+    } catch (error) {
+      if (error instanceof RecordRequestError && [401, 403].includes(error.status)) {
+        cache = []
+        dispatchItemsEvent(options.eventName, cache)
+      }
       return cache
     }
   }
@@ -170,17 +193,24 @@ export function createCollectionClient<T extends { id: string }>(options: Record
 
 export function createSingletonClient<T>(options: SingletonClientOptions<T>) {
   let cache = options.defaultValue
+  subscribeActorSession(() => {
+    // Public site configuration does not belong to an actor. Its writes still do.
+    if (options.publicRead) return
+    cache = options.defaultValue
+    dispatchItemsEvent(options.eventName, [cache])
+  })
 
   async function readValue() {
     try {
-      const payload = await requestJson<{ records: Array<{ data: T }> }>(`/api/records/${options.scope}`)
+      const payload = await requestJson<{ records: Array<{ data: T }> }>(`/api/records/${options.scope}`, undefined, !options.publicRead)
       cache = payload.records[0]?.data ?? options.defaultValue
-      if (payload.records.length === 0) {
-        void writeValue(options.defaultValue)
-      }
       dispatchItemsEvent(options.eventName, [cache])
       return cache
-    } catch {
+    } catch (error) {
+      if (error instanceof RecordRequestError && [401, 403].includes(error.status)) {
+        cache = options.defaultValue
+        dispatchItemsEvent(options.eventName, [cache])
+      }
       return cache
     }
   }

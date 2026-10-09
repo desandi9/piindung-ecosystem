@@ -1,0 +1,280 @@
+{
+  "startedAt": "2026-09-14T08:36:39.626Z",
+  "marker": "QA-PC-FINAL-PROOF-1789374999626",
+  "project": "prj_ndtzHGjeAHNXT5w1d2de4GKztRr1",
+  "branch": "feature/gorut-ui-redesign",
+  "deployment": "dpl_7iNpj798iPoQmr6LGyXYqd6L6EGR",
+  "base": "https://piindung-ecosystem-8cgt-7k3lxvrcp-dsndihrdynsh-4735s-projects.vercel.app",
+  "provisionalFlag": true,
+  "authAccess": true,
+  "finalApproveHttp": true,
+  "finalState": "FINAL_APPROVED",
+  "exactlyOneFinalEvent": true,
+  "replayIdempotent": true,
+  "evidenceUnchanged": true,
+  "existingDataPreserved": true,
+  "fixtureCleaned": true,
+  "authMethod": "Official QA fixture account and existing application session signer; /api/auth/me verification",
+  "http": [
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/api/gorut/packages/GORUT-QA-PC-FINAL-PROOF-1789374999626-202609/settlements",
+      "method": "POST",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/api/gorut/packages/GORUT-QA-PC-FINAL-PROOF-1789374999626-202609/validations",
+      "method": "POST",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/api/gorut/packages/GORUT-QA-PC-FINAL-PROOF-1789374999626-202609",
+      "method": "GET",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/api/gorut/packages/GORUT-QA-PC-FINAL-PROOF-1789374999626-202609/transition",
+      "method": "POST",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/api/gorut/packages/GORUT-QA-PC-FINAL-PROOF-1789374999626-202609/transition",
+      "method": "POST",
+      "status": 200,
+      "code": null
+    },
+    {
+      "path": "/api/gorut/packages/GORUT-QA-PC-FINAL-PROOF-1789374999626-202609",
+      "method": "GET",
+      "status": 200,
+      "code": null
+    }
+  ],
+  "mainPackageBefore": {
+    "state": "WAITING_PC_APPROVAL",
+    "version": 5,
+    "revision": 4,
+    "sha256": "33046f8f11f0f7a92c4750bc2f6e4bef010f090912003b28118c190ee3470589"
+  },
+  "packageCode": "GORUT-QA-PC-FINAL-PROOF-1789374999626-202609",
+  "validationResult": "MATCHED",
+  "versions": {
+    "beforeApprove": 5,
+    "afterApprove": 6
+  },
+  "finalEventCount": 1,
+  "eventCountBefore": 2,
+  "eventCountAfter": 3,
+  "settlementDigest": "2f7be9bfc48cdf203408fdaab34546f4b44be4e8ee9eaeae99630acbd10a6df3",
+  "validationDigest": "b8929f6b90220b4383a957e04996f8c507835b4c07ff44cddba1d9fc92f3709a",
+  "finalReadModel": {
+    "currentState": "FINAL_APPROVED",
+    "approved": true,
+    "availableActions": []
+  },
+  "changedModels": [],
+  "mainPackageAfter": {
+    "state": "WAITING_PC_APPROVAL",
+    "version": 5,
+    "revision": 4,
+    "sha256": "33046f8f11f0f7a92c4750bc2f6e4bef010f090912003b28118c190ee3470589"
+  },
+  "finishedAt": "2026-09-14T08:39:27.856Z",
+  "safeToResumeMunfiqUat": true,
+  "temporaryCredentialsRemoved": true,
+  "credentialFilesRemovedAtCompletion": [
+    "staging.env"
+  ],
+  "flagProof": {
+    "source": "lib/gorut-provisional-plpk-fee-policy.ts:24",
+    "allowedDeploymentEnvironments": [
+      "UAT",
+      "STAGING"
+    ],
+    "enableFlag": "GORUT_ENABLE_PROVISIONAL_FEE_POLICY",
+    "requiredEnableValue": "true",
+    "productionOverrideGuard": "VERCEL_ENV=production always blocks",
+    "previewEnvPulledForBranch": "feature/gorut-ui-redesign",
+    "secretFlagValuesReadable": false,
+    "deployedPolicyVerifiedBySuccessfulHttp": true
+  },
+  "deployedTarget": {
+    "id": "dpl_7iNpj798iPoQmr6LGyXYqd6L6EGR",
+    "state": "READY",
+    "target": null,
+    "branch": "feature/gorut-ui-redesign"
+  },
+  "baselineDigests": {
+    "User": {
+      "count": 17,
+      "sha256": "8b9fa4980f085e40e20a889cb343bdf09f5d35cef7d562e8df8641fbb08c70fc"
+    },
+    "GorutKecamatan": {
+      "count": 1,
+      "sha256": "eb75a2951a797c933e4c7a7dbf5487ab7c8597d6a025c1d3f44b9707f20c2d5a"
+    },
+    "GorutRanting": {
+      "count": 3,
+      "sha256": "a48eeb2afefcab88455be2888c229e94ec4591998925e8270af0d66552b78347"
+    },
+    "GorutPlpk": {
+      "count": 4,
+      "sha256": "143152a1442be8961c0adb2c9ea38eb087dc8fb0ab77b437c1b3efa1e2f5a427"
+    },
+    "GorutOperationalAssignment": {
+      "count": 10,
+      "sha256": "3d3c28a91c8bf0dab2160812631fddaeab3dc42c4a8c86ef57e996819d66581c"
+    },
+    "GorutMunfiq": {
+      "count": 12,
+      "sha256": "9ed53c795368c39dc13460164d406821d829dc1a2e7cbc78bb52128382ec979b"
+    },
+    "GorutMunfiqAccountLink": {
+      "count": 1,
+      "sha256": "c5bc9e47a958717ca6cd0cb7a94aefd5b73f6401347190592ca778746ee34e1e"
+    },
+    "GorutTransaction": {
+      "count": 3,
+      "sha256": "3bb8ed60125bab5e80cd9d7313d802aff62b3b002680d4892c57d9961f5e9c66"
+    },
+    "GorutCollectionBatch": {
+      "count": 3,
+      "sha256": "6b5df8e5c173f7b2ffed04256a22cc0744f3d8e04712d0642316b6d4cdfca4fb"
+    },
+    "GorutCollectionEntry": {
+      "count": 9,
+      "sha256": "3bfdffa8cf9d067be1104eabdcd846b27f6fecc55bafe3df3681101580629312"
+    },
+    "GorutCollectionRevision": {
+      "count": 21,
+      "sha256": "e423e73df13634683974b919ae53f462f6b352d09f4c2341c62e885db8372469"
+    },
+    "GorutCollectionCorrection": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "GorutUpzisPackage": {
+      "count": 1,
+      "sha256": "c9b702649a3fd796cb3645797a24899fdf7b95fbaab6a96ea97105f9cf956609"
+    },
+    "GorutPackageSettlementEvidence": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "GorutPackageSettlementValidation": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "GorutUpzisPackageTransaction": {
+      "count": 3,
+      "sha256": "af626715fd51973ca97bceaaabaeb094a4b12b6944c2231a023bbdb2cdf430a1"
+    },
+    "GorutUpzisPackageRantingCoverage": {
+      "count": 3,
+      "sha256": "c50332b343d7664b7549834e9a5fcada3a62c59de9c5a689ed247dcb2a37e1e9"
+    },
+    "GorutTransactionItem": {
+      "count": 9,
+      "sha256": "3a8d64162b41a90244c7f329f1b41c2f3509dda1e39b1900ade64bb82b70bc63"
+    },
+    "GorutWorkflowEvent": {
+      "count": 2,
+      "sha256": "79eeeae4b877b00d0a08c04479744fcfa1387efeda4b1e5e5d9c6777606e90ca"
+    },
+    "GorutPackageCorrection": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "afterCleanupDigests": {
+    "User": {
+      "count": 17,
+      "sha256": "8b9fa4980f085e40e20a889cb343bdf09f5d35cef7d562e8df8641fbb08c70fc"
+    },
+    "GorutKecamatan": {
+      "count": 1,
+      "sha256": "eb75a2951a797c933e4c7a7dbf5487ab7c8597d6a025c1d3f44b9707f20c2d5a"
+    },
+    "GorutRanting": {
+      "count": 3,
+      "sha256": "a48eeb2afefcab88455be2888c229e94ec4591998925e8270af0d66552b78347"
+    },
+    "GorutPlpk": {
+      "count": 4,
+      "sha256": "143152a1442be8961c0adb2c9ea38eb087dc8fb0ab77b437c1b3efa1e2f5a427"
+    },
+    "GorutOperationalAssignment": {
+      "count": 10,
+      "sha256": "3d3c28a91c8bf0dab2160812631fddaeab3dc42c4a8c86ef57e996819d66581c"
+    },
+    "GorutMunfiq": {
+      "count": 12,
+      "sha256": "9ed53c795368c39dc13460164d406821d829dc1a2e7cbc78bb52128382ec979b"
+    },
+    "GorutMunfiqAccountLink": {
+      "count": 1,
+      "sha256": "c5bc9e47a958717ca6cd0cb7a94aefd5b73f6401347190592ca778746ee34e1e"
+    },
+    "GorutTransaction": {
+      "count": 3,
+      "sha256": "3bb8ed60125bab5e80cd9d7313d802aff62b3b002680d4892c57d9961f5e9c66"
+    },
+    "GorutCollectionBatch": {
+      "count": 3,
+      "sha256": "6b5df8e5c173f7b2ffed04256a22cc0744f3d8e04712d0642316b6d4cdfca4fb"
+    },
+    "GorutCollectionEntry": {
+      "count": 9,
+      "sha256": "3bfdffa8cf9d067be1104eabdcd846b27f6fecc55bafe3df3681101580629312"
+    },
+    "GorutCollectionRevision": {
+      "count": 21,
+      "sha256": "e423e73df13634683974b919ae53f462f6b352d09f4c2341c62e885db8372469"
+    },
+    "GorutCollectionCorrection": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "GorutUpzisPackage": {
+      "count": 1,
+      "sha256": "c9b702649a3fd796cb3645797a24899fdf7b95fbaab6a96ea97105f9cf956609"
+    },
+    "GorutPackageSettlementEvidence": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "GorutPackageSettlementValidation": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "GorutUpzisPackageTransaction": {
+      "count": 3,
+      "sha256": "af626715fd51973ca97bceaaabaeb094a4b12b6944c2231a023bbdb2cdf430a1"
+    },
+    "GorutUpzisPackageRantingCoverage": {
+      "count": 3,
+      "sha256": "c50332b343d7664b7549834e9a5fcada3a62c59de9c5a689ed247dcb2a37e1e9"
+    },
+    "GorutTransactionItem": {
+      "count": 9,
+      "sha256": "3a8d64162b41a90244c7f329f1b41c2f3509dda1e39b1900ade64bb82b70bc63"
+    },
+    "GorutWorkflowEvent": {
+      "count": 2,
+      "sha256": "79eeeae4b877b00d0a08c04479744fcfa1387efeda4b1e5e5d9c6777606e90ca"
+    },
+    "GorutPackageCorrection": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  }
+}

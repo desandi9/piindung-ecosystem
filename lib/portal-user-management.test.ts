@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { canManagePortalUsers, isAppRole, isUserStatus, normalizeEmail, classifyDuplicateEmail, canChangeCentralUser, serializeManagedUser } from "./portal-user-management"
+import { canManagePortalUsers, isAppRole, isUserStatus, normalizeEmail, classifyDuplicateEmail, canChangeCentralUser } from "./portal-user-management"
 import { validateUserPayload, serializeUserListItem, serializeUserDetail, validateModules } from "./portal-user-management-server"
 import { hasEffectiveModuleEntry } from "./portal-access"
 
@@ -15,6 +15,7 @@ void test("portal-user-management: validator values allowlist checks", () => {
   assert.equal(isAppRole("admin_pc"), true)
   assert.equal(isAppRole("admin_upzis"), true)
   assert.equal(isAppRole("admin_kordes"), true)
+  assert.equal(isAppRole("munfiq"), true)
   assert.equal(isAppRole("unknown_role"), false)
   assert.equal(isAppRole(null), false)
 
@@ -102,6 +103,7 @@ void test("portal-user-management: validator validations", () => {
   assert.equal(typeof validateUserPayload({ name: "Ahmad", email: "ahmad@test.com", role: "admin_pc", status: "Aktif", phone: "123", password: "password123", extra: "unsupported" }), "string")
   // Valid payload
   assert.equal(validateUserPayload({ name: "Ahmad", email: "ahmad@test.com", role: "admin_pc", status: "Aktif", phone: "081234567890", password: "password123" }), null)
+  assert.equal(validateUserPayload({ name: "Munfiq", email: "munfiq@test.com", role: "munfiq", status: "Aktif", phone: "081234567891", password: "password123" }), null)
 })
 
 void test("portal-user-management: module grant rules", () => {

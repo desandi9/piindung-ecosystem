@@ -1,6 +1,5 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { canAccessMemberAreaRoute } from "./portal-access"
 import { canonicalOrigin, generateMemberId, isMemberId, normalizeMemberId, preservesMemberId, publicStatus, serializePublicMember, verificationPath, verificationUrl } from "./member-identity"
 
 void test("member-identity: generated ID uses only the allowed alphabet", () => {
@@ -70,12 +69,6 @@ void test("member-identity: active, pending, and inactive wording are distinct",
   assert.deepEqual(publicStatus("Nonaktif"), { label: "Akun tidak aktif", result: "Identitas terdaftar", active: false })
 })
 
-void test("member-identity: Member Area identity route is available to every active AppRole", () => {
-  for (const role of ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes"]) {
-    assert.equal(canAccessMemberAreaRoute(role, "/member-area/identitas"), true)
-  }
-  assert.equal(canAccessMemberAreaRoute("unknown_role", "/member-area/identitas"), false)
-})
 
 void test("member-identity: member ID remains immutable across role/status changes", () => {
   assert.equal(preservesMemberId("PID-23456789ABCD", "admin_upzis", "Nonaktif"), "PID-23456789ABCD")

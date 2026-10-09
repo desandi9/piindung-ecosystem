@@ -1,6 +1,6 @@
 export type PublicProductCategory = "Tata Kelola" | "Penghimpunan" | "Penyaluran & Pelayanan" | "Informasi & Media" | "Layanan Kesehatan" | "Dokumentasi & Arsip"
 export type PublicProductStatus = "Aktif" | "Segera Hadir"
-export type PublicProductId = "gorut" | "etasyaruf" | "mobisnu" | "arsip" | "lazisnu-pos"
+export type PublicProductId = "gorut" | "etasyaruf" | "mobisnu" | "arsip" | "lazisnu-pos" | (string & {})
 
 export interface PublicProduct {
   id: PublicProductId
@@ -14,6 +14,38 @@ export interface PublicProduct {
   visible: boolean
   featured: boolean
   position: number
+}
+
+const SAFE_PRODUCT_ID = /^[a-z0-9][a-z0-9-]{0,79}$/
+
+export function normalizePublicProductId(name: string) {
+  const id = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  return SAFE_PRODUCT_ID.test(id) ? id : null
+}
+
+export function isValidPublicProductRoute(href: unknown) {
+  if (href === "" || href === null || href === undefined) return true
+  if (typeof href !== "string") return false
+  const trimmed = href.trim()
+  if (trimmed === "") return true
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("..") && !trimmed.includes("\\")) return true
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === "http:" || url.protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
+export function createPublicProduct(input: Omit<PublicProduct, "id">) {
+  const id = normalizePublicProductId(input.name)
+  if (!id) return null
+  return { ...input, id, name: input.name.trim(), shortName: input.shortName.trim(), description: input.description.trim(), iconUrl: input.iconUrl.trim(), publicHref: input.publicHref.trim() }
 }
 
 export const PUBLIC_PRODUCTS_STORAGE_KEY = "piindung-public-products"

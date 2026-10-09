@@ -1,29 +1,36 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import Link from "next/link"
 import { motion, useReducedMotion, type Variants } from "motion/react"
 import {
   ArrowLeft,
+  Camera,
   Fingerprint,
   IdCard,
   KeyRound,
+  Loader2,
   Mail,
   MapPin,
   Phone,
   Save,
   ShieldCheck,
+  Trash2,
   UserRound,
 } from "lucide-react"
 import { Navbar } from "@/components/piindung/navbar"
 import { SimpleFooter } from "@/components/piindung/simple-footer"
-import { Button } from "@/components/ui/button"
+import { AvatarCropper } from "@/components/piindung/avatar-cropper"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { motionEase } from "@/lib/motion"
 import type { AccountProfile } from "@/lib/account-profile"
+
+const ACCEPTED_AVATAR_TYPES = ["image/jpeg", "image/jpg", "image/png"]
+const MAX_AVATAR_SIZE = 10 * 1024 * 1024
 
 function useReveal(delay = 0): Variants {
   const reduced = useReducedMotion()
@@ -50,6 +57,10 @@ export default function PengaturanProfilPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [changing, setChanging] = useState(false)
+  const [avatarBusy, setAvatarBusy] = useState(false)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [cropperOpen, setCropperOpen] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
 
@@ -91,6 +102,80 @@ export default function PengaturanProfilPage() {
       setError(cause instanceof Error ? cause.message : "Profil gagal disimpan.")
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function persistAvatar(avatar: string | null, successMessage: string) {
+    const response = await fetch("/api/account/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ avatar }),
+    })
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error)
+    setProfile(data.profile)
+    setMessage(successMessage)
+  }
+
+  function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (avatarInputRef.current) avatarInputRef.current.value = ""
+    if (!file) return
+    setError("")
+    setMessage("")
+    if (!ACCEPTED_AVATAR_TYPES.includes(file.type)) {
+      setError("Foto harus berupa JPG, JPEG, atau PNG.")
+      return
+    }
+    if (file.size > MAX_AVATAR_SIZE) {
+      setError("Ukuran foto maksimal 10MB.")
+      return
+    }
+    setPendingFile(file)
+    setCropperOpen(true)
+  }
+
+  function closeCropper() {
+    setCropperOpen(false)
+    setPendingFile(null)
+  }
+
+  async function uploadAvatar(file: File) {
+    setAvatarBusy(true)
+    setError("")
+    setMessage("")
+    try {
+      if (!ACCEPTED_AVATAR_TYPES.includes(file.type)) throw new Error("Foto harus berupa JPG, JPEG, atau PNG.")
+      if (file.size > MAX_AVATAR_SIZE) throw new Error("Ukuran foto maksimal 10MB.")
+
+      const body = new FormData()
+      body.set("file", file)
+      body.set("folder", "avatar")
+      if (profile?.avatar) body.set("previousUrl", profile.avatar)
+
+      const upload = await fetch("/api/upload/image", { method: "POST", body })
+      const uploaded = await upload.json()
+      if (!upload.ok || typeof uploaded.url !== "string") throw new Error(uploaded.error ?? "Foto gagal diunggah.")
+
+      await persistAvatar(uploaded.url, "Foto profil berhasil diperbarui.")
+      closeCropper()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Foto gagal diunggah.")
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
+
+  async function removeAvatar() {
+    setAvatarBusy(true)
+    setError("")
+    setMessage("")
+    try {
+      await persistAvatar(null, "Foto profil berhasil dihapus.")
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Foto gagal dihapus.")
+    } finally {
+      setAvatarBusy(false)
     }
   }
 
@@ -175,15 +260,58 @@ export default function PengaturanProfilPage() {
                 description="Perbarui nama, email, dan nomor HP Anda."
               />
 
-              <div className="mt-6 flex items-center gap-4 rounded-2xl border border-[#dce8e2]/70 bg-[#f8fbf9]/70 p-4 dark:border-white/10 dark:bg-white/5">
-                <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#08213b] to-[#07965d] text-xl font-bold text-white shadow-md">
-                  {initials}
-                </span>
-                <div className="min-w-0">
-                  <p className="font-semibold text-[#08213b] dark:text-white">Avatar</p>
+              <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-[#dce8e2]/70 bg-[#f8fbf9]/70 p-4 dark:border-white/10 dark:bg-white/5 sm:flex-row sm:items-center">
+                {profile.avatar ? (
+                  <Image
+                    src={profile.avatar}
+                    alt={`Foto profil ${profile.name}`}
+                    width={64}
+                    height={64}
+                    className="h-16 w-16 shrink-0 rounded-2xl object-cover shadow-md"
+                  />
+                ) : (
+                  <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#08213b] to-[#07965d] text-xl font-bold text-white shadow-md">
+                    {initials}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-[#08213b] dark:text-white">Foto Profil</p>
                   <p className="mt-0.5 text-sm leading-6 text-[#6c7a89] dark:text-slate-400">
-                    Unggah avatar ditunda hingga tersedia mekanisme terkelola yang aman.
+                    Format JPG atau PNG, maksimal 10MB. Anda bisa menyesuaikan posisi dan ukurannya sebelum disimpan.
                   </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={avatarBusy}
+                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#07965d] to-[#0bbf78] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(7,150,93,0.24)] transition-all duration-300 hover:shadow-[0_12px_26px_rgba(7,150,93,0.36)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-[#07131f]"
+                    >
+                      <Camera className="h-4 w-4" aria-hidden="true" />
+                      {profile.avatar ? "Ganti Foto" : "Unggah Foto"}
+                    </button>
+                    {profile.avatar ? (
+                      <button
+                        type="button"
+                        onClick={() => void removeAvatar()}
+                        disabled={avatarBusy}
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#dce8e2] bg-white px-4 text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-red-300 dark:hover:bg-red-500/10 dark:focus-visible:ring-offset-[#07131f]"
+                      >
+                        {avatarBusy ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        Hapus
+                      </button>
+                    ) : null}
+                  </div>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    className="sr-only"
+                    onChange={handleFileSelect}
+                  />
                 </div>
               </div>
 
@@ -255,7 +383,7 @@ export default function PengaturanProfilPage() {
                   {profile.memberId}
                 </div>
                 <Link
-                  href="/member-area/identitas"
+                  href="/profil/identitas"
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#dce8e2] bg-white px-5 text-sm font-semibold text-[#08213b] shadow-sm transition hover:border-[#07965d]/40 hover:bg-[#e7f7ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-emerald-500/10"
                 >
                   <IdCard className="h-4 w-4" aria-hidden="true" />
@@ -319,6 +447,13 @@ export default function PengaturanProfilPage() {
         ) : null}
       </main>
       <SimpleFooter />
+      <AvatarCropper
+        file={pendingFile}
+        open={cropperOpen}
+        busy={avatarBusy}
+        onCancel={closeCropper}
+        onConfirm={(cropped) => void uploadAvatar(cropped)}
+      />
     </div>
   )
 }

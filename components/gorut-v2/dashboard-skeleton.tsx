@@ -1,0 +1,1 @@
+export function DashboardSkeleton(){return <div className="gorut-skeleton" aria-label="Memuat dashboard"><aside><i/><i/><i/><i/><i/></aside><div><header/><section/><main><div className="sk-kpis">{[1,2,3,4].map(x=><i key={x}/>)}</div><div className="sk-main"><i/><i/></div><div className="sk-bottom"><i/><i/><i/></div></main></div></div>}
