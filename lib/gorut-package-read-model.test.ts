@@ -3,6 +3,9 @@ import test from "node:test"
 // @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
 import { packageReadScopeWhere, packageStates, parsePackagePeriod, parsePackageState, serializePackageDetail, type PackageDetailSource } from "./gorut-package-read-model.ts"
 import type { GorutOperationalContext } from "./gorut/server-pure.ts"
+import type { PrismaClient } from "@prisma/client"
+// @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
+import { getGorutPackageDetail } from "./gorut-package-server.ts"
 
 const context = (operationalRole: GorutOperationalContext["operationalRole"], kecamatanId: string | null = null): GorutOperationalContext => ({
   userId: "user-1",
@@ -88,6 +91,56 @@ test("package period parser accepts only canonical year-month values", () => {
   assert.equal(period?.end.toISOString(), "2026-09-01T00:00:00.000Z")
   assert.equal(parsePackagePeriod("2026-13"), null)
   assert.equal(parsePackagePeriod("2026-8"), null)
+})
+
+test("missing coverage is derived from active server Rantings in the package Kecamatan", () => {
+  const fixture = source()
+  fixture.rantingCoverages = [fixture.rantingCoverages[0]!]
+  fixture.kecamatan = { ...fixture.kecamatan, rantings: [
+    { id: "ranting-1", kecamatanId: "kecamatan-1", code: "RAN-001", name: "Sukamentri", isActive: true },
+    { id: "ranting-2", kecamatanId: "kecamatan-1", code: "RAN-002", name: "Pakuwon", isActive: true },
+    { id: "ranting-3", kecamatanId: "kecamatan-1", code: "RAN-003", name: "Ciwalen", isActive: true },
+    { id: "inactive", kecamatanId: "kecamatan-1", code: "RAN-004", name: "Tidak aktif", isActive: false },
+    { id: "outside", kecamatanId: "kecamatan-2", code: "RAN-005", name: "Di luar scope", isActive: true },
+  ] }
+  const detail = serializePackageDetail(fixture)
+  assert.deepEqual(detail.coverage.missingActiveRantings, [
+    { code: "RAN-002", name: "Pakuwon" },
+    { code: "RAN-003", name: "Ciwalen" },
+  ])
+  assert.equal(detail.coverage.included, 1)
+  assert.equal(detail.coverage.rantings[0]?.ranting?.code, "RAN-001")
+})
+
+test("existing included, excluded, and unresolved coverage is never returned as missing", () => {
+  const fixture = source()
+  fixture.rantingCoverages[2]!.ranting = { id: "ranting-3", kecamatanId: "kecamatan-1", code: "RAN-003", name: "Ciwalen" }
+  fixture.kecamatan = { ...fixture.kecamatan, rantings: [
+    { id: "ranting-1", kecamatanId: "kecamatan-1", code: "RAN-001", name: "Sukamentri", isActive: true },
+    { id: "ranting-2", kecamatanId: "kecamatan-1", code: "RAN-002", name: "Pakuwon", isActive: true },
+    { id: "ranting-3", kecamatanId: "kecamatan-1", code: "RAN-003", name: "Ciwalen", isActive: true },
+  ] }
+  assert.deepEqual(serializePackageDetail(fixture).coverage.missingActiveRantings, [])
+  assert.deepEqual(serializePackageDetail(source()).coverage.missingActiveRantings, [])
+})
+
+test("detail query reads active Rantings through the authoritative package Kecamatan and exposes server role", async () => {
+  const fixture = source()
+  let query: unknown
+  const unavailable = { gorutUpzisPackage: { findUnique: async () => null } }
+  const prisma = {
+    gorutUpzisPackage: {
+      findFirst: async (input: unknown) => { query = input; return fixture },
+      findUnique: async () => null,
+    },
+    $transaction: async (callback: (tx: typeof unavailable) => Promise<unknown>) => callback(unavailable),
+  } as unknown as PrismaClient
+  const result = await getGorutPackageDetail(prisma, context("UPZIS", "kecamatan-1"), fixture.packageCode)
+  const select = query as { where: unknown; select: { kecamatan: { select: { rantings?: { where: unknown; select: unknown } } } } }
+  assert.deepEqual(select.where, { kecamatanId: "kecamatan-1", packageCode: fixture.packageCode })
+  assert.deepEqual(select.select.kecamatan.select.rantings?.where, { isActive: true })
+  assert.equal(result?.workflow.operationalRole, "UPZIS")
+  assert.deepEqual(result?.workflow.availableActions, [])
 })
 
 test("canonical detail preserves decimal strings, recorded semantics, coverage facts, and disabled actions", () => {

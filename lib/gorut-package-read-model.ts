@@ -185,7 +185,7 @@ export type PackageSummarySource = {
   rosterFrozenAt?: Date | null
   rosterSourceHash?: string | null
   rosterFrozenBy?: { name: string } | null
-  kecamatan: { code: string; name: string }
+  kecamatan: { code: string; name: string; rantings?: Array<RantingSource & { isActive: boolean }> }
   transactionMemberships: MembershipSource[]
   rantingCoverages: CoverageSource[]
   settlementEvidence?: SettlementEvidenceSource[]
@@ -617,6 +617,12 @@ export function serializePackageDetail(source: PackageDetailSource) {
   return {
     ...value,
     identity: value.identity,
+    coverage: {
+      ...value.coverage,
+      missingActiveRantings: (source.kecamatan.rantings ?? [])
+        .filter((ranting) => ranting.isActive && ranting.kecamatanId === source.kecamatanId && !source.rantingCoverages.some((row) => row.ranting?.id === ranting.id || row.sourceRantingKey === ranting.code))
+        .map((ranting) => ({ code: ranting.code, name: ranting.name })),
+    },
     financial: {
       ...financialValue,
       authority: value.financial.authority,

@@ -12,6 +12,7 @@ import {
   type GorutPackageDetail,
   type GorutPackageReturnReasonCode,
   type PackageTransitionCommand,
+  type PackageCoverageCommand,
 } from '@/features/gorut-v2/package-api-client';
 import {
   formatCanonicalRupiah,
@@ -24,6 +25,7 @@ import {
   packageStatusTone,
   validatePackageReturnForm,
 } from '@/features/gorut-v2/package-api-view-model';
+import { UpzisCoverageResolution } from './upzis-coverage-resolution';
 
 type CorrectionTarget = {
   id: string;
@@ -50,6 +52,9 @@ export function UpzisPackageDetail({
   onClose,
   onRetry,
   onTransition,
+  coveragePending,
+  onCoverage,
+  onCoverageRefresh,
 }: {
   open: boolean;
   detail: GorutPackageDetail | null;
@@ -58,6 +63,9 @@ export function UpzisPackageDetail({
   onClose: () => void;
   onRetry: () => void;
   onTransition: (command: PackageTransitionCommand) => Promise<void>;
+  coveragePending: boolean;
+  onCoverage: (command: PackageCoverageCommand) => Promise<GorutPackageDetail>;
+  onCoverageRefresh: (packageCode: string) => Promise<GorutPackageDetail>;
 }) {
   const [prompt, setPrompt] = useState<GorutPackageAction | null>(null);
   const [reasonCode, setReasonCode] = useState<GorutPackageReturnReasonCode>('DATA_INCOMPLETE');
@@ -65,6 +73,7 @@ export function UpzisPackageDetail({
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [resolutionNote, setResolutionNote] = useState('');
   const [formError, setFormError] = useState('');
+  const pending = Boolean(pendingAction) || coveragePending;
 
   useEffect(() => {
     if (!open) {
@@ -148,7 +157,7 @@ export function UpzisPackageDetail({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen && !pendingAction) onClose(); }}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen && !pending) onClose(); }}>
       <DialogContent showCloseButton={false} overlayClassName="upzis-verification-modal-backdrop" className="upzis-verification-modal upzis-package-modal" aria-describedby="upzis-package-detail-description">
         {loading && !detail ? (
           <div className="upzis-package-detail-loading" aria-busy="true">
@@ -165,7 +174,7 @@ export function UpzisPackageDetail({
               </div>
               <div className="upzis-verification-modal-header-actions">
                 <span className={`gorut-upzis-status ${packageStatusTone(detail.workflow.currentState, detail.financial.status)}`}>{packageStateLabel(detail.workflow.currentState)}</span>
-                <DialogClose asChild><button type="button" className="upzis-verification-modal-close" aria-label="Tutup detail package" disabled={Boolean(pendingAction)}><X size={19} /></button></DialogClose>
+                <DialogClose asChild><button type="button" className="upzis-verification-modal-close" aria-label="Tutup detail package" disabled={pending}><X size={19} /></button></DialogClose>
               </div>
             </header>
 
@@ -220,6 +229,7 @@ export function UpzisPackageDetail({
                     </article>
                   ))}
                 </div>
+                <UpzisCoverageResolution key={detail.identity.packageCode} detail={detail} pending={pending} onExclude={onCoverage} onRefresh={() => onCoverageRefresh(detail.identity.packageCode)} />
               </Section>
 
               <Section title="D. Transaction / PLPK">
@@ -298,9 +308,9 @@ export function UpzisPackageDetail({
             </div>
 
             <footer className="upzis-verification-modal-footer">
-              <DialogClose asChild><button type="button" className="gorut-button gorut-secondary-button" disabled={Boolean(pendingAction)}>Tutup</button></DialogClose>
+              <DialogClose asChild><button type="button" className="gorut-button gorut-secondary-button" disabled={pending}>Tutup</button></DialogClose>
               <div className="upzis-verification-modal-primary-actions">
-                {detail.workflow.availableActions.map((action) => <button key={action} type="button" className={`gorut-button ${action === 'RETURN' ? 'gorut-secondary-button' : 'gorut-primary-button'}`} onClick={() => { setFormError(''); setPrompt(action); }} disabled={Boolean(pendingAction)}>{packageActionLabels[action]}</button>)}
+                {detail.workflow.availableActions.map((action) => <button key={action} type="button" className={`gorut-button ${action === 'RETURN' ? 'gorut-secondary-button' : 'gorut-primary-button'}`} onClick={() => { setFormError(''); setPrompt(action); }} disabled={pending}>{packageActionLabels[action]}</button>)}
               </div>
             </footer>
           </>

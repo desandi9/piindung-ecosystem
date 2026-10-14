@@ -133,6 +133,11 @@ const packageSummarySelect = {
 
 const packageDetailSelect = {
   ...packageSummarySelect,
+  kecamatan: { select: {
+    code: true,
+    name: true,
+    rantings: { where: { isActive: true }, select: { id: true, kecamatanId: true, code: true, name: true, isActive: true }, orderBy: { code: "asc" as const } },
+  } },
   legacyId: true,
   sourceRowKey: true,
   migrationBatchKey: true,
@@ -278,6 +283,7 @@ export async function getGorutPackageDetail(prisma: PrismaClient, context: Gorut
     },
     workflow: {
       ...detail.workflow,
+      operationalRole: context.operationalRole,
       availableActions: availability?.availableActions ?? [],
       blockingReasons: availability?.blockingReasons ?? ["WORKFLOW_AVAILABILITY_UNAVAILABLE"],
       finalApproved: {

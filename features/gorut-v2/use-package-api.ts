@@ -6,6 +6,7 @@ import {
   GorutPackageApiClient,
   PackageApiError,
   executeWithCanonicalPackageRefetch,
+  executeCoverageWithCanonicalPackageRefetch,
   packageErrorBlockingReasons,
   packageErrorMessage,
   type GorutPackageDetail,
@@ -15,6 +16,7 @@ import {
   type PackageTransitionCommand,
   type PackageValidationCommand,
   type GorutSettlementParticipant,
+  type PackageCoverageCommand,
 } from './package-api-client';
 import { packageBlockingReasonLabel } from './package-api-view-model';
 
@@ -148,6 +150,22 @@ export function usePackageApi(filters: PackageListFilters = {}) {
     return canonical;
   }, [loadDetail, reload, runMutation]);
 
+  const executeCoverage = useCallback(async (packageCode: string, command: PackageCoverageCommand) => {
+    const intentId = `package:${packageCode}:coverage`;
+    if (inFlight.current.has(intentId)) throw new PackageApiError('Keputusan coverage lain masih diproses.', 423, 'COVERAGE_PENDING');
+    if (!detail || detail.identity.packageCode !== packageCode) throw new PackageApiError('Detail coverage terbaru belum tersedia.', 409, 'COVERAGE_REVIEW_STALE');
+    return runMutation(intentId, async () => {
+      const canonical = await executeCoverageWithCanonicalPackageRefetch(
+        detail, command,
+        () => sharedClient.coverage(packageCode, command, intentId),
+        () => loadDetail(packageCode),
+      );
+      sharedClient.intents.complete(intentId);
+      await reload().catch(() => undefined);
+      return canonical;
+    });
+  }, [detail, loadDetail, reload, runMutation]);
+
   const clearDetail = useCallback(() => setDetail(null), []);
 
   return {
@@ -166,6 +184,7 @@ export function usePackageApi(filters: PackageListFilters = {}) {
     executeTransition,
     executeSettlement,
     executeValidation,
+    executeCoverage,
     loadSettlementParticipants,
     isPending: (intentId: string) => pendingIntents.has(intentId),
     hasPendingMutation: pendingIntents.size > 0,

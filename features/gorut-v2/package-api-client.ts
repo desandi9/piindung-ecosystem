@@ -264,6 +264,7 @@ export interface GorutPackageDetail extends Omit<GorutPackageSummary, 'coverage'
   coverage: PackageCoverageSummary & {
     roster: { frozenAt: string | null; frozenBy: string | null; sourceHash: string | null };
     rantings: GorutPackageCoverageRow[];
+    missingActiveRantings?: Array<{ code: string; name: string }>;
     consistency: { resolvedRantingsWithinRegion: boolean; everyTransactionHasIncludedRanting: boolean };
   };
   transactions: {
@@ -292,6 +293,7 @@ export interface GorutPackageDetail extends Omit<GorutPackageSummary, 'coverage'
     };
   };
   workflow: PackageWorkflowSummary & {
+    operationalRole?: 'UPZIS' | 'PC';
     history: Array<{
       sequence: number;
       fromState: string | null;
@@ -354,6 +356,13 @@ export type PackageSettlementCommand = {
 export type PackageValidationCommand = {
   settlementEvidenceCode: string;
   note?: string | null;
+  expectedVersion: number;
+};
+
+export type PackageCoverageCommand = {
+  rantingCode: string;
+  reason: string;
+  reference?: string | null;
   expectedVersion: number;
 };
 
@@ -441,6 +450,7 @@ function errorFromResponse(response: Response, body: unknown) {
 
 export function packageErrorMessage(error: unknown) {
   if (!(error instanceof PackageApiError)) return 'Terjadi kesalahan. Silakan coba lagi.';
+  if (error.code === 'COVERAGE_UNCERTAIN' || error.code === 'COVERAGE_UNCONFIRMED') return 'Hasil pencatatan coverage belum dapat dipastikan. Jangan kirim ulang; periksa detail terbaru.';
   if (error.status === 0) return 'Koneksi ke server terputus. Periksa jaringan lalu coba lagi.';
   if (error.status === 403) return 'Anda tidak memiliki akses ke package ini.';
   if (error.status === 404) return 'Data package tidak tersedia atau tidak ditemukan.';
@@ -467,6 +477,58 @@ export async function executeWithCanonicalPackageRefetch<T>(
     throw error;
   }
   return refetch();
+}
+
+export function packageCoverageTargets(detail: GorutPackageDetail) {
+  if (detail.workflow.operationalRole !== 'UPZIS' || detail.workflow.currentState !== 'DRAFT' || detail.coverage.roster.frozenAt !== null) return [];
+  return (detail.coverage.missingActiveRantings ?? []).filter(target =>
+    !detail.coverage.rantings.some(row => row.ranting?.code === target.code || row.sourceRantingKey === target.code) &&
+    !detail.transactions.items.some(row => row.ranting.code === target.code),
+  );
+}
+
+function normalizeCoverageCommand(command: PackageCoverageCommand): PackageCoverageCommand {
+  if (typeof command.reason !== 'string' || !command.reason.trim()) throw new PackageApiError('Alasan pengecualian wajib diisi.', 422, 'INVALID_COVERAGE_COMMAND');
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/.test(command.rantingCode) || !Number.isSafeInteger(command.expectedVersion) || command.expectedVersion < 1 || command.reason.length > 500 || command.reference != null && (typeof command.reference !== 'string' || command.reference.length > 300)) {
+    throw new PackageApiError('Data pengecualian coverage tidak valid.', 422, 'INVALID_COVERAGE_COMMAND');
+  }
+  return { rantingCode: command.rantingCode, reason: command.reason.trim(), reference: command.reference?.trim() || null, expectedVersion: command.expectedVersion };
+}
+
+export function preparePackageCoverageCommand(detail: GorutPackageDetail, rantingCode: string, reason: string, reference?: string | null) {
+  if (!packageCoverageTargets(detail).some(target => target.code === rantingCode)) throw new PackageApiError('Ranting tidak tersedia untuk keputusan coverage pada detail terbaru.', 422, 'COVERAGE_TARGET_UNAVAILABLE');
+  return normalizeCoverageCommand({ rantingCode, reason, reference, expectedVersion: detail.identity.version });
+}
+
+export async function executeCoverageWithCanonicalPackageRefetch(
+  detail: GorutPackageDetail,
+  input: PackageCoverageCommand,
+  mutation: () => Promise<unknown>,
+  refetch: () => Promise<GorutPackageDetail>,
+) {
+  const command = normalizeCoverageCommand(input);
+  if (command.expectedVersion !== detail.identity.version) throw new PackageApiError('Version keputusan coverage berubah. Tinjau detail terbaru.', 409, 'COVERAGE_REVIEW_STALE');
+  if (!packageCoverageTargets(detail).some(target => target.code === command.rantingCode)) throw new PackageApiError('Target coverage sudah berubah. Tinjau detail terbaru.', 409, 'COVERAGE_REVIEW_STALE');
+  const confirmed = (canonical: GorutPackageDetail) => canonical.identity.packageCode === detail.identity.packageCode && canonical.identity.version > command.expectedVersion && canonical.coverage.rantings.some(row =>
+    row.ranting?.code === command.rantingCode && row.status === 'excluded-with-reason' && row.exclusionReason === command.reason && row.exclusionReference === (command.reference ?? null),
+  );
+  try {
+    await mutation();
+  } catch (error) {
+    if (error instanceof PackageApiError && error.status === 409) {
+      await refetch().catch(() => undefined);
+      throw error;
+    }
+    if (error instanceof PackageApiError && (error.isNetworkFailure || error.status >= 500)) {
+      const canonical = await refetch().catch(() => null);
+      if (canonical && confirmed(canonical)) return canonical;
+      throw new PackageApiError('Hasil pengiriman coverage belum diketahui.', 0, 'COVERAGE_UNCERTAIN');
+    }
+    throw error;
+  }
+  const canonical = await refetch().catch(() => null);
+  if (!canonical || !confirmed(canonical)) throw new PackageApiError('Coverage belum terkonfirmasi oleh detail server.', 0, 'COVERAGE_UNCONFIRMED');
+  return canonical;
 }
 
 export class GorutPackageApiClient {
@@ -519,6 +581,10 @@ export class GorutPackageApiClient {
 
   validation(packageCode: string, command: PackageValidationCommand, intentId: string) {
     return this.mutate(packageUrl(packageCode, '/validations'), intentId, command);
+  }
+
+  async coverage(packageCode: string, command: PackageCoverageCommand, intentId: string) {
+    return this.mutate(packageUrl(packageCode, '/coverage'), intentId, normalizeCoverageCommand(command));
   }
 
   settlementParticipants(packageCode: string) {

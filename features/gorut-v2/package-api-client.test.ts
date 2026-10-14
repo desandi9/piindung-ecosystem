@@ -5,6 +5,8 @@ import test from 'node:test';
 // @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
 import { GorutPackageApiClient, PackageApiError, executeWithCanonicalPackageRefetch, packageErrorBlockingReasons, packageErrorMessage, resolvePackageFrontendMode, type GorutPackageDetail, type GorutPackageSummary } from './package-api-client.ts';
 // @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
+import * as coverageApi from './package-api-client.ts';
+// @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
 import { formatCanonicalRupiah, formatSignedCanonicalRupiah, packageFinancialLabel, packageHasAction, validatePackageReturnForm } from './package-api-view-model.ts';
 
 function summary(overrides: Partial<GorutPackageSummary> = {}): GorutPackageSummary {
@@ -294,6 +296,151 @@ void test('package detail public model has codes and facts without database ids'
   assert.equal('id' in canonical.transactions.items[0]!.collectionSource!, false);
   assert.equal(canonical.transactions.items[0]!.transactionCode, 'TRX-01');
   assert.equal(canonical.transactions.items[0]!.collectionSource?.collectionCode, 'COL-01');
+});
+
+function coverageDetail(version = 1): GorutPackageDetail {
+  const canonical = detail();
+  return {
+    ...canonical,
+    identity: { ...canonical.identity, version, revision: version },
+    coverage: { ...canonical.coverage, missingActiveRantings: [{ code: 'RAN-02', name: 'Pakuwon' }, { code: 'RAN-03', name: 'Ciwalen' }] },
+    workflow: { ...canonical.workflow, operationalRole: 'UPZIS', version, availableActions: [], blockingReasons: ['ROSTER_COVERAGE_INCOMPLETE'] },
+  };
+}
+
+function excludedDetail(previous: GorutPackageDetail, code: string, reason: string, reference: string | null = null) {
+  return {
+    ...previous,
+    identity: { ...previous.identity, version: previous.identity.version + 1, revision: previous.identity.revision + 1 },
+    coverage: {
+      ...previous.coverage,
+      missingActiveRantings: previous.coverage.missingActiveRantings?.filter(row => row.code !== code),
+      rantings: [...previous.coverage.rantings, {
+        status: 'excluded-with-reason' as const, ranting: { code, name: 'Pakuwon' }, sourceRantingKey: code, sourceRantingName: null,
+        exclusionReason: reason, exclusionReference: reference, recordedBy: 'UPZIS Maker', recordedAt: '2026-08-21T07:00:00.000Z', activeAtCutoff: null,
+        transactionCount: 0, plpkCount: 0, munfiqCount: 0, recordedAmount: null,
+      }],
+    },
+  };
+}
+
+void test('coverage command uses the exact endpoint, normalized reason, optional reference, and one fresh intent key', async () => {
+  const calls: Array<{ url: string; init?: RequestInit }> = [];
+  let keys = 0;
+  const client = new GorutPackageApiClient(async (url, init) => { calls.push({ url: String(url), init }); return json({ status: 'EXCLUDED', version: 2 }); }, () => `coverage-key-${++keys}`);
+  assert.equal(typeof client.coverage, 'function');
+  await client.coverage('GPK-1', { rantingCode: 'RAN-02', reason: '  Tidak beroperasi pada periode ini.  ', expectedVersion: 1 }, 'coverage:GPK-1');
+  assert.equal(calls[0]?.url, '/api/gorut/packages/GPK-1/coverage');
+  assert.equal(calls[0]?.init?.method, 'POST');
+  assert.equal(calls[0]?.init?.credentials, 'same-origin');
+  assert.deepEqual(JSON.parse(String(calls[0]?.init?.body)), { rantingCode: 'RAN-02', reason: 'Tidak beroperasi pada periode ini.', reference: null, expectedVersion: 1, idempotencyKey: 'coverage-key-1' });
+  assert.equal(calls.length, 1);
+  assert.equal(keys, 1);
+});
+
+void test('coverage review requires a factual reason and takes version from the current canonical package', () => {
+  assert.equal(typeof coverageApi.preparePackageCoverageCommand, 'function');
+  const current = coverageDetail(7);
+  assert.throws(() => coverageApi.preparePackageCoverageCommand(current, 'RAN-02', '  '), /Alasan.*wajib/);
+  assert.deepEqual(coverageApi.preparePackageCoverageCommand(current, 'RAN-02', '  Fakta diperiksa  '), { rantingCode: 'RAN-02', reason: 'Fakta diperiksa', reference: null, expectedVersion: 7 });
+  assert.equal(coverageApi.preparePackageCoverageCommand(current, 'RAN-02', 'Fakta', '  REF-1  ').reference, 'REF-1');
+});
+
+void test('only UPZIS DRAFT unfrozen missing Rantings without included or transaction source can be offered', () => {
+  assert.equal(typeof coverageApi.packageCoverageTargets, 'function');
+  const current = coverageDetail();
+  assert.deepEqual(coverageApi.packageCoverageTargets(current).map(row => row.code), ['RAN-02', 'RAN-03']);
+  assert.deepEqual(coverageApi.packageCoverageTargets({ ...current, workflow: { ...current.workflow, operationalRole: 'PC' } }), []);
+  assert.deepEqual(coverageApi.packageCoverageTargets({ ...current, workflow: { ...current.workflow, operationalRole: undefined } }), []);
+  assert.deepEqual(coverageApi.packageCoverageTargets({ ...current, workflow: { ...current.workflow, currentState: 'WAITING_UPZIS_VERIFICATION' } }), []);
+  assert.deepEqual(coverageApi.packageCoverageTargets({ ...current, coverage: { ...current.coverage, roster: { ...current.coverage.roster, frozenAt: '2026-08-21T07:00:00.000Z' } } }), []);
+  const inconsistent = { ...current, coverage: { ...current.coverage, missingActiveRantings: [{ code: 'RAN-01', name: 'Already included' }, { code: 'SOURCE-ONLY', name: 'Source exists' }] }, transactions: { ...current.transactions, items: [...current.transactions.items, { ...current.transactions.items[0]!, ranting: { code: 'SOURCE-ONLY', name: 'Source exists' } }] } };
+  assert.deepEqual(coverageApi.packageCoverageTargets(inconsistent), []);
+  assert.deepEqual(current.workflow.availableActions, []);
+});
+
+void test('coverage rejects blank reason and invalid version before acquiring a key or sending a request', async () => {
+  let posts = 0, keys = 0;
+  const client = new GorutPackageApiClient(async () => { posts++; return json({}); }, () => `key-${++keys}`);
+  assert.equal(typeof client.coverage, 'function');
+  await assert.rejects(client.coverage('GPK-1', { rantingCode: 'RAN-02', reason: ' ', expectedVersion: 1 }, 'coverage'), /Alasan.*wajib/);
+  await assert.rejects(client.coverage('GPK-1', { rantingCode: 'RAN-02', reason: 'Fakta', expectedVersion: 0 }, 'coverage'));
+  assert.equal(posts, 0);
+  assert.equal(keys, 0);
+});
+
+void test('one ambiguous coverage attempt retains its stable intent and never retries automatically', async () => {
+  let posts = 0, keys = 0;
+  const command = { rantingCode: 'RAN-02', reason: 'Fakta', reference: null, expectedVersion: 1 };
+  const client = new GorutPackageApiClient(async () => { posts++; throw new TypeError('offline'); }, () => `key-${++keys}`);
+  assert.equal(typeof client.coverage, 'function');
+  await assert.rejects(client.coverage('GPK-1', command, 'coverage'), { code: 'NETWORK_ERROR' });
+  assert.equal(posts, 1);
+  assert.equal(keys, 1);
+  assert.equal(client.intents.peek('coverage'), 'key-1');
+  assert.equal(client.intents.acquire('coverage', command), 'key-1');
+  assert.equal(keys, 1);
+});
+
+void test('coverage success requires a newer canonical excluded row with exact reason and reference', async () => {
+  assert.equal(typeof coverageApi.executeCoverageWithCanonicalPackageRefetch, 'function');
+  const current = coverageDetail();
+  const command = { rantingCode: 'RAN-02', reason: 'Fakta', reference: null, expectedVersion: 1 };
+  const events: string[] = [];
+  const canonical = excludedDetail(current, 'RAN-02', 'Fakta');
+  const result = await coverageApi.executeCoverageWithCanonicalPackageRefetch(current, command, async () => { events.push('POST'); }, async () => { events.push('GET'); return canonical; });
+  assert.deepEqual(events, ['POST', 'GET']);
+  assert.equal(result, canonical);
+  assert.deepEqual(result.workflow.availableActions, []);
+  await assert.rejects(coverageApi.executeCoverageWithCanonicalPackageRefetch(current, command, async () => {}, async () => current), { code: 'COVERAGE_UNCONFIRMED' });
+  await assert.rejects(coverageApi.executeCoverageWithCanonicalPackageRefetch(current, command, async () => {}, async () => excludedDetail(current, 'RAN-02', 'Different reason')), { code: 'COVERAGE_UNCONFIRMED' });
+  await assert.rejects(coverageApi.executeCoverageWithCanonicalPackageRefetch(current, command, async () => {}, async () => excludedDetail(current, 'RAN-02', 'Fakta', 'Unexpected reference')), { code: 'COVERAGE_UNCONFIRMED' });
+});
+
+void test('409 coverage conflict refetches canonical detail once and never repeats the POST', async () => {
+  assert.equal(typeof coverageApi.executeCoverageWithCanonicalPackageRefetch, 'function');
+  let posts = 0, reads = 0;
+  const current = coverageDetail();
+  const command = { rantingCode: 'RAN-02', reason: 'Fakta', expectedVersion: 1 };
+  await assert.rejects(coverageApi.executeCoverageWithCanonicalPackageRefetch(current, command, async () => { posts++; throw new PackageApiError('Conflict', 409, 'PACKAGE_VERSION_CONFLICT'); }, async () => { reads++; return coverageDetail(2); }), { status: 409 });
+  assert.equal(posts, 1);
+  assert.equal(reads, 1);
+});
+
+void test('ambiguous coverage result reconciles by GET only and reports uncertainty when uncommitted', async () => {
+  assert.equal(typeof coverageApi.executeCoverageWithCanonicalPackageRefetch, 'function');
+  let posts = 0, reads = 0;
+  const current = coverageDetail();
+  const command = { rantingCode: 'RAN-02', reason: 'Fakta', expectedVersion: 1 };
+  const error = await coverageApi.executeCoverageWithCanonicalPackageRefetch(current, command, async () => { posts++; throw new PackageApiError('offline', 0, 'NETWORK_ERROR'); }, async () => { reads++; return current; }).catch(caught => caught);
+  assert.equal(error.code, 'COVERAGE_UNCERTAIN');
+  assert.match(packageErrorMessage(error), /Jangan kirim ulang/);
+  assert.equal(posts, 1);
+  assert.equal(reads, 1);
+});
+
+void test('sequential coverage decisions use refreshed versions and never manufacture SUBMIT availability', async () => {
+  assert.equal(typeof coverageApi.preparePackageCoverageCommand, 'function');
+  const bodies: Array<Record<string, unknown>> = [];
+  let key = 0;
+  const client = new GorutPackageApiClient(async (_url, init) => { bodies.push(JSON.parse(String(init?.body))); return json({}); }, () => `key-${++key}`);
+  let canonical = coverageDetail();
+  for (const target of ['RAN-02', 'RAN-03']) {
+    const current = canonical;
+    const command = coverageApi.preparePackageCoverageCommand(current, target, `Fakta ${target}`);
+    canonical = await coverageApi.executeCoverageWithCanonicalPackageRefetch(current, command, () => client.coverage(current.identity.packageCode, command, 'coverage'), async () => excludedDetail(current, target, command.reason));
+  }
+  assert.deepEqual(bodies.map(body => body.expectedVersion), [1, 2]);
+  assert.notEqual(bodies[0]?.idempotencyKey, bodies[1]?.idempotencyKey);
+  assert.equal(canonical.identity.version, 3);
+  assert.deepEqual(canonical.workflow.availableActions, []);
+});
+
+void test('stale coverage confirmation is rejected before sending any POST', async () => {
+  assert.equal(typeof coverageApi.executeCoverageWithCanonicalPackageRefetch, 'function');
+  let posts = 0;
+  await assert.rejects(coverageApi.executeCoverageWithCanonicalPackageRefetch(coverageDetail(2), { rantingCode: 'RAN-02', reason: 'Fakta', expectedVersion: 1 }, async () => { posts++; }, async () => coverageDetail(2)), { code: 'COVERAGE_REVIEW_STALE' });
+  assert.equal(posts, 0);
 });
 
 void test('signed server difference presentation preserves mismatch direction', () => {

@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, Download, Eye, Info, PackageCheck, Refresh
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 
 import { bottomNavigation, mainNavigation, masterDataNavigation, mobileNavigation, operationalNavigation } from '@/features/gorut-v2/navigation';
-import type { GorutPackageAction, GorutPackageState, PackageTransitionCommand } from '@/features/gorut-v2/package-api-client';
+import { PackageApiError, type GorutPackageAction, type GorutPackageState, type PackageCoverageCommand, type PackageTransitionCommand } from '@/features/gorut-v2/package-api-client';
 import { packageActionLabels, packageBlockingReasonLabel, packageFinancialLabel, packageStateLabel, packageStateLabels, packageStatusTone } from '@/features/gorut-v2/package-api-view-model';
 import { usePackageApi } from '@/features/gorut-v2/use-package-api';
 import { GorutHeader } from '../gorut-header';
@@ -47,7 +47,7 @@ export function UpzisPackageShell() {
   };
 
   const closeDetail = () => {
-    if (selectedPendingAction) return;
+    if (api.hasPendingMutation) return;
     setSelectedCode(null);
     api.clearDetail();
     window.requestAnimationFrame(() => detailTriggerRef.current?.focus());
@@ -64,6 +64,11 @@ export function UpzisPackageShell() {
           ? 'Package berhasil dikirim untuk verifikasi UPZIS.'
           : 'Transition SUBMIT selesai dan package canonical telah dimuat ulang.';
     setFeedback(message);
+  };
+
+  const executeCoverage = async (command: PackageCoverageCommand) => {
+    if (!selectedCode) throw new PackageApiError('Package coverage belum dipilih.', 409, 'COVERAGE_REVIEW_STALE');
+    return api.executeCoverage(selectedCode, command);
   };
 
   const resetFilters = () => { setQuery(''); setPeriod(''); setState(''); setPage(1); };
@@ -109,7 +114,7 @@ export function UpzisPackageShell() {
       </div>
       <MobileSidebar open={mobileMenu} onClose={() => setMobileMenu(false)} navigation={mainNavigation} secondaryNavigation={operationalNavigation} masterNavigation={masterDataNavigation} bottomNavigation={bottomNavigation} target={target} />
       <MobileBottomNav navigation={mobileNavigation} onMore={() => setMobileMenu(true)} onUnavailable={(label) => setFeedback(`${label}: belum tersedia pada fase ini.`)} />
-      <UpzisPackageDetail open={Boolean(selectedCode)} detail={api.detail?.identity.packageCode === selectedCode ? api.detail : null} loading={api.detailLoading} pendingAction={selectedPendingAction} onClose={closeDetail} onRetry={() => { if (selectedCode) void api.loadDetail(selectedCode); }} onTransition={executeTransition} />
+      <UpzisPackageDetail open={Boolean(selectedCode)} detail={api.detail?.identity.packageCode === selectedCode ? api.detail : null} loading={api.detailLoading} pendingAction={selectedPendingAction} coveragePending={api.hasPendingMutation} onCoverage={executeCoverage} onCoverageRefresh={api.loadDetail} onClose={closeDetail} onRetry={() => { if (selectedCode) void api.loadDetail(selectedCode); }} onTransition={executeTransition} />
     </div></div>
   );
 }
