@@ -10,6 +10,7 @@ import { AUTH_COOKIE_NAME, createSessionToken, getAuthCookieOptions } from "@/li
 import type { AuthUser } from "@/types/auth"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 import { readJsonMutation } from "@/lib/request-security"
+import { checkLoginThrottle, recordLoginFailure, resetLoginThrottleForIdentity, resolveClientIp } from "@/lib/gorut-login-throttle-server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,6 +28,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Nomor HP dan password wajib diisi." }, { status: 400 })
     }
 
+    const clientIp = resolveClientIp(request.headers)
+    const throttle = await checkLoginThrottle(phoneNumber, clientIp)
+    if (throttle.kind === "error") {
+      return NextResponse.json({ error: "Layanan login sementara tidak tersedia. Coba lagi sebentar lagi." }, { status: 503 })
+    }
+    if (throttle.kind === "blocked") {
+      return NextResponse.json(
+        { error: "Terlalu banyak percobaan. Coba lagi beberapa saat lagi." },
+        { status: 429, headers: { "Retry-After": String(throttle.retryAfterSeconds) } },
+      )
+    }
+
     const users = await prisma.$queryRaw<Array<{
       id: string
       name: string
@@ -41,13 +54,17 @@ export async function POST(request: NextRequest) {
     const user = users[0]
 
     if (!user || user.status !== "Aktif") {
+      await recordLoginFailure(phoneNumber, clientIp)
       return NextResponse.json({ error: "Nomor HP atau password tidak valid." }, { status: 401 })
     }
 
     const passwordMatch = await bcrypt.compare(password, user.passwordHash)
     if (!passwordMatch) {
+      await recordLoginFailure(phoneNumber, clientIp)
       return NextResponse.json({ error: "Nomor HP atau password tidak valid." }, { status: 401 })
     }
+
+    await resetLoginThrottleForIdentity(phoneNumber)
 
     const authUser: AuthUser = {
       id: user.id,
