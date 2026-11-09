@@ -1,0 +1,79 @@
+/* The supplied Stitch account composition, using the established Munfiq frame. */
+.mqa-shell { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+.mqa-header { padding: 12px 20px 20px; }
+.mqa-status { display: flex; align-items: center; justify-content: space-between; padding-inline: 4px; font-size: 12px; }
+.mqa-status > span { display: flex; align-items: center; gap: 6px; }
+.mqa-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; }
+.mqa-heading h1 { margin: 0; font-size: 26px; line-height: 1.2; font-weight: 800; letter-spacing: -.025em; }
+.mqa-heading p { margin: 7px 0 0; font-size: 12.5px; color: var(--mq-muted); }
+.mqa-content { display: flex; flex-direction: column; gap: 24px; padding-inline: 20px; }
+.mqa-profile { padding: 18px; border: 1px solid var(--mq-border); border-radius: 16px; background: white; }
+.mqa-profile-top { display: flex; align-items: flex-start; gap: 14px; }
+.mqa-avatar { flex: 0 0 60px; width: 60px; height: 60px; border: 2px solid #b9e3d7; padding: 3px; background: white; }
+.mqa-avatar > :is(span,img) { border-radius: 50%; background: #eaf8f4; color: var(--mq-green-text); font-size: 20px; font-weight: 700; }
+.mqa-identity { min-width: 0; flex: 1; }
+.mqa-identity > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.mqa-identity h2 { margin: 0; font-size: 17px; font-weight: 800; line-height: 1.4; overflow-wrap: anywhere; }
+.mqa-badge { padding: 3px 7px; border-radius: 999px; background: #eaf8f4; color: var(--mq-green-text); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.mqa-identity p { margin: 5px 0 0; color: var(--mq-muted); font-size: 11.5px; line-height: 1.6; overflow-wrap: anywhere; }
+.mqa-location { display: flex; align-items: flex-start; gap: 5px; }
+.mqa-location svg { flex-shrink: 0; margin-top: 3px; color: var(--mq-green-text); }
+.mqa-profile-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding-top: 8px; margin-top: 14px; border-top: 1px solid var(--mq-border); }
+.mqa-profile-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: var(--mq-green-text); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+.mqa-profile-actions .mqa-copy { color: var(--mq-muted); font-size: 10px; font-weight: 500; overflow-wrap: anywhere; text-align: left; }
+.mqa-copy svg { flex-shrink: 0; }
+.mqa-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0 0; padding: 12px; border-radius: 12px; background: var(--mq-bg); }
+.mqa-stats > div + div { padding-left: 12px; border-left: 1px solid var(--mq-border); }
+.mqa-stats dt { font-size: 10px; color: var(--mq-muted); }
+.mqa-stats dd { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; margin: 4px 0 0; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.mqa-stats dd.is-active { color: var(--mq-green-text); }
+.mqa-demo { margin: 10px 0 0; color: var(--mq-muted); font-size: 10.5px; line-height: 1.6; }
+.mqa-section h2 { margin: 0 3px 9px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--mq-muted); }
+.mqa-menu { border: 1px solid var(--mq-border); border-radius: 16px; overflow: hidden; background: white; }
+.mqa-row { display: flex; width: 100%; align-items: center; gap: 12px; min-height: 76px; padding: 14px; border: 0; background: white; color: var(--mq-navy); text-align: left; text-decoration: none; font: inherit; cursor: pointer; transition: background-color 150ms ease; }
+.mqa-row + .mqa-row { border-top: 1px solid #f0f3f5; }
+.mqa-icon { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; border-radius: 12px; color: var(--mq-green-text); background: #eaf8f4; }
+.mqa-row-copy { flex: 1; min-width: 0; }
+.mqa-row-copy strong { display: block; font-size: 12.5px; font-weight: 700; line-height: 1.5; }
+.mqa-row-copy small { display: block; margin-top: 3px; font-size: 10.5px; line-height: 1.6; color: var(--mq-muted); }
+.mqa-row > svg { flex-shrink: 0; color: var(--mq-muted); }
+.mqa-preferences .mqa-icon { width: 36px; height: 36px; flex-basis: 36px; background: #f0f4f6; color: var(--mq-navy); }
+.mqa-row.is-unavailable { cursor: default; }
+.mqa-row.is-unavailable .mqa-icon { background: #f0f4f6; color: var(--mq-muted); }
+.mqa-unavailable { flex: 0 0 53px; color: var(--mq-muted); font-size: 9px; line-height: 1.5; text-align: right; }
+.mqa-count { display: grid; place-items: center; min-width: 20px; height: 20px; padding-inline: 4px; border-radius: 50%; color: white; background: #b63838; font-size: 10px; font-weight: 700; }
+.mqa-footer > p { margin: 14px 0 4px; font-size: 10.5px; text-align: center; color: var(--mq-muted); }
+.mqa-logout,.mqa-primary,.mqa-secondary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid #ebc9c9; border-radius: 12px; background: #fff6f6; color: #ab3030; font: inherit; font-size: 13px; line-height: 1.5; font-weight: 700; text-decoration: none; cursor: pointer; }
+.mqa-primary { border-color: transparent; background: #05775d; color: white; }
+.mqa-secondary { border-color: #d6dfe4; background: white; color: #0e2940; }
+.mqa-feedback { margin: 0; padding: 12px 14px; border-radius: 12px; background: #eaf8f4; color: #05775d; font-size: 12px; }
+.mqa-feedback:empty { display: none; }
+.mqa-error { margin: 0; padding: 14px; border: 1px solid #ebc9c9; border-radius: 12px; background: #fff6f6; color: #ab3030; font-size: 12px; line-height: 1.6; }
+.mqa-error p { margin: 0; }
+.mqa-error button { min-height: 44px; border: 0; padding: 8px 0; background: transparent; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.mqa-overlay { position: fixed; inset: 0; z-index: 70; background: rgb(14 41 64 / 55%); }
+.mqa-sheet { position: fixed; inset: auto 0 0; z-index: 71; box-sizing: border-box; width: 100%; max-width: 480px; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain; margin-inline: auto; padding: 14px 24px max(24px,env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0; background: white; color: #0e2940; font-family: var(--font-munfiq),sans-serif; color-scheme: light; }
+.mqa-sheet * { box-sizing: border-box; }
+.mqa-handle { width: 40px; height: 4px; margin: 0 auto 22px; border-radius: 999px; background: #d6dfe4; }
+.mqa-close { position: absolute; top: 24px; right: 14px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #f0f4f6; color: #62717b; cursor: pointer; }
+.mqa-sheet h2 { margin: 0 42px 8px 0; font-size: 22px; font-weight: 800; line-height: 1.4; letter-spacing: -.02em; }
+.mqa-sheet h2 + p { margin: 0 40px 20px 0; color: #62717b; font-size: 12px; line-height: 1.7; }
+.mqa-form { display: grid; gap: 16px; }
+.mqa-form-note,.mqa-information p { margin: 0 0 4px; color: #62717b; font-size: 12px; line-height: 1.8; }
+.mqa-information p { margin-bottom: 22px; }
+.mqa-form fieldset { display: grid; gap: 16px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.mqa-form label { display: block; font-size: 12px; font-weight: 700; }
+.mqa-form label > span { color: #62717b; font-weight: 400; }
+.mqa-field-hint { margin: 7px 0 0; color: #62717b; font-size: 11px; line-height: 1.6; }
+.mqa-form :is(input,textarea) { display: block; width: 100%; min-height: 48px; margin-top: 7px; padding: 11px 12px; border: 1px solid #c7d3da; border-radius: 10px; background: white; color: #0e2940; font: inherit; font-size: 16px; font-weight: 400; line-height: 1.5; }
+.mqa-form textarea { resize: vertical; }
+.mqa-reveal { display: flex; align-items: center; gap: 8px; width: fit-content; min-height: 44px; padding: 4px 0; border: 0; background: none; color: #05775d; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.mqa-confirm { display: grid; gap: 12px; margin-top: 24px; }
+.mqa-shell button:disabled,.mqa-sheet button:disabled { opacity: .55; cursor: default; }
+.mqa-shell :is(a,button):focus-visible,.mqa-sheet :is(a,button,input,textarea):focus-visible { outline: 2px solid #05775d; outline-offset: 3px; }
+.mqa-shell .mqa-row:focus-visible { outline-offset: -3px; }
+.mqa-sheet[data-state=open] { animation: mqa-sheet-in 220ms cubic-bezier(.16,1,.3,1); }
+@keyframes mqa-sheet-in { from { transform: translateY(24px); } to { transform: translateY(0); } }
+@media (hover:hover) { .mqa-row:is(a,button):hover { background: #f0faf6; } .mqa-primary:hover { background: #04634d; } .mqa-logout:hover { background: #ffeded; } }
+@media (max-width:350px) { .mqa-header,.mqa-content { padding-inline: 14px; } .mqa-profile { padding: 14px; } .mqa-row { gap: 10px; padding: 12px; } .mqa-profile-top { gap: 10px; } .mqa-avatar { flex-basis: 48px; width: 48px; height: 48px; } .mqa-stats { padding: 10px; gap: 8px; } .mqa-stats > div + div { padding-left: 8px; } }
+@media (prefers-reduced-motion:reduce) { .mqa-row { transition: none; } .mqa-sheet[data-state=open] { animation: none; } }

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Akses mobile Munfiq GORUT',
 };
 
-export const viewport = { width: 'device-width', initialScale: 1, maximumScale: 1, themeColor: '#07965D' };
+export const viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#F7FAFB' };
 
 export default function MunfiqMobileLayout({ children }: { children: React.ReactNode }) {
   return children;

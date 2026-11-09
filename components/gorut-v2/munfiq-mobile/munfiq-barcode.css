@@ -1,0 +1,33 @@
+.mq-barcode-shell { padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
+.mq-barcode-header { padding: 12px 20px 8px; }
+.mq-barcode-status { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 12px; font-size: 12px; line-height: 16px; }
+.mq-barcode-status > span { display: flex; align-items: center; gap: 6px; }
+.mq-barcode-main { display: flex; flex-direction: column; gap: 20px; padding: 12px 20px 24px; }
+.mq-barcode-heading h1 { margin: 0; font-size: 30px; line-height: 1.25; letter-spacing: -.025em; font-weight: 700; }
+.mq-barcode-heading p { margin: 6px 0 0; color: var(--mq-muted); font-size: 12px; }
+.mq-barcode-card { padding: 24px 20px; border: 1px solid var(--mq-border); border-radius: 24px; background: white; text-align: center; }
+.mq-barcode-logo { display: block; width: 96px; height: 42px; margin: 0 auto 16px; object-fit: contain; }
+.mq-barcode-card h2 { margin: 0; font-size: 20px; font-weight: 700; overflow-wrap: anywhere; }
+.mq-barcode-role { margin: 6px 0 20px; color: var(--mq-muted); font-size: 12px; }
+.mq-barcode-role > span:last-child { color: var(--mq-green-text); }
+.mq-barcode-qr { position: relative; display: grid; width: min(100%, 256px); min-height: 220px; place-items: center; margin-inline: auto; padding: 8px; border: 1px solid #d5f3e9; border-radius: 16px; background: white; }
+.mq-barcode-qr > img { display: block; width: 100%; height: auto; aspect-ratio: 1; }
+.mq-barcode-qr > span { position: absolute; inset: 0; display: grid; place-items: center; border-radius: inherit; background: white; font-size: 12px; color: var(--mq-muted); }
+.mq-barcode-member { display: grid; gap: 4px; margin-top: 20px; }
+.mq-barcode-member > span { color: var(--mq-muted); font-size: 11px; }
+.mq-barcode-member > strong { font-size: 15px; letter-spacing: .035em; overflow-wrap: anywhere; user-select: all; }
+.mq-barcode-organization { margin: 16px 0 0; padding-top: 16px; border-top: 1px solid var(--mq-border); color: var(--mq-muted); font-size: 11px; }
+.mq-barcode-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mq-barcode-actions button { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 8px; padding: 12px; border: 1px solid var(--mq-border); border-radius: 12px; background: white; color: var(--mq-navy); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.mq-barcode-actions button:last-child { border-color: var(--mq-green); background: var(--mq-green); color: white; }
+.mq-barcode-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.mq-barcode-actions button:active:not(:disabled) { transform: scale(.98); }
+.mq-barcode-feedback { margin: -8px 0 0; color: var(--mq-green-text); font-size: 12px; text-align: center; }
+.mq-barcode-feedback:empty { display: none; }
+.mq-barcode-note { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 16px; border-radius: 12px; background: #eaf8f4; color: #47665b; font-size: 12px; line-height: 1.6; }
+.mq-barcode-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--mq-green-text); }
+.mq-barcode-loading { display: grid; min-height: 360px; place-items: center; border-radius: 24px; background: white; color: var(--mq-muted); font-size: 13px; }
+.mq-barcode-image-error { padding: 16px; font-size: 12px; }
+.mq-barcode-image-error button { min-height: 44px; border: 0; background: transparent; color: var(--mq-green-text); text-decoration: underline; cursor: pointer; }
+@media (max-width:350px) { .mq-barcode-main,.mq-barcode-header { padding-inline: 16px; } .mq-barcode-card { padding-inline: 16px; } }
+@media (prefers-reduced-motion:reduce) { .mq-barcode-actions button:active:not(:disabled) { transform: none; } }
