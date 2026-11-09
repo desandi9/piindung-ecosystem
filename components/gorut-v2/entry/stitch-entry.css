@@ -1,0 +1,589 @@
+/* Scoped verbatim Stitch CSS. Utilities are compiled by the project Tailwind pipeline. */
+
+  .stitch-entry[data-entry-screen="splash"] {
+    font-family: var(--font-stitch-entry), system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Safe Area Handlers */
+  .stitch-entry[data-entry-screen="splash"] .safe-top {
+    padding-top: max(env(safe-area-inset-top), 14px);
+  }
+  .stitch-entry[data-entry-screen="splash"] .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 12px);
+  }
+
+  /* Keyframe Animations */
+  @keyframes stitch-splash-bgAtmosphericZoom {
+    0% {
+      opacity: 0.2;
+      transform: scale(1.04);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1.0);
+    }
+  }
+
+  @keyframes stitch-splash-iconSpringEntrance {
+    0% {
+      opacity: 0;
+      transform: scale(0.86) translateY(8px);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.03) translateY(-1px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1.0) translateY(0);
+    }
+  }
+
+  @keyframes stitch-splash-glowBreath {
+    0%, 100% {
+      opacity: 0.35;
+      transform: scale(0.92);
+    }
+    50% {
+      opacity: 0.65;
+      transform: scale(1.08);
+    }
+  }
+
+  @keyframes stitch-splash-contentSlideUp {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes stitch-splash-fillProgress {
+    0% {
+      width: 0%;
+    }
+    20% {
+      width: 25%;
+    }
+    55% {
+      width: 68%;
+    }
+    85% {
+      width: 92%;
+    }
+    100% {
+      width: 100%;
+    }
+  }
+
+  @keyframes stitch-splash-sheenPass {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(180%);
+    }
+  }
+
+  @keyframes stitch-splash-dotPulse {
+    0%, 20% { opacity: 0; }
+    40% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* Running state helper classes */
+  .stitch-entry[data-entry-screen="splash"] .anim-bg {
+    animation: stitch-splash-bgAtmosphericZoom 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-icon {
+    animation: stitch-splash-iconSpringEntrance 1.1s cubic-bezier(0.34, 1.4, 0.64, 1) 0.15s both;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-glow {
+    animation: stitch-splash-glowBreath 3.2s ease-in-out infinite 1.2s;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-title {
+    animation: stitch-splash-contentSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-tagline {
+    animation: stitch-splash-contentSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-loader {
+    animation: stitch-splash-contentSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-progress-fill {
+    animation: stitch-splash-fillProgress 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-sheen {
+    animation: stitch-splash-sheenPass 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.6s;
+  }
+  .stitch-entry[data-entry-screen="splash"] .anim-footer {
+    animation: stitch-splash-contentSlideUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stitch-entry[data-entry-screen="splash"] *, .stitch-entry[data-entry-screen="splash"] ::before, .stitch-entry[data-entry-screen="splash"] ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+
+    .stitch-entry[data-entry-screen="splash"] {
+      min-height: max(884px, 100dvh);
+    }
+
+
+    .stitch-entry[data-entry-screen="welcome"] {
+      background-color: #F3F6F8;
+      font-family: var(--font-stitch-entry), system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .stitch-entry[data-entry-screen="welcome"] .screen-container {
+      width: 100%;
+      max-width: 420px;
+      min-height: 100vh;
+      margin: 0 auto;
+      position: relative;
+      background: #FFFFFF;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Primary CTA Gradient */
+    .stitch-entry[data-entry-screen="welcome"] .btn-gradient-primary {
+      background: linear-gradient(105deg, #0E2940 0%, #0A6F70 54%, #05A987 100%);
+    }
+
+    /* Soft landscape blend overlay */
+    .stitch-entry[data-entry-screen="welcome"] .scenic-gradient-blend {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.94) 0%,
+        rgba(255, 255, 255, 0.82) 22%,
+        rgba(255, 255, 255, 0.40) 45%,
+        rgba(255, 255, 255, 0.20) 65%,
+        rgba(255, 255, 255, 0.70) 86%,
+        #FFFFFF 100%
+      );
+    }
+
+    /* Dynamic Atmospheric Breathe Zoom */
+    @keyframes stitch-welcome-kenBurnsAtmosphere {
+      0% {
+        transform: scale(1.0);
+      }
+      100% {
+        transform: scale(1.038);
+      }
+    }
+
+    .stitch-entry[data-entry-screen="welcome"] .ken-burns-bg {
+      animation: stitch-welcome-kenBurnsAtmosphere 11s ease-in-out infinite alternate;
+      transform-origin: center center;
+    }
+
+    /* Staggered Cascading Entrances */
+    .stitch-entry[data-entry-screen="welcome"] .motion-item {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+    }
+
+    .stitch-entry[data-entry-screen="welcome"] .motion-item.animate-in {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Primary Button Specular Shimmer Sweep */
+    @keyframes stitch-welcome-shimmerSweep {
+      0% {
+        transform: translateX(-150%) skewX(-20deg);
+      }
+      25%, 100% {
+        transform: translateX(250%) skewX(-20deg);
+      }
+    }
+
+    .stitch-entry[data-entry-screen="welcome"] .shimmer-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.25),
+        transparent
+      );
+      animation: stitch-welcome-shimmerSweep 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      pointer-events: none;
+    }
+
+    /* Arrow icon micro-slide */
+    .stitch-entry[data-entry-screen="welcome"] .group-btn:hover .arrow-icon,
+    .stitch-entry[data-entry-screen="welcome"] .group-btn:active .arrow-icon {
+      transform: translateX(4px);
+    }
+
+    /* Card Micro-interactions */
+    .stitch-entry[data-entry-screen="welcome"] .benefit-card {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .stitch-entry[data-entry-screen="welcome"] .benefit-card:hover, .stitch-entry[data-entry-screen="welcome"] .benefit-card:active {
+      transform: translateY(-3px);
+      border-color: #079B78;
+    }
+    .stitch-entry[data-entry-screen="welcome"] .benefit-card:hover .icon-box, .stitch-entry[data-entry-screen="welcome"] .benefit-card:active .icon-box {
+      transform: scale(1.1);
+    }
+
+    /* Ripple pulse on card selection */
+    .stitch-entry[data-entry-screen="welcome"] .benefit-card.selected-card {
+      border-color: #079B78;
+      background-color: #F7FCFA;
+      box-shadow: 0 4px 18px rgba(7, 155, 120, 0.15);
+    }
+
+    /* Prefers reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .stitch-entry[data-entry-screen="welcome"] .ken-burns-bg, .stitch-entry[data-entry-screen="welcome"] .shimmer-layer {
+        animation: none !important;
+      }
+      .stitch-entry[data-entry-screen="welcome"] .motion-item {
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+    }
+
+
+    .stitch-entry[data-entry-screen="login"] {
+      background-color: #EEF2F5;
+      font-family: var(--font-stitch-entry), system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .mobile-screen {
+      width: 100%;
+      max-width: 390px;
+      min-height: 100vh;
+      margin: 0 auto;
+      position: relative;
+      background: #FFFFFF;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Primary CTA Gradient */
+    .stitch-entry[data-entry-screen="login"] .btn-gradient-primary {
+      background: linear-gradient(108deg, #093748 0%, #06655a 50%, #05A987 100%);
+      background-size: 200% 200%;
+      transition: all 0.3s ease;
+    }
+    .stitch-entry[data-entry-screen="login"] .btn-gradient-primary:hover {
+      background-position: right center;
+    }
+
+    /* Subtle smooth interactions */
+    .stitch-entry[data-entry-screen="login"] .btn-tap {
+      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, opacity 0.15s ease;
+    }
+    .stitch-entry[data-entry-screen="login"] .btn-tap:active {
+      transform: scale(0.98);
+      opacity: 0.94;
+    }
+
+    /* Bottom fade overlay for landscape */
+    .stitch-entry[data-entry-screen="login"] .scenic-bottom-gradient {
+      background: linear-gradient(
+        180deg,
+        #FFFFFF 0%,
+        rgba(255, 255, 255, 0.92) 20%,
+        rgba(255, 255, 255, 0.45) 50%,
+        rgba(255, 255, 255, 0.10) 75%,
+        rgba(255, 255, 255, 0.35) 100%
+      );
+    }
+
+    /* Custom Checkbox spring */
+    .stitch-entry[data-entry-screen="login"] .checkbox-spring {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .stitch-entry[data-entry-screen="login"] .checkbox-spring:active {
+      transform: scale(0.85);
+    }
+
+    /* Staggered entrance animation keyframes */
+    @keyframes stitch-login-animFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes stitch-login-animScaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes stitch-login-animSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes stitch-login-subtlePulseGlow {
+      0%, 100% {
+        box-shadow: 0 8px 20px -4px rgba(7, 155, 120, 0.35);
+      }
+      50% {
+        box-shadow: 0 10px 24px -2px rgba(7, 155, 120, 0.55);
+      }
+    }
+
+    .stitch-entry[data-entry-screen="login"] .animate-pulse-glow {
+      animation: stitch-login-subtlePulseGlow 3s infinite ease-in-out;
+    }
+
+    /* Staggered animation classes applied to elements */
+    .stitch-entry[data-entry-screen="login"] .entrance-node {
+      opacity: 0;
+      animation-fill-mode: forwards;
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-topbar {
+      animation-name: stitch-login-animFadeIn;
+      animation-duration: 400ms;
+      animation-delay: 50ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-logo {
+      animation-name: stitch-login-animScaleIn;
+      animation-duration: 450ms;
+      animation-delay: 150ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-title {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 450ms;
+      animation-delay: 240ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-subtitle {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 450ms;
+      animation-delay: 330ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-input-1 {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 450ms;
+      animation-delay: 420ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-input-2 {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 450ms;
+      animation-delay: 500ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-aux {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 420ms;
+      animation-delay: 570ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-btn-submit {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 480ms;
+      animation-delay: 650ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-divider {
+      animation-name: stitch-login-animFadeIn;
+      animation-duration: 400ms;
+      animation-delay: 720ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-btn-guest {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 460ms;
+      animation-delay: 780ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-quote {
+      animation-name: stitch-login-animSlideUp;
+      animation-duration: 500ms;
+      animation-delay: 880ms;
+    }
+
+    .stitch-entry[data-entry-screen="login"] .play-anim .anim-scenic {
+      animation-name: stitch-login-animFadeIn;
+      animation-duration: 600ms;
+      animation-delay: 950ms;
+    }
+
+    /* Floating ambient mist leaf dots */
+    @keyframes stitch-login-floatParticle {
+      0% { transform: translateY(0px) rotate(0deg); opacity: 0.2; }
+      50% { transform: translateY(-8px) rotate(15deg); opacity: 0.6; }
+      100% { transform: translateY(0px) rotate(0deg); opacity: 0.2; }
+    }
+    .stitch-entry[data-entry-screen="login"] .ambient-dot {
+      animation: stitch-login-floatParticle 4s ease-in-out infinite;
+    }
+
+    /* Input focus styling transitions */
+    .stitch-entry[data-entry-screen="login"] .input-field-group {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .stitch-entry[data-entry-screen="login"] .input-field-group:focus-within {
+      border-color: #079B78 !important;
+      box-shadow: 0 0 0 3.5px rgba(7, 155, 120, 0.16) !important;
+    }
+    .stitch-entry[data-entry-screen="login"] .input-field-group:focus-within svg.input-icon {
+      color: #079B78 !important;
+      transform: scale(1.08);
+    }
+    .stitch-entry[data-entry-screen="login"] svg.input-icon {
+      transition: transform 0.25s ease, color 0.25s ease;
+    }
+
+    /* Primary button arrow micro-interaction */
+    .stitch-entry[data-entry-screen="login"] .btn-gradient-primary:hover svg.arrow-icon,
+    .stitch-entry[data-entry-screen="login"] .btn-gradient-primary:active svg.arrow-icon {
+      transform: translateX(4px);
+    }
+    .stitch-entry[data-entry-screen="login"] #btnGuest:hover svg.guest-arrow,
+    .stitch-entry[data-entry-screen="login"] #btnGuest:active svg.guest-arrow {
+      transform: translateX(3px);
+    }
+    .stitch-entry[data-entry-screen="login"] svg.arrow-icon, .stitch-entry[data-entry-screen="login"] svg.guest-arrow {
+      transition: transform 0.2s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .stitch-entry[data-entry-screen="login"] .entrance-node {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+      }
+      .stitch-entry[data-entry-screen="login"] .ambient-dot, .stitch-entry[data-entry-screen="login"] .animate-pulse-glow {
+        animation: none !important;
+      }
+    }
+
+
+    .stitch-entry[data-entry-screen="reset"] {
+      background-color: #F3F6F8;
+      font-family: var(--font-stitch-entry), system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      margin: 0;
+      padding: 0;
+    }
+
+    .stitch-entry[data-entry-screen="reset"] .screen-container {
+      width: 100%;
+      max-width: 390px;
+      min-height: 100vh;
+      margin: 0 auto;
+      position: relative;
+      background: linear-gradient(175deg, #DEFAF0 0%, #EBF8F4 18%, #F6FCFA 42%, #FFFFFF 68%, #E4F5EE 100%);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Staggered entrance animation keyframes */
+    @keyframes stitch-reset-fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stitch-entry[data-entry-screen="reset"] .animate-in {
+      animation: stitch-reset-fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .stitch-entry[data-entry-screen="reset"] .motion-item {
+      opacity: 0;
+      transform: translateY(18px);
+      will-change: transform, opacity;
+    }
+
+    /* Icon transitions */
+    .stitch-entry[data-entry-screen="reset"] .field-container:focus-within .field-icon {
+      color: #079B78 !important;
+    }
+
+
+/* Compatibility with the original Tailwind 3/forms rendering. */
+.stitch-entry { min-height: 100dvh; font-family: var(--font-stitch-entry), system-ui, sans-serif; color-scheme: light; line-height: 1.5; }
+.stitch-entry *, .stitch-entry *::before, .stitch-entry *::after { box-sizing: border-box; }
+.stitch-entry button, .stitch-entry input { font-family: inherit; letter-spacing: inherit; }
+.stitch-entry input { line-height: 1.5; box-shadow: none; min-width: 0; }
+.stitch-entry input:focus { outline: none; }
+.stitch-entry input::placeholder { opacity: 1; }
+.stitch-entry[data-entry-screen="reset"] input { line-height: 24px; }
+.stitch-entry[data-entry-screen="reset"] header > div:first-child span { line-height: 16px; }
+.stitch-entry button:enabled { cursor: pointer; }
+.stitch-entry button:disabled { cursor: wait; }
+.stitch-entry :where(main > *) { animation: none; }
+.stitch-entry :where(button, [role="button"]):hover { transform: none; }
+.stitch-entry #toastNotification { animation: none; }
+.stitch-entry :focus-visible { outline: 2px solid #079B78; outline-offset: 3px; }
+.stitch-entry .stitch-shadow-card { box-shadow: 0 4px 18px -2px rgba(14,41,64,.05),0 2px 6px -1px rgba(14,41,64,.03); }
+.stitch-entry .stitch-shadow-input { box-shadow: 0 1px 3px 0 rgba(14,41,64,.04); }
+.stitch-entry .stitch-shadow-btn-primary { box-shadow: 0 8px 20px -4px rgba(7,155,120,.35); }
+.stitch-entry[data-entry-screen="welcome"] .stitch-shadow-btn-primary { box-shadow: 0 8px 20px -4px rgba(10,111,112,.35); }
+.stitch-entry .stitch-shadow-btn-secondary { box-shadow: 0 2px 8px -1px rgba(14,41,64,.04); }
+.stitch-entry .stitch-shadow-toast { box-shadow: 0 10px 25px -4px rgba(14,41,64,.2); }
+.stitch-entry[data-entry-screen="welcome"] .stitch-shadow-toast { box-shadow: 0 12px 30px -4px rgba(14,41,64,.25); }
+.stitch-entry[data-entry-screen="welcome"] .stitch-cascade { animation: stitch-welcome-cascade .75s cubic-bezier(.16,1,.3,1) forwards; }
+@keyframes stitch-welcome-cascade { to { opacity: 1; transform: translateY(0) scale(1); } }
+.stitch-entry[data-entry-screen="reset"] .stitch-cascade { animation: stitch-reset-fadeInUp .55s cubic-bezier(.16,1,.3,1) forwards; }
+.stitch-entry .benefit-card[data-selected="true"] { border-color: #079B78; background-color: #F7FCFA; box-shadow: 0 4px 18px rgba(7,155,120,.15); }
+.stitch-entry .benefit-card[data-selected="true"] .card-check { opacity: 1; }
+.stitch-entry input:not(:checked) + .checkbox-spring { background: white; border-color: #CAD4DC; }
+.stitch-entry input:focus-visible + .checkbox-spring { outline: 2px solid #079B78; outline-offset: 3px; }
+.stitch-entry .stitch-material-icon { width: 1em; height: 1em; stroke-width: 2; }
+.stitch-entry .stitch-form-error { font-size: 13px; line-height: 1.5; color: #b42318; background: #fff1f0; border-radius: 12px; padding: 10px 12px; }
+.stitch-entry[data-entry-screen="splash"] { display: flex; justify-content: center; align-items: center; background: #0f172a; }
+/* Match the source canvas at 390 × 884; use the device height on smaller phones. */
+@media (max-width: 480px) {
+ .stitch-entry[data-entry-screen="splash"] { min-height: 100dvh; }
+ .stitch-entry[data-entry-screen="splash"] #splash-stage { height: min(884px, 100dvh); }
+}
+@media (prefers-reduced-motion: reduce) {
+ .stitch-entry *, .stitch-entry *::before, .stitch-entry *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+ .stitch-entry .motion-item { opacity: 1 !important; transform: none !important; }
+}

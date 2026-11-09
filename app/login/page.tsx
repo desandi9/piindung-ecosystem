@@ -3,6 +3,7 @@
 import { LoginForm } from "@/components/piindung/login-form"
 import { PromoPanel } from "@/components/piindung/promo-panel"
 import { LoginTransitionScreen } from "@/components/piindung/login-transition-screen"
+import { GorutMobileEntry } from "@/components/gorut-v2/entry/gorut-mobile-entry"
 import { resolveLoginPresentation } from "@/lib/login-presentation"
 import { useSearchParams } from "next/navigation"
 import { useState } from "react"
@@ -13,19 +14,7 @@ export default function LoginPage() {
   const presentation = resolveLoginPresentation(searchParams.get("next"))
 
   if (presentation.kind === "gorut-mobile") {
-    return (
-      <main
-        className="min-h-[100svh] overflow-x-hidden bg-[#f6f8f6] sm:px-6"
-        data-login-presentation="gorut-mobile"
-        data-mobile-actor={presentation.actorType.toLowerCase()}
-      >
-        <div className="mx-auto flex min-h-[100svh] w-full max-w-[430px] items-center bg-white px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2.5rem,env(safe-area-inset-top))] sm:border-x sm:border-[#e4eae7] sm:px-8">
-          <section className="w-full" aria-label={`Login GORUT ${presentation.actorLabel}`}>
-            <LoginForm presentation={presentation} />
-          </section>
-        </div>
-      </main>
-    )
+    return <GorutMobileEntry presentation={presentation} />
   }
 
   return (

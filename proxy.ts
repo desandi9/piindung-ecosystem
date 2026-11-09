@@ -4,6 +4,7 @@ import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 import { canAccessLandingPageRoute, canAccessPortalAccessApiRoute } from "@/lib/portal-access"
 import { resolveAuthenticatedLoginDestination } from "@/lib/login-presentation"
 import { safeRedirectPath } from "@/lib/safe-redirect"
+import { isMobileEntryPath, mobileLoginPath } from "./lib/gorut/mobile-entry-routes"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
@@ -123,6 +124,7 @@ function canAccessGorutPath(role: string | null | undefined, pathname: string) {
 }
 
 function isPublicPath(pathname: string) {
+  if (isMobileEntryPath(pathname)) return true
   if (pathname === "/produk" || pathname === "/dampak" || pathname === "/artikel" || pathname.startsWith("/artikel/")) return true
   return ["/", "/login", "/program", "/informasi", "/laporan", "/rekening-donasi", "/qris-donasi", "/bantuan", "/kontak", "/galeri", "/download", "/verify"].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
@@ -210,6 +212,9 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!session) {
+    if (pathname.startsWith("/gorut-v2/mobile/")) {
+      return NextResponse.redirect(new URL(mobileLoginPath(`${pathname}${request.nextUrl.search}`), request.url))
+    }
     const loginUrl = new URL("/login", request.url)
     loginUrl.searchParams.set("next", safeRedirectPath(`${pathname}${request.nextUrl.search}`))
     return NextResponse.redirect(loginUrl)
