@@ -1,4 +1,6 @@
 import type { CollectionBatch, CollectionVisitStatus, KordesVillageRecap } from './types';
+import { hasF015HandoverEvidence } from './document-evidence';
+import { isF009Confirmed } from './f009-eligibility';
 
 type DocumentRequest<T extends string, D> = {
   documentType: T;
@@ -73,9 +75,8 @@ const visitStatusLabels: Record<CollectionVisitStatus, string> = {
 };
 
 const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 const words = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
-const fundraisingOfficerName = 'Divisi Fundraising NU Care-LAZISNU Garut';
+const fundraisingOfficerName = '';
 
 function formatNumber(value: number) {
   return Math.round(value).toLocaleString('id-ID');
@@ -117,11 +118,6 @@ export function numberToIndonesianWords(value: number) {
   return `${value === 0 ? 'Nol' : spell(value)} Rupiah`;
 }
 
-function documentNumber(form: 'F.010', recap: KordesVillageRecap) {
-  const [year, month] = recap.period.split('-');
-  return `${form}/${filenamePart(recap.village).toUpperCase()}/${romanMonths[Number(month) - 1] ?? month}/${year}`;
-}
-
 function recapBatches(recap: KordesVillageRecap, batches: CollectionBatch[]) {
   const byId = new Map(batches.map((batch) => [batch.id, batch]));
   return recap.plpkRows.map((row) => {
@@ -135,12 +131,13 @@ function recapBatches(recap: KordesVillageRecap, batches: CollectionBatch[]) {
 }
 
 export function buildF009DocumentRequest(batch: CollectionBatch): DocumentRequest<'f009', F009DocumentData> {
+  if (!isF009Confirmed(batch)) throw new Error('F.009 menunggu konfirmasi PLPK.');
   const periodLabel = formatPeriod(batch.period);
   return {
     documentType: 'f009',
     filename: `F.009-${filenamePart(batch.village)}-${filenamePart(batch.plpkName)}-${filenamePart(periodLabel)}.pdf`,
     data: {
-      documentNumber: batch.f009DocumentNumber ?? batch.documentNumber,
+      documentNumber: 'dataMode' in batch && batch.dataMode === 'server' ? 'Belum diterbitkan' : batch.f009DocumentNumber ?? batch.documentNumber,
       verificationStatus: batch.status === 'verified-by-kordes' ? 'Terverifikasi' : 'Belum Verifikasi',
       plpkName: batch.plpkName,
       plpkId: batch.plpkId,
@@ -179,7 +176,7 @@ export function buildF010DocumentRequest(recap: KordesVillageRecap, batches: Col
     documentType: 'f010',
     filename: `F.010-${filenamePart(recap.village)}-${filenamePart(periodLabel)}.pdf`,
     data: {
-      documentNumber: documentNumber('F.010', recap),
+      documentNumber: recap.f010Number?.trim() || 'Belum diterbitkan',
       village: recap.village,
       kecamatan: recap.kecamatan,
       kordesName: recap.kordesName,
@@ -210,6 +207,7 @@ export function buildF010DocumentRequest(recap: KordesVillageRecap, batches: Col
 }
 
 export function buildF015DocumentRequest(recap: KordesVillageRecap, batches: CollectionBatch[]): DocumentRequest<'f015', F015DocumentData> {
+  if (!hasF015HandoverEvidence(recap)) throw new Error('F.015 menunggu bukti serah-terima faktual Ranting ke UPZIS.');
   const sources = recapBatches(recap, batches);
   const totals = sources.reduce((sum, { batch }) => ({
     active: sum.active + batch.activeCanCount,

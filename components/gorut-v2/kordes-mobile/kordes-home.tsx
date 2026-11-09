@@ -11,7 +11,8 @@ import {
   UserGroupIcon,
   UserMultipleIcon,
 } from '@hugeicons/core-free-icons';
-import { Bell } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { HomeHeader, HomeHero, HomeProgress, HomeSection, HomeStat, HomeValue } from '../home/home-ui';
 
 import { MobileNewsPortal } from '@/components/gorut-v2/mobile-shared/mobile-news-portal';
 import { formatNumber, formatRupiah } from '@/features/gorut-v2/formatters';
@@ -21,7 +22,7 @@ import type { CollectionBatch } from '@/features/gorut-v2/types';
 import { formatPeriodLabel } from '@/features/gorut-v2/pengambilan-options';
 
 import { MobileServiceIcon } from '../plpk-mobile/mobile-service-icon';
-import { MobileSectionHeader, MobileServiceTile } from '../plpk-mobile/mobile-ui';
+import { MobileServiceTile } from '../plpk-mobile/mobile-ui';
 import type { KordesMobileProfile } from '../../../lib/gorut/mobile-actor-access-pure';
 
 export type KordesHomeProfile = KordesMobileProfile;
@@ -56,47 +57,24 @@ export function KordesHome({
   const financialReady = periodBatches.every((batch) => !isServerCollectionBatch(batch) || batch.canonical.financial.status === 'READY');
 
   return (
-    <div className="plpk-scroll plpk-home-screen kordes-home-screen">
-      <header className="plpk-home-header kordes-home-header">
-        <div className="plpk-home-avatar" aria-hidden="true">{profile.identity.initials}</div>
-        <div className="plpk-home-greeting">
-          <span>Assalamu’alaikum</span>
-          <strong>{profile.name}</strong>
-          <small>{profile.identity.assignmentLabel} · {profile.upzis}</small>
-        </div>
-        <button type="button" className="plpk-icon-button plpk-notification-button" onClick={() => onNavigate('notifications')} aria-label={`Buka notifikasi, ${unreadCount} belum dibaca`}>
-          <Bell size={21} aria-hidden="true" />{unreadCount ? <i aria-hidden="true" /> : null}
-        </button>
-      </header>
-
-      <section className="plpk-period-hero kordes-period-hero" aria-labelledby="kordes-period-title">
-        <div className="plpk-period-top"><div><span>Periode aktif</span><h1 id="kordes-period-title">{formatPeriodLabel(period)}</h1></div><span className="kordes-period-pill">{summary.activePlpk} PLPK</span></div>
-        <div className="kordes-period-stats">
-          <div><strong>{summary.submittedPlpk}</strong><span>Sudah kirim</span></div>
-          <div><strong>{summary.waiting}</strong><span>Menunggu</span></div>
-          <div><strong>{summary.verified}</strong><span>Terverifikasi</span></div>
-          <div><strong>{summary.corrections}</strong><span>Perlu koreksi</span></div>
-        </div>
-        <div className="plpk-progress-head"><span>Progres verifikasi ranting</span><strong>{summary.progress}%</strong></div>
-        <div className="plpk-progress-track" role="progressbar" aria-label="Progres verifikasi" aria-valuemin={0} aria-valuemax={100} aria-valuenow={summary.progress}><i style={{ width: `${summary.progress}%` }} /></div>
-        <button type="button" className="plpk-btn plpk-btn-hero" onClick={() => onNavigate('verification')}><MobileServiceIcon icon={CheckListIcon} label="Buka antrean" size={20} />Buka Antrean Verifikasi</button>
+    <div className="plpk-scroll gh-home">
+      <HomeHeader role="Ruang Kordes" name={profile.name} assignment={`${profile.identity.assignmentLabel} · ${profile.upzis}`} initials={profile.identity.initials} unreadCount={unreadCount} onNotifications={() => onNavigate('notifications')} />
+      <HomeHero eyebrow={formatPeriodLabel(period)} label="Total perolehan ranting" value={<HomeValue>{financialReady ? formatRupiah(summary.grossAmount) : 'Belum siap'}</HomeValue>} note={`${formatNumber(periodBatches.reduce((n, batch) => n + batch.collectedCanCount, 0))} kaleng terjemput`}>
+        <div className="gh-hero-footer"><span>{summary.activePlpk} PLPK dalam pendampingan</span><MobileServiceIcon icon={Coins01Icon} label="Perolehan" size={23} /></div>
+      </HomeHero>
+      <div className="gh-stats" aria-label="Ringkasan verifikasi">
+        <HomeStat label="Menunggu" value={summary.waiting} icon={<MobileServiceIcon icon={Notification02Icon} label="" size={18} />} />
+        <HomeStat label="Terverifikasi" value={summary.verified} icon={<MobileServiceIcon icon={CheckListIcon} label="" size={18} />} />
+        <HomeStat label="Perlu koreksi" value={summary.corrections} icon={<MobileServiceIcon icon={Analytics02Icon} label="" size={18} />} />
+      </div>
+      <section className="gh-surface" aria-label="Progres verifikasi ranting">
+        <div className="gh-surface-head"><div><h2>Dampingi setiap langkah</h2><p>{summary.submittedPlpk} dari {summary.activePlpk} PLPK sudah kirim</p></div></div>
+        <HomeProgress value={summary.progress} label="Progres verifikasi ranting" detail={`${summary.progress}%`} />
+        <button type="button" className="gh-button" onClick={() => onNavigate('verification')}>Buka antrean verifikasi<ArrowRight size={18} /></button>
       </section>
-
-      <section className="plpk-home-section">
-        <MobileSectionHeader title="Informasi Utama" description="Ringkasan seluruh PLPK dalam ranting" />
-        <article className="plpk-amount-card"><span className="plpk-amount-icon"><MobileServiceIcon icon={Coins01Icon} label="Total perolehan" size={21} /></span><div><small>Total Perolehan</small><strong>{financialReady ? formatRupiah(summary.grossAmount) : 'Belum siap'}</strong><span>{formatNumber(periodBatches.reduce((n, batch) => n + batch.collectedCanCount, 0))} kaleng terjemput</span></div></article>
-        <div className="plpk-home-stat-grid">
-          <article><span><MobileServiceIcon icon={Notification02Icon} label="Menunggu verifikasi" size={19} /></span><small>Menunggu</small><strong>{summary.waiting}</strong></article>
-          <article><span><MobileServiceIcon icon={CheckListIcon} label="Terverifikasi" size={19} /></span><small>Terverifikasi</small><strong>{summary.verified}</strong></article>
-          <article><span><MobileServiceIcon icon={Analytics02Icon} label="Perlu koreksi" size={19} /></span><small>Perlu Koreksi</small><strong>{summary.corrections}</strong></article>
-        </div>
-      </section>
-
-      <section className="plpk-home-section">
-        <MobileSectionHeader title="Menu Utama" description="Akses operasional Kordes" />
+      <HomeSection title="Ruang kerja Anda" description="Pendampingan dan verifikasi ranting.">
         <div className="plpk-quick-grid">{menu.map((item) => <MobileServiceTile key={item.title} {...item} compact onClick={() => onNavigate(item.destination)} />)}</div>
-      </section>
-
+      </HomeSection>
       <MobileNewsPortal onOpenAll={() => onNavigate('news')} onOpenArticle={onOpenArticle} />
     </div>
   );

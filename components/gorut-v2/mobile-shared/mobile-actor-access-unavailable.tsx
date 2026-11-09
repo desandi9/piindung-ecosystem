@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useMobileLogout } from '@/features/gorut-v2/mobile-auth';
 import type { MobileActorType } from '../../../lib/gorut/mobile-actor-access-pure';
 
-const actorLabels: Record<MobileActorType, string> = { MUNFIQ: 'Munfiq', PLPK: 'PLPK', KORDES: 'Kordes' };
+const actorLabels: Record<MobileActorType, string> = { MUNFIQ: 'Munfiq', PLPK: 'PLPK', KORDES: 'Kordes', UPZIS: 'UPZIS', PC: 'PC' };
 
 export function MobileActorAccessUnavailable({
   actorType,

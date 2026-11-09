@@ -39,7 +39,7 @@ const tabs: { key: KordesTab; label: string; icon: IconSvgElement }[] = [
   { key: 'profile', label: 'Profil', icon: UserIcon },
 ];
 
-export function KordesMobileServerApp({ profile }: { profile: KordesHomeProfile }) {
+export function KordesMobileServerApp({ profile, hasMunfiqSpace = false }: { profile: KordesHomeProfile; hasMunfiqSpace?: boolean }) {
   const api = useCollectionApi({ page: 1, pageSize: 100, status: 'WAITING_KORDES_VERIFICATION' });
   const [tab, setTab] = useState<KordesTab>('home');
   const [subScreen, setSubScreen] = useState<KordesSubScreen | null>(null);
@@ -157,7 +157,7 @@ export function KordesMobileServerApp({ profile }: { profile: KordesHomeProfile 
     {!subScreen && tab === 'verification' ? <KordesVerificationTab batches={periodBatches} period={period} onOpen={(batch) => void openVerification(batch.id)} onOpenF009={(batch) => setF009BatchId(batch.id)} onOpenJournal={() => navigateTab('journal')} /> : null}
     {!subScreen && tab === 'journal' ? <KordesJournalTab batches={batches} village={profile.village} kecamatan={profile.kecamatan} onOpenRecap={(nextPeriod) => { setRecapPeriod(nextPeriod); setSubScreen('recap'); }} /> : null}
     {!subScreen && tab === 'services' ? <KordesServicesTab unreadCount={unreadCount} onOpen={setSubScreen} /> : null}
-    {!subScreen && tab === 'profile' ? <KordesProfileTab profile={profile} plpkCount={new Set(batches.map((batch) => batch.plpkId)).size} onNotice={showToast} onLogout={logout} logoutPending={logoutPending} /> : null}
+    {!subScreen && tab === 'profile' ? <KordesProfileTab profile={profile} plpkCount={new Set(batches.map((batch) => batch.plpkId)).size} hasMunfiqSpace={hasMunfiqSpace} onNotice={showToast} onLogout={logout} logoutPending={logoutPending} /> : null}
 
     <MobileBottomNav items={tabs.map((item) => ({ ...item, badge: item.key === 'verification' ? waitingCount : undefined, badgeLabel: item.key === 'verification' ? `${waitingCount} antrean menunggu` : undefined }))} activeKey={currentTab} ariaLabel="Navigasi utama Kordes" onSelect={navigateTab} />
 

@@ -214,6 +214,7 @@ export interface KordesVillageRecap {
   village: string;
   kordesName: string;
   upzisOfficerName: string;
+  f010Number?: string;
   f015Number: string;
   handoverDate: string;
   plpkRows: KordesVerification[];

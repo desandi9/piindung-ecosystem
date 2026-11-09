@@ -1,5 +1,6 @@
 import type { CollectionBatch, KordesVerification, KordesVillageRecap } from './types';
 import { getCollectionSnapshot } from './collection-store';
+import { hasF015HandoverEvidence } from './document-evidence';
 
 const eligibleStatuses: CollectionBatch['status'][] = ['waiting-kordes-verification', 'verified-by-kordes', 'needs-correction'];
 
@@ -35,7 +36,7 @@ export function buildKordesVerifications(batches: CollectionBatch[] = getCollect
     .filter((batch) => eligibleStatuses.includes(batch.status))
     .map((batch, index) => {
       /** Batch hasil konfirmasi mobile belum punya seed, jadi masuk sebagai menunggu verifikasi. */
-      const seed = batch.status === 'waiting-kordes-verification'
+      const seed = 'dataMode' in batch && batch.dataMode === 'server' ? { status: batch.status as KordesVerification['status'] } : batch.status === 'waiting-kordes-verification'
         ? { status: 'waiting-kordes-verification' as const }
         : verificationSeeds[batch.id] ?? fallbackSeed(index, batch);
       return {
@@ -73,21 +74,20 @@ export function createVillageRecaps(verifications: KordesVerification[]): Kordes
     const key = `${item.period}|${item.kecamatan}|${item.village}`;
     groups.set(key, [...(groups.get(key) ?? []), item]);
   }
-  return Array.from(groups.entries()).map(([key, rows], index) => {
+  return Array.from(groups.entries()).map(([key, rows]) => {
     const [period, kecamatan, village] = key.split('|');
     const allReady = rows.every((row) => row.status === 'verified-by-kordes');
-    const code = village.toUpperCase().replace(/\s+/g, '');
     return {
       id: `recap-${period}-${kecamatan}-${village}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       period,
       kecamatan,
       village,
       kordesName: rows[0]?.kordesName ?? `Kordes ${village}`,
-      upzisOfficerName: `Admin UPZIS ${kecamatan}`,
-      f015Number: `BA/GORUT/F015/${code}/VIII/2026/${String(index + 1).padStart(3, '0')}`,
-      handoverDate: '2026-08-01',
+      upzisOfficerName: '',
+      f015Number: '',
+      handoverDate: '',
       plpkRows: rows,
-      f015Status: allReady ? (index % 3 === 0 ? 'waiting-upzis-handover' : 'f015-ready') : 'waiting-plpk-completion',
+      f015Status: allReady ? 'waiting-upzis-handover' : 'waiting-plpk-completion',
       handedToUpzisAt: undefined,
     };
   });
@@ -112,5 +112,5 @@ export function getBatch(batchId: string) {
 }
 
 export function isF015Ready(recap: KordesVillageRecap) {
-  return recap.plpkRows.every((row) => row.status === 'verified-by-kordes');
+  return hasF015HandoverEvidence(recap);
 }

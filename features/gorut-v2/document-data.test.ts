@@ -55,7 +55,8 @@ test('F.009 prefers the assigned document number when available', () => {
 test('F.010 data derives PLPK rows and totals from the same village batches', () => {
   const request = buildF010DocumentRequest(recap, [batch()]);
   assert.equal(request.documentType, 'f010');
-  assert.equal(request.data.documentNumber, 'F.010/MEKARJAYA/VII/2026');
+  assert.equal(request.data.documentNumber, 'Belum diterbitkan');
+  assert.equal(buildF010DocumentRequest({ ...recap, f010Number: '  ' }, [batch()]).data.documentNumber, 'Belum diterbitkan');
   assert.deepEqual(request.data.rows[0], {
     index: '1', plpkName: 'Dede Rahmat', active: '2', collected: '1', percentage: '50%', average: '12.500', gross: '12.500', fee: '2.500', net: '10.000', verifiedAt: '11 Jul 2026',
   });
@@ -63,14 +64,16 @@ test('F.010 data derives PLPK rows and totals from the same village batches', ()
   assert.equal(request.data.totalPercentage, '50%');
 });
 
-test('F.015 remains narrative and reports the verified village totals in words', () => {
-  const request = buildF015DocumentRequest(recap, [batch()]);
-  assert.equal(request.documentType, 'f015');
-  assert.equal(request.data.documentNumber, 'F.015/MKR/VII/2026/001');
-  assert.equal(request.data.totalNet, 'Rp10.000');
-  assert.equal(request.data.totalWords, 'Sepuluh Ribu Rupiah');
-  assert.equal(request.data.totalPlpk, '1');
-  assert.equal(request.data.verificationStatus, 'Data penerimaan terverifikasi');
+test('F.015 rejects verified village totals without factual Ranting to UPZIS handover evidence', () => {
+  const missingHandoverEvidence: KordesVillageRecap[] = [
+    recap,
+    { ...recap, f015Status: 'handed-to-upzis' },
+    { ...recap, f015Number: '', handoverDate: '', upzisOfficerName: '' },
+  ];
+  for (const source of missingHandoverEvidence) {
+    assert.throws(() => buildF015DocumentRequest(source, [batch()]),
+      /F\.015 menunggu bukti serah-terima faktual Ranting ke UPZIS\./);
+  }
 });
 
 test('Indonesian amount words handle zero, teens, thousands, and millions', () => {

@@ -4,11 +4,15 @@ import { KordesMobileApp } from '@/components/gorut-v2/kordes-mobile/kordes-mobi
 import { MobileActorAccessUnavailable } from '@/components/gorut-v2/mobile-shared/mobile-actor-access-unavailable';
 import { resolveCurrentKordesMobileAccess } from '../../../../lib/gorut/mobile-actor-access';
 import { resolveMobileEntry } from '../../../../lib/gorut/mobile-actor-access-pure';
+import { hasCurrentMunfiqSpace } from '../../../../lib/gorut/mobile-role-space-server';
 
 export default async function KordesMobilePage() {
-  const access = await resolveCurrentKordesMobileAccess();
+  const [access, hasMunfiqSpace] = await Promise.all([
+    resolveCurrentKordesMobileAccess(),
+    hasCurrentMunfiqSpace(),
+  ]);
   const entry = resolveMobileEntry(access.kind, 'KORDES');
   if (entry.kind === 'redirect') redirect(entry.location);
   if (access.kind !== 'authorized') return <MobileActorAccessUnavailable actorType="KORDES" reason={access.kind === 'unavailable' ? 'unavailable' : 'forbidden'} />;
-  return <KordesMobileApp profile={access.profile} />;
+  return <KordesMobileApp profile={access.profile} hasMunfiqSpace={hasMunfiqSpace} />;
 }

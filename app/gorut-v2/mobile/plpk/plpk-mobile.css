@@ -1081,14 +1081,15 @@
 .plpk-account-inline { border-radius: 99px; background: var(--p-soft); padding: 4px 8px; color: var(--p-hover); font-size: 10px; }
 .plpk-profile-menu { overflow: hidden; border: 1px solid var(--p-border); border-radius: 18px; background: #fff; }
 .plpk-profile-menu-row,
-.plpk-profile-menu > button { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 11px; width: 100%; min-height: 70px; border: 0; border-bottom: 1px solid #edf1ef; background: #fff; padding: 10px 12px; color: var(--p-text); font-family: inherit; text-align: left; }
-.plpk-profile-menu > button:last-child { border-bottom: 0; }
+.plpk-profile-menu > button,
+.plpk-profile-menu > a { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 11px; width: 100%; min-height: 70px; border: 0; border-bottom: 1px solid #edf1ef; background: #fff; padding: 10px 12px; color: var(--p-text); font-family: inherit; text-align: left; text-decoration: none; }
+.plpk-profile-menu > :is(button, a):last-child { border-bottom: 0; }
 .plpk-profile-menu-row > div,
-.plpk-profile-menu > button > div { min-width: 0; }
+.plpk-profile-menu > :is(button, a) > div { min-width: 0; }
 .plpk-profile-menu-row strong,
-.plpk-profile-menu > button strong { display: block; color: var(--p-navy); font-size: 12px; }
+.plpk-profile-menu > :is(button, a) strong { display: block; color: var(--p-navy); font-size: 12px; }
 .plpk-profile-menu-row small,
-.plpk-profile-menu > button small { display: block; margin-top: 3px; color: var(--p-muted); font-size: 9px; line-height: 1.35; }
+.plpk-profile-menu > :is(button, a) small { display: block; margin-top: 3px; color: var(--p-muted); font-size: 9px; line-height: 1.35; }
 .plpk-switch { position: relative; width: 48px; height: 44px; border: 0; border-radius: 99px; background: transparent; padding: 11px 3px; }
 .plpk-switch::before { position: absolute; inset: 8px 1px; border-radius: 99px; background: #dce3df; content: ''; }
 .plpk-switch i { position: relative; z-index: 1; display: block; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(8,33,59,.2); transition: transform .18s; }
