@@ -11,7 +11,7 @@ export async function GET() {
   if ("response" in auth) return auth.response
   try {
     const prisma = getPrismaClient()
-    await syncGorutMunfiqMilestoneNotifications(prisma, auth.context.munfiqId)
+    await syncGorutMunfiqMilestoneNotifications(prisma, auth.context)
     return json(await listGorutMunfiqOwnCollections(prisma, auth.context))
   } catch (error) {
     console.error("GORUT Munfiq own history failed", error)

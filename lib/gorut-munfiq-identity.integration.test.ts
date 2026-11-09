@@ -88,6 +88,63 @@ test("admin authority and target lifecycle fail closed", async () => {
   assert.equal((await resolveGorutMunfiqContextForUser(prisma, inactive.id)).kind, "inactive-user")
 })
 
+test("self-context server allows linked Kordes, UPZIS, and PC but denies PLPK, unrelated admin, and no-link users", async () => {
+  const row = await fixture()
+  const [kordes, upzis, pc, plpk, unrelated, noLink] = await Promise.all([
+    createUser("admin_kordes"),
+    createUser("admin_upzis"),
+    createUser("admin_pc"),
+    createUser("admin_kordes"),
+    createUser("super_admin_pc"),
+    createUser("admin_pc"),
+  ])
+  const identitySeed = `${Date.now()}${sequence}`
+  const munfiqs = await Promise.all(["K", "U", "P", "L", "X"].map((suffix, index) =>
+    prisma.gorutMunfiq.create({
+      data: {
+        code: `${marker}-SELF-${suffix}-${sequence}`,
+        nik: `${identitySeed}${index}`,
+        name: `${marker} Self ${suffix}`,
+        rantingId: row.rantingB.id,
+        plpkId: row.plpkB.id,
+      },
+    }),
+  ))
+
+  await prisma.gorutOperationalAssignment.createMany({
+    data: [
+      { userId: kordes.id, role: "RANTING", rantingId: row.rantingB.id },
+      { userId: upzis.id, role: "UPZIS", kecamatanId: row.rantingB.kecamatanId },
+      { userId: pc.id, role: "PC" },
+      { userId: plpk.id, role: "PLPK", plpkId: row.plpkB.id },
+      { userId: noLink.id, role: "PC" },
+    ],
+  })
+  await prisma.gorutMunfiqAccountLink.createMany({
+    data: [kordes, upzis, pc, plpk, unrelated].map((user, index) => ({
+      linkCode: `${marker}-SELF-LINK-${index}-${sequence}`,
+      userId: user.id,
+      munfiqId: munfiqs[index]!.id,
+      linkedByUserId: row.admin.id,
+    })),
+  })
+
+  const [kordesContext, upzisContext, pcContext, plpkContext, unrelatedContext, noLinkContext] = await Promise.all([
+    resolveGorutMunfiqContextForUser(prisma, kordes.id),
+    resolveGorutMunfiqContextForUser(prisma, upzis.id),
+    resolveGorutMunfiqContextForUser(prisma, pc.id),
+    resolveGorutMunfiqContextForUser(prisma, plpk.id),
+    resolveGorutMunfiqContextForUser(prisma, unrelated.id),
+    resolveGorutMunfiqContextForUser(prisma, noLink.id),
+  ])
+  assert.equal(kordesContext.kind, "authorized")
+  assert.equal(upzisContext.kind, "authorized")
+  assert.equal(pcContext.kind, "authorized")
+  assert.equal(plpkContext.kind, "wrong-role")
+  assert.equal(unrelatedContext.kind, "wrong-role")
+  assert.equal(noLinkContext.kind, "mapping-unavailable")
+})
+
 test("parallel competing link attempts leave exactly one active winner", async () => {
   const row = await fixture()
   const attempts = await Promise.allSettled([

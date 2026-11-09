@@ -18,7 +18,7 @@ function userData(suffix: string, role = "munfiq") {
 async function createFixture() {
   const [actor, userA, userB] = await Promise.all([
     prisma.user.create({ data: userData("A", "super_admin_pc") }),
-    prisma.user.create({ data: userData("B") }),
+    prisma.user.create({ data: userData("B", "admin_kordes") }),
     prisma.user.create({ data: userData("C") }),
   ])
   const kecamatan = await prisma.gorutKecamatan.create({ data: { code: `${marker}-K`, name: `${marker} Kecamatan` } })
@@ -27,6 +27,9 @@ async function createFixture() {
     prisma.gorutPlpk.create({ data: { rantingId: ranting.id, code: `${marker}-P-HIST`, name: "PLPK Historis Amanah" } }),
     prisma.gorutPlpk.create({ data: { rantingId: ranting.id, code: `${marker}-P-NOW`, name: "PLPK Saat Ini" } }),
   ])
+  await prisma.gorutOperationalAssignment.create({
+    data: { userId: userA.id, role: "RANTING", rantingId: ranting.id },
+  })
   const [munfiqA, munfiqB] = await Promise.all([
     prisma.gorutMunfiq.create({ data: { rantingId: ranting.id, plpkId: historicalPlpk.id, code: `${marker}-MA`, nik: `${Date.now()}101`, name: `${marker} Munfiq A` } }),
     prisma.gorutMunfiq.create({ data: { rantingId: ranting.id, plpkId: historicalPlpk.id, code: `${marker}-MB`, nik: `${Date.now()}202`, name: `${marker} Munfiq B` } }),
@@ -131,10 +134,10 @@ test("self read model isolates accounts, preserves personal amount and historica
 test("milestone notification sync targets only linked Munfiq account and is idempotent", async () => {
   const row = await fixture()
   const concurrent = await Promise.all([
-    syncGorutMunfiqMilestoneNotifications(prisma, row.munfiqA.id),
-    syncGorutMunfiqMilestoneNotifications(prisma, row.munfiqA.id),
+    syncGorutMunfiqMilestoneNotifications(prisma, row.contextA),
+    syncGorutMunfiqMilestoneNotifications(prisma, row.contextA),
   ])
-  const replay = await syncGorutMunfiqMilestoneNotifications(prisma, row.munfiqA.id)
+  const replay = await syncGorutMunfiqMilestoneNotifications(prisma, row.contextA)
   assert.equal(concurrent.reduce((total, result) => total + result.created, 0), 9)
   assert.equal(replay.created, 0)
   const [targetedA, targetedB, broad] = await Promise.all([
@@ -166,16 +169,16 @@ test("milestone sync rolls back claims on failure and survives database latency 
   })
   const claimsWhere = { scope: "gorut-munfiq-milestone-notification", key: { startsWith: `${row.userB.id}:` } }
   try {
-    await assert.rejects(syncGorutMunfiqMilestoneNotifications(delayed, row.munfiqB.id), /Injected notification write failure/)
+    await assert.rejects(syncGorutMunfiqMilestoneNotifications(delayed, row.contextB), /Injected notification write failure/)
     assert.equal(await prisma.appRecord.count({ where: claimsWhere }), 0)
     assert.equal(await prisma.portalNotification.count({ where: { targetUserId: row.userB.id } }), 0)
 
     failNotification = false
     delayNextRead = true
-    const result = await syncGorutMunfiqMilestoneNotifications(delayed, row.munfiqB.id)
+    const result = await syncGorutMunfiqMilestoneNotifications(delayed, row.contextB)
     assert.equal(delayNextRead, false)
     assert.equal(result.created, 6)
-    assert.equal((await syncGorutMunfiqMilestoneNotifications(delayed, row.munfiqB.id)).created, 0)
+    assert.equal((await syncGorutMunfiqMilestoneNotifications(delayed, row.contextB)).created, 0)
     assert.equal(await prisma.appRecord.count({ where: claimsWhere }), 6)
     assert.equal(await prisma.portalNotification.count({ where: { targetUserId: row.userB.id } }), 6)
   } finally {

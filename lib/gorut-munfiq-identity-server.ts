@@ -209,6 +209,12 @@ export async function resolveGorutMunfiqContextForUser(prisma: PrismaClient, use
       id: true,
       status: true,
       role: true,
+      gorutAssignments: {
+        where: { isActive: true },
+        orderBy: { id: "asc" },
+        take: 2,
+        select: { id: true, role: true, kecamatanId: true, rantingId: true, plpkId: true },
+      },
       gorutMunfiqAccountLinks: {
         where: { status: GorutMunfiqAccountLinkStatus.ACTIVE },
         orderBy: { id: "asc" },
@@ -222,7 +228,11 @@ export async function resolveGorutMunfiqContextForUser(prisma: PrismaClient, use
     },
   })
   if (!user) return { kind: "unauthenticated" as const }
-  return resolveGorutMunfiqSelfContext({ ...user, accountLinks: user.gorutMunfiqAccountLinks })
+  return resolveGorutMunfiqSelfContext({
+    ...user,
+    operationalAssignments: user.gorutAssignments,
+    accountLinks: user.gorutMunfiqAccountLinks,
+  })
 }
 
 export async function requireGorutMunfiqContext(): Promise<{ context: GorutMunfiqSelfContext } | { response: Response }> {

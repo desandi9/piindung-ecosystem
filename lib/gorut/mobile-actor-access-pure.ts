@@ -4,6 +4,8 @@ export const gorutMobilePaths = {
   MUNFIQ: "/gorut-v2/mobile/munfiq",
   PLPK: "/gorut-v2/mobile/plpk",
   KORDES: "/gorut-v2/mobile/kordes",
+  UPZIS: "/gorut-v2/mobile/upzis",
+  PC: "/gorut-v2/mobile/pc",
 } as const
 
 export type MobileActorType = keyof typeof gorutMobilePaths
@@ -85,7 +87,7 @@ export type MunfiqMobileAccess =
   | { kind: "contract-gap" }
 
 export function gorutMobileLoginPath(actorType: MobileActorType) {
-  return `/login?next=${gorutMobilePaths[actorType]}`
+  return `/gorut-v2/mobile/login?next=${encodeURIComponent(gorutMobilePaths[actorType])}`
 }
 
 export function resolveMobileEntry(kind: "authorized" | "unauthenticated" | "inactive" | "forbidden" | "unavailable" | "contract-gap", actorType: MobileActorType) {

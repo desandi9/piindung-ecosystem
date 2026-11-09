@@ -5,11 +5,24 @@ import { parseGorutMunfiqLinkInput } from "./gorut-munfiq-identity-api.ts"
 // @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
 import { resolveGorutMunfiqSelfContext, serializeGorutMunfiqSelfIdentity, type GorutMunfiqContextRecord } from "./gorut-munfiq-identity-pure.ts"
 
+type OperationalRole = GorutMunfiqContextRecord["operationalAssignments"][number]["role"]
+
+function assignment(role: OperationalRole): GorutMunfiqContextRecord["operationalAssignments"][number] {
+  return {
+    id: `assignment-${role.toLowerCase()}`,
+    role,
+    kecamatanId: role === "UPZIS" ? "kecamatan-db-a" : null,
+    rantingId: role === "RANTING" ? "ranting-db-a" : null,
+    plpkId: role === "PLPK" ? "plpk-db-a" : null,
+  }
+}
+
 function record(overrides: Partial<GorutMunfiqContextRecord> = {}): GorutMunfiqContextRecord {
   return {
     id: "user-db-a",
     status: "Aktif",
     role: "munfiq",
+    operationalAssignments: [],
     accountLinks: [{ userId: "user-db-a", status: "ACTIVE", munfiq: { id: "munfiq-db-a", code: "MUN-A", name: "Munfiq A", isActive: true } }],
     ...overrides,
   }
@@ -25,6 +38,50 @@ void test("self context resolves exactly the authoritative active link and seria
   assert.equal(JSON.stringify(serializeGorutMunfiqSelfIdentity(result.context)).includes("db-"), false)
 })
 
+void test("Kordes with one valid active RANTING assignment and own link receives Munfiq self context", () => {
+  const result = resolveGorutMunfiqSelfContext(record({
+    role: "admin_kordes",
+    operationalAssignments: [assignment("RANTING")],
+  }))
+  assert.equal(result.kind, "authorized")
+  if (result.kind === "authorized") assert.equal(result.context.munfiqCode, "MUN-A")
+})
+
+void test("UPZIS with one valid active assignment and own link receives Munfiq self context", () => {
+  assert.equal(resolveGorutMunfiqSelfContext(record({
+    role: "admin_upzis",
+    operationalAssignments: [assignment("UPZIS")],
+  })).kind, "authorized")
+})
+
+void test("PC with one valid active assignment and own link receives Munfiq self context", () => {
+  assert.equal(resolveGorutMunfiqSelfContext(record({
+    role: "admin_pc",
+    operationalAssignments: [assignment("PC")],
+  })).kind, "authorized")
+})
+
+void test("PLPK with a valid link is denied Munfiq self context", () => {
+  assert.equal(resolveGorutMunfiqSelfContext(record({
+    role: "admin_kordes",
+    operationalAssignments: [assignment("PLPK")],
+  })).kind, "wrong-role")
+})
+
+void test("Kordes, UPZIS, and PC assignments never grant Munfiq context without an active link", () => {
+  for (const [role, portalRole] of [
+    ["RANTING", "admin_kordes"],
+    ["UPZIS", "admin_upzis"],
+    ["PC", "admin_pc"],
+  ] as const) {
+    assert.equal(resolveGorutMunfiqSelfContext(record({
+      role: portalRole,
+      operationalAssignments: [assignment(role)],
+      accountLinks: [],
+    })).kind, "mapping-unavailable")
+  }
+})
+
 void test("inactive Munfiq remains available for historical self context", () => {
   const result = resolveGorutMunfiqSelfContext(record({
     accountLinks: [{ userId: "user-db-a", status: "ACTIVE", munfiq: { id: "munfiq-db-a", code: "MUN-A", name: "Munfiq A", isActive: false } }],
@@ -33,9 +90,13 @@ void test("inactive Munfiq remains available for historical self context", () =>
   if (result.kind === "authorized") assert.equal(result.context.munfiqActive, false)
 })
 
-void test("inactive user, wrong role, missing/revoked/multiple/invalid links fail closed", () => {
+void test("inactive user, unrelated role, invalid operational assignments, and invalid links fail closed", () => {
   assert.equal(resolveGorutMunfiqSelfContext(record({ status: "Nonaktif" })).kind, "inactive-user")
   assert.equal(resolveGorutMunfiqSelfContext(record({ role: "admin_pc" })).kind, "wrong-role")
+  assert.equal(resolveGorutMunfiqSelfContext(record({
+    role: "admin_pc",
+    operationalAssignments: [assignment("PC"), { ...assignment("PC"), id: "assignment-pc-2" }],
+  })).kind, "wrong-role")
   assert.equal(resolveGorutMunfiqSelfContext(record({ accountLinks: [] })).kind, "mapping-unavailable")
   assert.equal(resolveGorutMunfiqSelfContext(record({ accountLinks: [
     { userId: "user-db-a", status: "ACTIVE", munfiq: { id: "m-a", code: "M-A", name: "A", isActive: true } },

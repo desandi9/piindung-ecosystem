@@ -11,6 +11,8 @@ const actorLabels: Record<MobileActorType, string> = {
   MUNFIQ: "Munfiq",
   PLPK: "PLPK",
   KORDES: "Kordes",
+  UPZIS: "UPZIS",
+  PC: "PC",
 }
 
 export type LoginPresentation =

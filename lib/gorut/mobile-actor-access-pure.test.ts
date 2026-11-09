@@ -59,8 +59,10 @@ void test("all actor direct entries use the existing login with actor-specific s
     MUNFIQ: "/gorut-v2/mobile/munfiq",
     PLPK: "/gorut-v2/mobile/plpk",
     KORDES: "/gorut-v2/mobile/kordes",
+    UPZIS: "/gorut-v2/mobile/upzis",
+    PC: "/gorut-v2/mobile/pc",
   })
-  for (const actor of ["MUNFIQ", "PLPK", "KORDES"] as const) {
+  for (const actor of ["MUNFIQ", "PLPK", "KORDES", "UPZIS", "PC"] as const) {
     assert.equal(resolveMobileEntry("unauthenticated", actor).location, gorutMobileLoginPath(actor))
     assert.equal(resolveMobileEntry("unauthenticated", actor).kind, "redirect")
   }

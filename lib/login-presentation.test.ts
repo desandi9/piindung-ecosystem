@@ -8,6 +8,8 @@ void test("exact safe GORUT mobile destinations select actor-aware presentation"
     ["/gorut-v2/mobile/plpk", "PLPK", "PLPK"],
     ["/gorut-v2/mobile/kordes", "KORDES", "Kordes"],
     ["/gorut-v2/mobile/munfiq", "MUNFIQ", "Munfiq"],
+    ["/gorut-v2/mobile/upzis", "UPZIS", "UPZIS"],
+    ["/gorut-v2/mobile/pc", "PC", "PC"],
   ] as const
 
   for (const [path, actorType, actorLabel] of cases) {
@@ -41,7 +43,7 @@ void test("unsafe next falls back before presentation selection", () => {
 })
 
 void test("resolved mobile destination remains exact for successful login and logout return", () => {
-  for (const path of ["/gorut-v2/mobile/plpk", "/gorut-v2/mobile/kordes", "/gorut-v2/mobile/munfiq"]) {
+  for (const path of ["/gorut-v2/mobile/plpk", "/gorut-v2/mobile/kordes", "/gorut-v2/mobile/munfiq", "/gorut-v2/mobile/upzis", "/gorut-v2/mobile/pc"]) {
     const presentation = resolveLoginPresentation(path)
     assert.equal(presentation.safeDestination, path)
     assert.deepEqual(resolvePostLoginNavigation(presentation), {
@@ -68,7 +70,7 @@ void test("protected mobile destinations are not prefetched before authenticatio
 })
 
 void test("authenticated login proxy preserves only exact safe GORUT mobile intent", () => {
-  for (const path of ["/gorut-v2/mobile/plpk", "/gorut-v2/mobile/kordes", "/gorut-v2/mobile/munfiq"]) {
+  for (const path of ["/gorut-v2/mobile/plpk", "/gorut-v2/mobile/kordes", "/gorut-v2/mobile/munfiq", "/gorut-v2/mobile/upzis", "/gorut-v2/mobile/pc"]) {
     assert.equal(resolveAuthenticatedLoginDestination(path, "/dashboard"), path)
   }
 

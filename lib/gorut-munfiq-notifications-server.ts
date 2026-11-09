@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto"
 import type { PrismaClient } from "@prisma/client"
+import type { GorutMunfiqSelfContext } from "./gorut-munfiq-identity-pure"
 import { buildGorutMunfiqTimeline } from "./gorut-munfiq-transparency-pure"
 
 const NOTIFICATION_SCOPE = "gorut-munfiq-milestone-notification"
@@ -15,16 +16,21 @@ const milestoneCopy = {
 
 type NotificationMilestone = keyof typeof milestoneCopy
 
-export async function syncGorutMunfiqMilestoneNotifications(prisma: PrismaClient, munfiqId: string) {
+export async function syncGorutMunfiqMilestoneNotifications(prisma: PrismaClient, context: GorutMunfiqSelfContext) {
   return prisma.$transaction(async (tx) => {
     const link = await tx.gorutMunfiqAccountLink.findFirst({
-      where: { munfiqId, status: "ACTIVE", user: { status: "Aktif", role: "munfiq" } },
+      where: {
+        userId: context.userId,
+        munfiqId: context.munfiqId,
+        status: "ACTIVE",
+        user: { status: "Aktif" },
+      },
       select: { userId: true },
     })
     if (!link) return { created: 0 }
 
     const entries = await tx.gorutCollectionEntry.findMany({
-      where: { munfiqId, visitStatus: "COLLECTED" },
+      where: { munfiqId: context.munfiqId, visitStatus: "COLLECTED" },
       select: {
         createdAt: true,
         collectedAt: true,

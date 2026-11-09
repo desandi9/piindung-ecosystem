@@ -42,3 +42,25 @@ void test('component unmount cancels its request without changing another reques
   await rejected
   assert.equal(await runActorRequest(async () => 'current actor'), 'current actor')
 })
+
+void test('actor switch A to B rejects stale Munfiq data before it can replace B data', async () => {
+  setRequestActor('user-a:admin_kordes')
+  let releaseA!: () => void
+  const requestA = runActorRequest(async () => {
+    await new Promise<void>((resolve) => { releaseA = resolve })
+    return { owner: { munfiqCode: 'MUN-A' }, collections: ['A-only'] }
+  })
+  const staleA = assert.rejects(requestA, { name: 'AbortError' })
+
+  setRequestActor('user-b:admin_upzis')
+  releaseA()
+  await staleA
+
+  const dataB = await runActorRequest(async () => ({
+    owner: { munfiqCode: 'MUN-B' },
+    collections: ['B-only'],
+  }))
+  assert.deepEqual(dataB, { owner: { munfiqCode: 'MUN-B' }, collections: ['B-only'] })
+  assert.equal(JSON.stringify(dataB).includes('MUN-A'), false)
+  assert.equal(JSON.stringify(dataB).includes('A-only'), false)
+})

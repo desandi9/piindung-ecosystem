@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ col
     const { collectionCode } = await params
     const result = await getGorutMunfiqOwnCollection(prisma, auth.context, collectionCode)
     if (!result) return json({ error: "Riwayat infak tidak ditemukan." }, 404)
-    await syncGorutMunfiqMilestoneNotifications(prisma, auth.context.munfiqId)
+    await syncGorutMunfiqMilestoneNotifications(prisma, auth.context)
     return json(result)
   } catch (error) {
     console.error("GORUT Munfiq own detail failed", error)

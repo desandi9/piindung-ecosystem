@@ -18,11 +18,13 @@ void test("failed server logout is not treated as success", async () => {
 
 void test("each actor returns to login with its canonical mobile next path", () => {
   const expected = {
-    MUNFIQ: "/login?next=/gorut-v2/mobile/munfiq",
-    PLPK: "/login?next=/gorut-v2/mobile/plpk",
-    KORDES: "/login?next=/gorut-v2/mobile/kordes",
+    MUNFIQ: "/gorut-v2/mobile/login?next=%2Fgorut-v2%2Fmobile%2Fmunfiq",
+    PLPK: "/gorut-v2/mobile/login?next=%2Fgorut-v2%2Fmobile%2Fplpk",
+    KORDES: "/gorut-v2/mobile/login?next=%2Fgorut-v2%2Fmobile%2Fkordes",
+    UPZIS: "/gorut-v2/mobile/login?next=%2Fgorut-v2%2Fmobile%2Fupzis",
+    PC: "/gorut-v2/mobile/login?next=%2Fgorut-v2%2Fmobile%2Fpc",
   } as const
-  for (const actor of ["MUNFIQ", "PLPK", "KORDES"] as const) {
+  for (const actor of ["MUNFIQ", "PLPK", "KORDES", "UPZIS", "PC"] as const) {
     let destination = ""
     redirectAfterMobileLogout(actor, { assign(value) { destination = String(value) } })
     assert.equal(destination, expected[actor])
