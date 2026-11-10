@@ -27,13 +27,14 @@ export function verificationPath(memberId: string) {
 
 export function canonicalOrigin(env: Record<string, string | undefined> = process.env) {
   const configured = env.SITE_URL || env.NEXT_PUBLIC_SITE_URL
-  if (!configured) {
-    if (env.NODE_ENV === "production") throw new Error("SITE_URL_REQUIRED")
-    return "http://localhost:3000"
+  if (configured) {
+    const url = new URL(configured.includes("://") ? configured : `https://${configured}`)
+    if (url.protocol !== "https:" && !(env.NODE_ENV !== "production" && url.hostname === "localhost")) throw new Error("INVALID_SITE_URL")
+    return url.origin
   }
-  const url = new URL(configured.includes("://") ? configured : `https://${configured}`)
-  if (url.protocol !== "https:" && !(env.NODE_ENV !== "production" && url.hostname === "localhost")) throw new Error("INVALID_SITE_URL")
-  return url.origin
+  if (env.VERCEL_ENV === "preview" && env.VERCEL_URL) return new URL(`https://${env.VERCEL_URL}`).origin
+  if (env.NODE_ENV === "production") throw new Error("SITE_URL_REQUIRED")
+  return "http://localhost:3000"
 }
 
 export function verificationUrl(memberId: string, env?: Record<string, string | undefined>) {

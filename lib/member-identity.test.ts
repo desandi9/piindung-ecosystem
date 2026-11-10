@@ -41,6 +41,45 @@ void test("member-identity: production canonical URL fails closed without config
   assert.equal(canonicalOrigin({ NODE_ENV: "development" }), "http://localhost:3000")
 })
 
+void test("member-identity: Preview falls back to the current deployment's VERCEL_URL", () => {
+  assert.equal(
+    canonicalOrigin({ NODE_ENV: "production", VERCEL_ENV: "preview", VERCEL_URL: "my-app-git-branch-team.vercel.app" }),
+    "https://my-app-git-branch-team.vercel.app",
+  )
+})
+
+void test("member-identity: Preview without VERCEL_URL still fails closed, no silent localhost", () => {
+  assert.throws(() => canonicalOrigin({ NODE_ENV: "production", VERCEL_ENV: "preview" }), /SITE_URL_REQUIRED/)
+})
+
+void test("member-identity: explicit SITE_URL outranks VERCEL_URL even on Preview", () => {
+  assert.equal(
+    canonicalOrigin({ NODE_ENV: "production", VERCEL_ENV: "preview", VERCEL_URL: "my-app-git-branch-team.vercel.app", SITE_URL: "https://custom.example" }),
+    "https://custom.example",
+  )
+})
+
+void test("member-identity: Production never falls back to VERCEL_URL, fails closed without explicit SITE_URL", () => {
+  assert.throws(
+    () => canonicalOrigin({ NODE_ENV: "production", VERCEL_ENV: "production", VERCEL_URL: "my-app.vercel.app" }),
+    /SITE_URL_REQUIRED/,
+  )
+  assert.equal(
+    canonicalOrigin({ NODE_ENV: "production", VERCEL_ENV: "production", SITE_URL: "https://lazisnugarut.web.id" }),
+    "https://lazisnugarut.web.id",
+  )
+})
+
+void test("member-identity: invalid explicit SITE_URL configuration is rejected", () => {
+  assert.throws(() => canonicalOrigin({ NODE_ENV: "production", SITE_URL: "http://insecure.example" }), /INVALID_SITE_URL/)
+})
+
+void test("member-identity: verificationUrl uses the Preview deployment URL end to end", () => {
+  const env = { NODE_ENV: "production", VERCEL_ENV: "preview", VERCEL_URL: "my-app-git-branch-team.vercel.app" }
+  const url = verificationUrl("PID-23456789ABCD", env)
+  assert.equal(url, "https://my-app-git-branch-team.vercel.app/verify/PID-23456789ABCD")
+})
+
 void test("member-identity: QR payload equals only the canonical verification URL", () => {
   const env = { SITE_URL: "https://verify.example", NODE_ENV: "production" }
   const url = verificationUrl("PID-23456789ABCD", env)
