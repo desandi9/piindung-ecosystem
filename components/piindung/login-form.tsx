@@ -1,17 +1,18 @@
 "use client"
 
 import { type FormEvent, useEffect, useState } from "react"
-import { Phone, Lock, Eye, EyeOff } from "lucide-react"
+import { Phone, Lock, Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { resolvePostLoginNavigation, shouldPrefetchPostLoginDestination, type LoginPresentation } from "@/lib/login-presentation"
 import { cn } from "@/lib/utils"
 
-export function LoginForm({ presentation, onTransitionStart }: { presentation: LoginPresentation; onTransitionStart?: () => void }) {
+export function LoginForm({ presentation }: { presentation: LoginPresentation }) {
   const router = useRouter()
   const { login } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
@@ -45,11 +46,8 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
         return
       }
 
-      if (navigation.showDashboardTransition) {
-        setIsTransitioning(true)
-        onTransitionStart?.()
-        await new Promise((resolve) => window.setTimeout(resolve, 1250))
-      }
+      // Tanpa layar transisi: langsung pindah; tombol menampilkan "Memuat dasbor..." selama navigasi.
+      if (navigation.showDashboardTransition) setIsTransitioning(true)
       router.push(navigation.destination)
     } else {
       setErrorMessage(result.error ?? "Nomor HP atau password tidak valid.")
@@ -61,7 +59,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
   return (
     <>
       <div
-        className={cn("w-full mx-auto transition-all duration-500 ease-out data-[transitioning=true]:scale-[0.985] data-[transitioning=true]:opacity-80", isGorutMobile ? "max-w-none" : "max-w-md")}
+        className={cn("w-full mx-auto transition-all duration-500 ease-out data-[transitioning=true]:scale-[0.985] data-[transitioning=true]:opacity-80", isGorutMobile ? "max-w-none" : "max-w-[380px]")}
         data-transitioning={isTransitioning}
         data-post-login-method={navigation.method}
       >
@@ -77,13 +75,13 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
           </div>
         </div>
       ) : (
-        <div className="flex justify-center mb-10">
+        <div className="mb-7 flex justify-center">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LOGO%20PIINDUNG%20BIRU.-RwIMUrRjgQyDRv216W7LDokN9BO9L4.png"
             alt="PIINDUNG - Pusat Instalasi dan Informasi Donasi Unggulan Nahdliyyin Garut"
             width={380}
             height={120}
-            className="h-auto w-full max-w-[380px]"
+            className="h-auto w-full max-w-[188px]"
             style={{ width: "100%", height: "auto" }}
             priority
           />
@@ -91,8 +89,8 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
       )}
 
       {/* Login Title */}
-      <h1 className={cn("font-medium text-foreground", isGorutMobile ? "text-center text-[1.75rem] leading-tight tracking-[-0.025em] text-[#08213b]" : "text-center text-lg mb-8")}>
-        {isGorutMobile ? "Masuk ke GORUT" : "Login Menggunakan No HP dan Password"}
+      <h1 className={cn("font-medium text-foreground", isGorutMobile ? "text-center text-[1.75rem] leading-tight tracking-[-0.025em] text-[#08213b]" : "text-center text-[clamp(1.6rem,2.3vw,1.95rem)] font-bold leading-[1.15] tracking-[-0.03em] text-[#08213b]")}>
+        {isGorutMobile ? "Masuk ke GORUT" : "Masuk ke PIINDUNG"}
       </h1>
       {isGorutMobile ? (
         <div className="mb-8 mt-3 text-center">
@@ -103,7 +101,9 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
             Gunakan nomor HP dan password akun PIINDUNG Anda.
           </p>
         </div>
-      ) : null}
+      ) : (
+        <p className="mb-7 mt-2 text-balance text-center text-[14.5px] leading-relaxed text-[#5b6878]">Gunakan nomor HP dan kata sandi akun Anda.</p>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -111,7 +111,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
         <div>
           {isGorutMobile ? <label htmlFor="login-phone" className="mb-2 block text-sm font-semibold text-[#25364a]">No. HP</label> : null}
           <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <div className={cn("absolute top-1/2 -translate-y-1/2 text-muted-foreground", isGorutMobile ? "left-4" : "left-5 text-[#7b8a84]")}>
               <Phone className="h-5 w-5" aria-hidden="true" />
             </div>
             <Input
@@ -123,7 +123,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
               placeholder={isGorutMobile ? "Contoh: 0812 3456 7890" : "Nomor HP"}
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className={cn("h-14 pl-12 pr-4 text-base rounded-xl focus:border-[#07965d] focus:ring-[#07965d]/20", isGorutMobile ? "border-[#dfe7e3] bg-[#f8faf9] text-[#25364a] placeholder:text-[#68766f]" : "border-gray-200 bg-white")}
+              className={cn("h-14 pl-12 pr-4 text-base rounded-xl focus:border-[#07965d] focus:ring-[#07965d]/20", isGorutMobile ? "border-[#dfe7e3] bg-[#f8faf9] text-[#25364a] placeholder:text-[#68766f]" : "rounded-full border-[#dbe5df] bg-white pl-[3.25rem] text-[#08213b] shadow-[0_1px_2px_rgba(8,33,59,.04)] placeholder:text-[#7b8a84] focus-visible:border-[#07965d] focus-visible:ring-[#07965d]/20 autofill:shadow-[inset_0_0_0_1000px_#f3f8ef] autofill:[-webkit-text-fill-color:#08213b] md:text-[15px] dark:bg-white")}
             />
           </div>
         </div>
@@ -132,7 +132,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
         <div>
           {isGorutMobile ? <label htmlFor="login-password" className="mb-2 block text-sm font-semibold text-[#25364a]">Password</label> : null}
           <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <div className={cn("absolute top-1/2 -translate-y-1/2 text-muted-foreground", isGorutMobile ? "left-4" : "left-5 text-[#7b8a84]")}>
               <Lock className="h-5 w-5" aria-hidden="true" />
             </div>
             <Input
@@ -143,7 +143,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={cn("h-14 pl-12 pr-14 text-base rounded-xl focus:border-[#07965d] focus:ring-[#07965d]/20", isGorutMobile ? "border-[#dfe7e3] bg-[#f8faf9] text-[#25364a] placeholder:text-[#68766f]" : "border-gray-200 bg-white")}
+              className={cn("h-14 pl-12 pr-14 text-base rounded-xl focus:border-[#07965d] focus:ring-[#07965d]/20", isGorutMobile ? "border-[#dfe7e3] bg-[#f8faf9] text-[#25364a] placeholder:text-[#68766f]" : "rounded-full border-[#dbe5df] bg-white pl-[3.25rem] text-[#08213b] shadow-[0_1px_2px_rgba(8,33,59,.04)] placeholder:text-[#7b8a84] focus-visible:border-[#07965d] focus-visible:ring-[#07965d]/20 autofill:shadow-[inset_0_0_0_1000px_#f3f8ef] autofill:[-webkit-text-fill-color:#08213b] md:text-[15px] dark:bg-white")}
             />
             <button
               type="button"
@@ -158,7 +158,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
         </div>
 
         {errorMessage ? (
-          <p className={cn("text-sm leading-5 text-destructive", isGorutMobile && "rounded-xl bg-[#fdecec] px-4 py-3 text-[#a43f3f]")} role="alert">{errorMessage}</p>
+          <p className={cn("text-sm leading-5 text-destructive", isGorutMobile ? "rounded-xl bg-[#fdecec] px-4 py-3 text-[#a43f3f]" : "rounded-2xl bg-[#fdecec] px-4 py-3 text-[#a43f3f]")} role="alert">{errorMessage}</p>
         ) : null}
 
         {/* Remember Me */}
@@ -171,7 +171,7 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
           />
           <label
             htmlFor="remember"
-            className={cn("text-sm text-muted-foreground cursor-pointer", isGorutMobile && "text-[#52645e]")}
+            className={cn("text-sm text-muted-foreground cursor-pointer", isGorutMobile ? "text-[#52645e]" : "text-[#5b6878]")}
           >
             Ingat Saya
           </label>
@@ -181,11 +181,16 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
         <Button
           type="submit"
           disabled={isLoading || isTransitioning || isDirectNavigating}
-          className={cn("w-full h-14 text-base font-semibold rounded-xl text-white transition-colors disabled:opacity-70", isGorutMobile ? "bg-[#07965d] hover:bg-[#067a4c]" : "bg-[#2e8b57] hover:bg-[#257a4a]")}
+          className={cn("w-full h-14 text-base font-semibold rounded-xl text-white transition-colors disabled:opacity-70", isGorutMobile ? "bg-[#07965d] hover:bg-[#067a4c]" : "group justify-between rounded-full bg-[#08213b] pl-6 pr-2 text-[15px] shadow-[0_16px_30px_-16px_rgba(8,33,59,.6)] hover:bg-[#0c2c4c] focus-visible:ring-2 focus-visible:ring-[#07965d] focus-visible:ring-offset-2")}
         >
           {isGorutMobile
             ? isDirectNavigating ? "Membuka GORUT..." : isLoading ? "Memeriksa akun..." : "Masuk"
-            : isTransitioning ? "Memuat Dashboard..." : isLoading ? "Loading..." : "Login"}
+            : <>
+                <span>{isTransitioning ? "Memuat dasbor..." : isLoading ? "Memeriksa akun..." : "Masuk"}</span>
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-[#c9f26d] text-[#061423] transition-transform duration-300 group-hover:translate-x-0.5">
+                  <ArrowRight className="h-[18px] w-[18px]" aria-hidden="true" />
+                </span>
+              </>}
         </Button>
       </form>
 
@@ -196,9 +201,16 @@ export function LoginForm({ presentation, onTransitionStart }: { presentation: L
           <p>NU Care–LAZISNU Kabupaten Garut</p>
         </div>
       ) : (
-        <p className="text-center text-sm text-muted-foreground mt-12">
-          ©2026 — <span className="text-[#2e8b57] font-medium">NU Care Lazisnu Garut</span>
-        </p>
+        <div className="mt-7 text-center text-[13.5px] leading-relaxed text-[#5b6878]">
+          <p>
+            Lupa kata sandi atau belum punya akun?{" "}
+            <Link href="/kontak" className="rounded font-semibold text-[#06784b] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d]">Hubungi admin</Link>
+          </p>
+          <div className="mt-8 flex items-center justify-between gap-4 border-t border-[#e6eeea] pt-5 text-[12.5px]">
+            <Link href="/" className="inline-flex items-center gap-1.5 rounded font-semibold text-[#08213b] hover:text-[#06784b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#07965d]"><ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />Beranda</Link>
+            <span>©2026 NU Care–LAZISNU Garut</span>
+          </div>
+        </div>
       )}
       </div>
     </>
