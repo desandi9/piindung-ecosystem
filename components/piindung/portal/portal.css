@@ -1,0 +1,32 @@
+/* Dashboard PIINDUNG V2 — animasi masuk ringan dan skeleton. */
+
+@keyframes portal-rise {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes portal-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.portal-rise {
+  animation: portal-rise .6s cubic-bezier(.16, 1, .3, 1) both;
+  animation-delay: calc(var(--portal-index, 0) * 60ms);
+}
+
+.portal-skeleton {
+  background: linear-gradient(90deg, #edf4ea 25%, #f6faf4 50%, #edf4ea 75%);
+  background-size: 200% 100%;
+  animation: portal-shimmer 1.4s linear infinite;
+}
+
+.dark .portal-skeleton {
+  background: linear-gradient(90deg, #10261c 25%, #163326 50%, #10261c 75%);
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-rise,
+  .portal-skeleton { animation: none; }
+}
