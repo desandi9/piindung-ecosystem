@@ -1,6 +1,6 @@
 "use client"
 
-import { type FormEvent, useEffect, useState } from "react"
+import { type FormEvent, useState } from "react"
 import { Phone, Lock, Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { resolvePostLoginNavigation, shouldPrefetchPostLoginDestination, type LoginPresentation } from "@/lib/login-presentation"
+import { resolvePostLoginNavigation, type LoginPresentation } from "@/lib/login-presentation"
 import { cn } from "@/lib/utils"
 
 export function LoginForm({ presentation }: { presentation: LoginPresentation }) {
@@ -25,12 +25,8 @@ export function LoginForm({ presentation }: { presentation: LoginPresentation })
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const isGorutMobile = presentation.kind === "gorut-mobile"
   const navigation = resolvePostLoginNavigation(presentation)
-  const shouldPrefetch = shouldPrefetchPostLoginDestination(presentation)
-
-  useEffect(() => {
-    if (!shouldPrefetch) return
-    router.prefetch(navigation.destination)
-  }, [navigation.destination, router, shouldPrefetch])
+  // Sengaja tanpa router.prefetch: semua tujuan setelah login terlindungi. Prefetch sebelum
+  // sesi ada dijawab redirect ke /login dan disimpan router, sehingga push setelah login macet.
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()

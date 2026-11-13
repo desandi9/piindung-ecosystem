@@ -3,7 +3,7 @@ import { canAccessAdminDashboard, isSuperAdminOnlyRoute } from "@/features/auth"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 import { canAccessLandingPageRoute, canAccessPortalAccessApiRoute } from "@/lib/portal-access"
 import { resolveAuthenticatedLoginDestination } from "@/lib/login-presentation"
-import { safeRedirectPath } from "@/lib/safe-redirect"
+import { DEFAULT_SAFE_REDIRECT, safeRedirectPath } from "@/lib/safe-redirect"
 import { isMobileEntryPath, mobileLoginPath } from "./lib/gorut/mobile-entry-routes"
 
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
@@ -133,10 +133,6 @@ function isAuthApiPath(pathname: string) {
   return pathname.startsWith("/api/auth/")
 }
 
-function defaultRouteForRole(role: string) {
-  return canAccessAdminDashboard(role as never) ? "/admin" : "/dashboard"
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -159,9 +155,10 @@ export async function proxy(request: NextRequest) {
     const session = await verifySessionToken(token, AUTH_SECRET)
     if (!session) return NextResponse.next()
 
+    // Sama dengan tujuan default form login: dashboard PIINDUNG adalah pusat akses untuk semua peran.
     const destination = resolveAuthenticatedLoginDestination(
       request.nextUrl.searchParams.get("next"),
-      defaultRouteForRole(session.role),
+      DEFAULT_SAFE_REDIRECT,
     )
     return NextResponse.redirect(new URL(destination, request.url))
   }

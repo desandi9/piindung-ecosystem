@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 // @ts-expect-error Node's native strip-types runner requires the explicit TypeScript extension.
-import { isGorutMobileDestination, resolveAuthenticatedLoginDestination, resolveLoginPresentation, resolvePostLoginNavigation, shouldPrefetchPostLoginDestination } from "./login-presentation.ts"
+import { isGorutMobileDestination, resolveAuthenticatedLoginDestination, resolveLoginPresentation, resolvePostLoginNavigation } from "./login-presentation.ts"
+import { readFileSync } from "node:fs"
 
 void test("exact safe GORUT mobile destinations select actor-aware presentation", () => {
   const cases = [
@@ -64,9 +65,11 @@ void test("standard login keeps its existing dashboard transition and push navig
   })
 })
 
-void test("protected mobile destinations are not prefetched before authentication", () => {
-  assert.equal(shouldPrefetchPostLoginDestination(resolveLoginPresentation("/gorut-v2/mobile/plpk")), false)
-  assert.equal(shouldPrefetchPostLoginDestination(resolveLoginPresentation("/dashboard")), true)
+void test("login form never prefetches its protected destination before authentication", () => {
+  // Prefetch saat belum login selalu dijawab redirect ke /login, lalu router memakai
+  // hasil simpanan itu setelah login sehingga navigasi macet di halaman login.
+  const source = readFileSync(new URL("../components/piindung/login-form.tsx", import.meta.url), "utf8")
+  assert.equal(/\.prefetch\(/.test(source), false)
 })
 
 void test("authenticated login proxy preserves only exact safe GORUT mobile intent", () => {

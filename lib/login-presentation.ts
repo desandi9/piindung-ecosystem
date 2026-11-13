@@ -44,10 +44,6 @@ export function resolvePostLoginNavigation(presentation: LoginPresentation): Pos
     : { destination: presentation.safeDestination, method: "push", showDashboardTransition: true }
 }
 
-export function shouldPrefetchPostLoginDestination(presentation: LoginPresentation) {
-  return presentation.kind !== "gorut-mobile"
-}
-
 export function resolveAuthenticatedLoginDestination(
   rawNext: string | null | undefined,
   defaultDestination: string,
