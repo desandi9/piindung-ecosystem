@@ -4,16 +4,9 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
+// Satu client per instance, juga di production: client baru per panggilan membuka pool
+// koneksi baru ke database setiap kali (lambat, dan koneksinya tidak pernah ditutup).
 export function getPrismaClient() {
-  if (globalForPrisma.prisma) {
-    return globalForPrisma.prisma
-  }
-
-  const prisma = new PrismaClient()
-
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = prisma
-  }
-
-  return prisma
+  globalForPrisma.prisma ??= new PrismaClient()
+  return globalForPrisma.prisma
 }
