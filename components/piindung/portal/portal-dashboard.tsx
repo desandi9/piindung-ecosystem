@@ -6,7 +6,6 @@ import { AlertCircle, ArrowRight, ArrowUpRight, Camera, ChevronRight, Lock, Mess
 import { useCallback, useEffect, useState, type CSSProperties } from "react"
 import { useLandingApps, type LandingApp } from "@/components/piindung/home/home-apps"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { canAccessAdminDashboard } from "@/features/auth/route-access"
 import { roleDisplayNames } from "@/features/auth/role-config"
 import {
   hasGorutModule,
@@ -65,7 +64,6 @@ function useDashboardAccess(user: AuthUser) {
             modules: (portal.data.modules as { key: string }[] | undefined) ?? [],
             operationalRole: !isMunfiq && typeof role === "string" && operationalRoles.has(role) ? (role as OperationalRole) : null,
             munfiqLinked: isMunfiq ? typeof gorut.data?.munfiqCode === "string" && gorut.data?.active === true : null,
-            adminDashboard: canAccessAdminDashboard(user.role),
           },
         })
       })
@@ -332,7 +330,7 @@ export function PortalDashboard({ user }: { user: AuthUser }) {
   const tasks = ready ? resolveDashboardTasks(ready.access) : []
   const gorut = ready ? resolveGorutApp(ready.access) : null
   // Sebelum izin termuat, tampilkan tautan akun dasar yang dimiliki semua peran.
-  const accountLinks = ready ? resolveAccountLinks(ready.access) : resolveAccountLinks({ role: user.role, permissions: ["profile.view", "notifications.view"], modules: [], operationalRole: null, munfiqLinked: null, adminDashboard: false })
+  const accountLinks = ready ? resolveAccountLinks(ready.access) : resolveAccountLinks({ role: user.role, permissions: ["profile.view", "notifications.view"], modules: [], operationalRole: null, munfiqLinked: null })
   const helpHref = accountLinks.find((link) => link.id === "bantuan")?.href ?? "/bantuan"
 
   return (

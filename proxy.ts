@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { canAccessAdminDashboard, isSuperAdminOnlyRoute } from "@/features/auth"
+import { canAccessAdminDashboard } from "@/features/auth"
 import { AUTH_COOKIE_NAME, verifySessionToken } from "@/lib/session-token"
 import { canAccessLandingPageRoute, canAccessPortalAccessApiRoute } from "@/lib/portal-access"
 import { resolveAuthenticatedLoginDestination } from "@/lib/login-presentation"
@@ -9,6 +9,7 @@ import { isMobileEntryPath, mobileLoginPath } from "./lib/gorut/mobile-entry-rou
 const AUTH_SECRET = process.env.AUTH_SECRET ?? "piindung-dev-auth-secret"
 
 const legacyMemberAreaPath = "/member-area"
+const legacyAdminPath = "/admin"
 const adminApiPrefixes = ["/api/users", "/api/records", "/api/user-operational-scopes", "/api/public-products"]
 const publicReadableRecordScopes = new Set([
   "maintenance-mode",
@@ -147,6 +148,8 @@ export async function proxy(request: NextRequest) {
   if (pathname === legacyMemberAreaPath) return NextResponse.redirect(new URL("/dashboard", request.url))
   if (pathname === `${legacyMemberAreaPath}/identitas`) return NextResponse.redirect(new URL("/profil/identitas", request.url))
   if (pathname === `${legacyMemberAreaPath}/notifikasi`) return NextResponse.redirect(new URL("/notifikasi", request.url))
+  // Area /admin lama sudah dihapus; bookmark & tautan lama diarahkan ke dashboard PIINDUNG.
+  if (pathname === legacyAdminPath || pathname.startsWith(`${legacyAdminPath}/`)) return NextResponse.redirect(new URL("/dashboard", request.url))
 
   if (pathname === "/login") {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
@@ -231,20 +234,6 @@ export async function proxy(request: NextRequest) {
   } else if (pathname.startsWith("/gorut")) {
     if (!canAccessGorutPath(session.role, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", request.url))
-    }
-  }
-
-  if (pathname.startsWith("/admin")) {
-    if (!canAccessAdminDashboard(session.role)) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
-    }
-
-    if ((session.role === "admin_upzis" || session.role === "admin_kordes") && pathname !== "/admin" && !pathname.startsWith("/admin/notifikasi")) {
-      return NextResponse.redirect(new URL("/admin", request.url))
-    }
-
-    if (isSuperAdminOnlyRoute(pathname) && session.role !== "super_admin_pc") {
-      return NextResponse.redirect(new URL("/admin", request.url))
     }
   }
 

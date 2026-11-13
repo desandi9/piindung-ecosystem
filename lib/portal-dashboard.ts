@@ -9,7 +9,7 @@ export type OperationalRole = "PC" | "UPZIS" | "RANTING" | "PLPK"
 
 export type DashboardIcon =
   | "deposit" | "validate" | "approve" | "package" | "verify" | "pickup"
-  | "home" | "program" | "bell" | "website" | "admin" | "identity" | "settings" | "help"
+  | "home" | "program" | "bell" | "website" | "identity" | "settings" | "help"
 
 export interface DashboardAccess {
   role: AppRole
@@ -19,8 +19,6 @@ export interface DashboardAccess {
   operationalRole: OperationalRole | null
   /** Hanya untuk Munfiq: identitas Munfiq aktif dan terhubung. */
   munfiqLinked: boolean | null
-  /** canAccessAdminDashboard(role) dihitung pemanggil agar modul ini tetap murni. */
-  adminDashboard: boolean
 }
 
 export interface DashboardLink {
@@ -35,7 +33,6 @@ export type GorutAppAccess = { kind: "open"; href: string } | { kind: "locked"; 
 
 // Sama dengan aturan Akses Cepat portal-hub lama.
 const CONTENT_PERMISSIONS = ["articles.manage", "homepage.manage", "products.manage", "impact.manage", "gallery.manage", "downloads.manage", "help_content.manage", "contact.manage", "branding.manage"]
-const ADMIN_PERMISSIONS = ["users.manage", "access.manage", "settings.manage", "audit.view", "notifications.manage"]
 
 const gorutTasks: Record<OperationalRole, DashboardLink[]> = {
   PC: [
@@ -78,9 +75,6 @@ function resolvePortalTasks(access: DashboardAccess): DashboardLink[] {
   const tasks: DashboardLink[] = []
   if (CONTENT_PERMISSIONS.some((permission) => access.permissions.includes(permission))) {
     tasks.push({ id: "portal-website", title: "Kelola website", description: "Perbarui artikel dan konten halaman publik.", href: "/dashboard/landing-page", icon: "website" })
-  }
-  if (access.adminDashboard || ADMIN_PERMISSIONS.some((permission) => access.permissions.includes(permission))) {
-    tasks.push({ id: "portal-admin", title: "Administrasi sistem", description: "Kelola pengguna, hak akses, dan pengaturan.", href: "/admin", icon: "admin" })
   }
   return tasks
 }

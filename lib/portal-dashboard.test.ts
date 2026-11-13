@@ -9,7 +9,6 @@ const base: DashboardAccess = {
   modules: [{ key: "gorut" }],
   operationalRole: null,
   munfiqLinked: null,
-  adminDashboard: false,
 }
 
 const hrefs = (access: DashboardAccess) => resolveDashboardTasks(access).map((task) => task.href)
@@ -49,8 +48,6 @@ void test("operational roles without the GORUT module grant get no GORUT tasks",
 
 void test("portal management tasks follow the existing permission rules", () => {
   assert.deepEqual(hrefs({ ...base, permissions: [...base.permissions, "articles.manage"] }), ["/dashboard/landing-page"])
-  assert.deepEqual(hrefs({ ...base, adminDashboard: true }), ["/admin"])
-  assert.deepEqual(hrefs({ ...base, permissions: [...base.permissions, "users.manage"] }), ["/admin"])
 })
 
 void test("GORUT app entry is open only when the destination will authorize the user", () => {
@@ -68,15 +65,15 @@ void test("account links respect portal permissions", () => {
   assert.deepEqual(munfiqLinks, ["/pengaturan-profil", "/notifikasi", "/bantuan"])
 })
 
-void test("no dashboard destination ever points at legacy GORUT V1", () => {
+void test("no dashboard destination ever points at legacy GORUT V1 or the removed /admin area", () => {
   const roles = ["super_admin_pc", "admin_pc", "admin_upzis", "admin_kordes", "munfiq", "plpk"] as const
   const operational = ["PC", "UPZIS", "RANTING", "PLPK", null] as const
   for (const role of roles) {
     for (const operationalRole of operational) {
-      const access: DashboardAccess = { ...base, role, operationalRole, munfiqLinked: true, adminDashboard: true, permissions: [...base.permissions, "articles.manage", "member_area.view"] }
+      const access: DashboardAccess = { ...base, role, operationalRole, munfiqLinked: true, permissions: [...base.permissions, "articles.manage", "member_area.view", "users.manage", "access.manage", "settings.manage"] }
       const app = resolveGorutApp(access)
       const all = [...resolveDashboardTasks(access).map((task) => task.href), ...resolveAccountLinks(access).map((link) => link.href), ...(app.kind === "open" ? [app.href] : [])]
-      for (const href of all) assert.ok(!/^\/gorut(\/|$)/.test(href), `${role}/${operationalRole} -> ${href}`)
+      for (const href of all) assert.ok(!/^\/(gorut|admin)(\/|$)/.test(href), `${role}/${operationalRole} -> ${href}`)
     }
   }
 })
